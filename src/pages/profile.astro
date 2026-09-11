@@ -1,0 +1,65 @@
+---
+import DashboardLayout from "../layouts/ProfileLayout.astro";
+import ProfileCard from "../components/profile/ProfileCard.astro";
+import EmailCard from "../components/profile/EmailCard.astro";
+import PasswordCard from "../components/profile/PasswordCard.astro";
+import SecurityCards from "../components/profile/SecurityCards.astro";
+import Toast from "../components/profile/Toast.astro";
+---
+
+<DashboardLayout title="Perfil y Seguridad - Tremia">
+  <div class="flex flex-col w-full gap-8">
+    <!-- Header Page Banner -->
+    <section
+      class="flex flex-col md:flex-row md:items-center justify-between gap-4"
+    >
+      <div class="flex flex-col gap-1">
+        <div
+          class="flex items-center gap-1.5 text-zinc-500 text-xs font-medium"
+        >
+          <span>Configuración de Cuenta</span>
+          <span class="material-symbols-outlined text-[14px]"
+            >chevron_right</span
+          >
+          <span class="text-orange-600 font-semibold">Perfil y Seguridad</span>
+        </div>
+        <h1 class="text-2xl font-bold text-zinc-900 tracking-tight">
+          Perfil y Seguridad
+        </h1>
+        <p class="text-sm text-zinc-500 max-w-2xl">
+          Administra tu información personal, actualiza tu correo electrónico de
+          acceso y gestiona la seguridad de tu contraseña y credenciales.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3 shrink-0">
+        <div
+          class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-zinc-200/80 text-zinc-700 text-xs font-medium shadow-xs"
+        >
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"
+          ></span>
+          <span>Cuenta Verificada</span>
+          <span class="text-zinc-400">· Google Workspace</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <!-- Left Column: Forms -->
+      <div class="lg:col-span-7 flex flex-col gap-6">
+        <ProfileCard />
+        <EmailCard />
+        <PasswordCard />
+      </div>
+
+      <!-- Right Column: Integrations & 2FA -->
+      <div class="lg:col-span-5">
+        <SecurityCards />
+      </div>
+    </div>
+  </div>
+
+  <!-- Componente global para alertas Toast -->
+  <Toast />
+</DashboardLayout>

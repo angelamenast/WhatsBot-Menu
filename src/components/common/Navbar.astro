@@ -1,0 +1,48 @@
+---
+import Logo from "./Logo.astro";
+---
+
+<nav
+  class="bg-surface sticky top-0 z-50 border-b border-surface-variant backdrop-blur-md bg-surface/90"
+>
+  <div
+    class="flex justify-between items-center w-full px-gutter-mobile md:px-gutter-desktop py-4 max-w-7xl mx-auto"
+  >
+    <Logo />
+    <div class="hidden md:flex items-center gap-gutter-desktop">
+      <a
+        class="text-on-surface-variant hover:text-primary transition-colors duration-300"
+        href="#product">Product</a
+      >
+      <a
+        class="text-on-surface-variant hover:text-primary transition-colors duration-300"
+        href="#solutions">Solutions</a
+      >
+      <a
+        class="text-on-surface-variant hover:text-primary transition-colors duration-300"
+        href="#pricing">Pricing</a
+      >
+      <a
+        class="text-on-surface-variant hover:text-primary transition-colors duration-300"
+        href="#resources">Resources</a
+      >
+    </div>
+    <div class="hidden md:flex items-center gap-unit-sm">
+      <a
+        href="/login"
+        class="text-on-surface-variant hover:text-primary transition-colors duration-300 px-3 py-2"
+      >
+        Log In
+      </a>
+      <a
+        href="/register"
+        class="bg-primary hover:bg-secondary text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+      >
+        Get Started
+      </a>
+    </div>
+    <button class="md:hidden text-on-surface-variant p-2">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+  </div>
+</nav>
