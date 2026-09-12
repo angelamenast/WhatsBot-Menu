@@ -1,12 +1,24 @@
 ---
 import Logo from "../common/Logo.astro";
+
+const pathname = Astro.url.pathname;
+
+// Función para determinar si un enlace está activo
+const isActive = (path: string) => {
+  if (path === "/") return pathname === "/";
+  return pathname.startsWith(path);
+};
+
+const getLinkClass = (path: string) =>
+  isActive(path)
+    ? "flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-orange-500 text-white font-medium text-sm shadow-sm transition-all"
+    : "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors text-sm font-medium";
 ---
 
 <aside
   class="fixed top-0 left-0 h-screen w-72 bg-white border-r border-zinc-200/80 z-50 flex flex-col justify-between p-6 overflow-y-auto"
 >
   <div class="flex flex-col gap-6">
-    <!-- Logo -->
     <div class="px-2">
       <Logo />
     </div>
@@ -21,7 +33,6 @@ import Logo from "../common/Logo.astro";
         <span class="material-symbols-outlined text-[20px]">store</span>
       </div>
       <div class="flex flex-col min-w-0 flex-1">
-        <!-- Business Name ID -->
         <span
           id="sidebar-business-name"
           class="font-semibold text-sm text-zinc-900 truncate"
@@ -35,9 +46,10 @@ import Logo from "../common/Logo.astro";
       </div>
     </div>
 
-    <!-- Action Button -->
+    <!-- Action Button con Toast -->
     <button
-      class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-orange-500 text-white font-medium text-sm shadow-sm hover:bg-orange-600 transition-all cursor-pointer"
+      id="btn-create-bot"
+      class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-orange-500 text-white font-medium text-sm shadow-sm hover:bg-orange-600 active:scale-95 transition-all cursor-pointer"
     >
       <span class="material-symbols-outlined text-[18px]">add</span>
       <span>Crear Nuevo Bot</span>
@@ -45,31 +57,19 @@ import Logo from "../common/Logo.astro";
 
     <!-- Main Navigation -->
     <nav class="flex flex-col gap-1">
-      <a
-        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors text-sm font-medium"
-        href="/orders"
-      >
+      <a class={getLinkClass("/orders")} href="/orders">
         <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
         <span>Pedidos</span>
       </a>
-      <a
-        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors text-sm font-medium"
-        href="/customization"
-      >
+      <a class={getLinkClass("/customization")} href="/customization">
         <span class="material-symbols-outlined text-[20px]">tune</span>
         <span>Personalización</span>
       </a>
-      <a
-        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors text-sm font-medium"
-        href="/analytics"
-      >
+      <a class={getLinkClass("/analytics")} href="/analytics">
         <span class="material-symbols-outlined text-[20px]">analytics</span>
         <span>Analíticas</span>
       </a>
-      <a
-        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors text-sm font-medium"
-        href="/billing"
-      >
+      <a class={getLinkClass("/billing")} href="/billing">
         <span class="material-symbols-outlined text-[20px]">credit_card</span>
         <span>Facturación</span>
       </a>
@@ -79,26 +79,17 @@ import Logo from "../common/Logo.astro";
   <!-- Bottom Navigation -->
   <div class="flex flex-col gap-2 pt-6 border-t border-zinc-100">
     <nav class="flex flex-col gap-1">
-      <a
-        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-orange-500 text-white font-medium text-sm shadow-sm"
-        href="/profile"
-      >
+      <a class={getLinkClass("/profile")} href="/profile">
         <span class="material-symbols-outlined text-[20px]"
           >manage_accounts</span
         >
         <span>Perfil y Seguridad</span>
       </a>
-      <a
-        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors text-sm font-medium"
-        href="/settings"
-      >
+      <a class={getLinkClass("/vincular-whatsapp")} href="/vincular-whatsapp">
         <span class="material-symbols-outlined text-[20px]">settings</span>
         <span>Configuración</span>
       </a>
-      <a
-        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors text-sm font-medium"
-        href="/support"
-      >
+      <a class={getLinkClass("/support")} href="/support">
         <span class="material-symbols-outlined text-[20px]">help_outline</span>
         <span>Soporte</span>
       </a>
@@ -109,7 +100,6 @@ import Logo from "../common/Logo.astro";
       class="flex items-center gap-3 p-2.5 mt-2 rounded-xl bg-zinc-50 hover:bg-zinc-100 border border-zinc-100 transition-colors group cursor-pointer"
       href="/profile"
     >
-      <!-- Avatar ID -->
       <div
         id="sidebar-avatar-container"
         class="w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center shrink-0 font-bold text-xs overflow-hidden"
@@ -122,7 +112,6 @@ import Logo from "../common/Logo.astro";
         />
       </div>
       <div class="flex flex-col min-w-0 flex-1">
-        <!-- User Name & Email IDs -->
         <span
           id="sidebar-user-name"
           class="text-xs font-semibold text-zinc-900 truncate group-hover:text-orange-600 transition-colors"
@@ -141,6 +130,17 @@ import Logo from "../common/Logo.astro";
 </aside>
 
 <script>
+  // Evento interactivo al hacer clic en "Crear Nuevo Bot"
+  document.getElementById("btn-create-bot")?.addEventListener("click", () => {
+    if ((window as any).showToast) {
+      (window as any).showToast(
+        "Iniciando asistente de creación de Bot...",
+        "info",
+      );
+    }
+  });
+
+  // Lógica de perfil guardado
   const updateSidebarUI = (data: any) => {
     const businessNameEl = document.getElementById("sidebar-business-name");
     const userNameEl = document.getElementById("sidebar-user-name");
@@ -154,7 +154,6 @@ import Logo from "../common/Logo.astro";
       businessNameEl.textContent = data.businessName;
     if (data.adminName && userNameEl) {
       userNameEl.textContent = data.adminName;
-      // Generar iniciales automáticas (ej. Alex Ramírez -> AR)
       const initials = data.adminName
         .split(" ")
         .map((n: string) => n[0])
@@ -177,7 +176,6 @@ import Logo from "../common/Logo.astro";
     }
   };
 
-  // Cargar desde localStorage al montar
   const savedData = localStorage.getItem("user_profile_data");
   if (savedData) {
     try {
@@ -185,7 +183,6 @@ import Logo from "../common/Logo.astro";
     } catch (e) {}
   }
 
-  // Escuchar evento de actualización en tiempo real
   window.addEventListener("profile-updated", (e: any) => {
     updateSidebarUI(e.detail);
   });
