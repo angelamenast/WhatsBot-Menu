@@ -1,7 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { SupabaseAuthGuard } from './guards/supabase-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -21,4 +22,12 @@ export class AuthController {
   forgotPassword(@Body('email') email: string) {
     return this.authService.requestPasswordReset(email);
   }
+
+  @UseGuards(SupabaseAuthGuard)
+  @Get('me')
+  getMe(@Req()req: Request) {
+    return { user: (req as Request & { user: unknown }).user };
+  }
+  
+  
 }
