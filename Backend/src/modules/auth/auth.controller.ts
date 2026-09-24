@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -28,6 +28,19 @@ export class AuthController {
   getMe(@Req()req: Request) {
     return { user: (req as Request & { user: unknown }).user };
   }
+
+  @UseGuards(SupabaseAuthGuard)
+  @Post('logout')
+
+  logout(@Headers('authorization') authHeader: string) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Token no proporcionado');
+    }
+    const token = authHeader.split(' ')[1];
+    return this.authService.logout(token);
+  }
+
+
   
   
 }
