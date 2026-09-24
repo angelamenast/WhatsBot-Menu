@@ -12,7 +12,7 @@ import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }), 
+    ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     BusinessModule,
     WhatsappModule,
@@ -20,7 +20,8 @@ import { HealthController } from './health/health.controller';
     PaymentsModule,
     SupabaseModule,
   ],
-  controllers: [AppController, HealthController],
+  controllers: [AppController, HealthController],     
   providers: [AppService],
+
 })
 export class AppModule {}
