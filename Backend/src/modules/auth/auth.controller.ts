@@ -3,20 +3,23 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { SupabaseAuthGuard } from './guards/supabase-auth.guard';
+import { Throttle } from '@nestjs/throttler/dist/throttler.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
-  }
+ @Post('login')
+@Throttle({ default: { limit: 5, ttl: 60000 } }) 
+login(@Body() dto: LoginDto) {
+  return this.authService.login(dto);
+}
 
-  @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
-  }
+@Post('register')
+@Throttle({ default: { limit: 3, ttl: 60000 } })
+register(@Body() dto: RegisterDto) {
+  return this.authService.register(dto);
+}
 
   @Post('forgot-password')
   forgotPassword(@Body('email') email: string) {

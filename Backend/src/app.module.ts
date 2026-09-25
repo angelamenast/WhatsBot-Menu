@@ -9,10 +9,18 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
 import { PaymentsModule } from './modules/payments/payments.module';
 import { SupabaseModule } from './shared/supabase/supabase.module';
 import { HealthController } from './health/health.controller';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,  // ventana de 60 segundos
+        limit: 10,   // 10 peticiones por ventana, por defecto global
+      },
+    ]),
     AuthModule,
     BusinessModule,
     WhatsappModule,
@@ -21,7 +29,9 @@ import { HealthController } from './health/health.controller';
     SupabaseModule,
   ],
   controllers: [AppController, HealthController],     
-  providers: [AppService],
+  providers: [AppService, 
+     { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 
 })
 export class AppModule {}
