@@ -14,10 +14,6 @@ export class SupabaseService {
     throw new Error('Faltan las variables de entorno de Supabase');
   }
 
-  // 🔍 TEMPORAL: decodifica el JWT para ver qué rol trae
-  const payload = JSON.parse(Buffer.from(key.split('.')[1], 'base64').toString());
-  console.log('🔑 Supabase key role:', payload.role);
-
   this.client = createClient(url, key);
 }
 
