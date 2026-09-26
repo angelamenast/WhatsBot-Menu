@@ -30,7 +30,6 @@ export class BusinessService {
         usuario_id: usuarioId,
         nombre_negocio: dto.nombre_negocio,
         descripcion: dto.descripcion ?? null,
-        numero_whatsapp: dto.numero_whatsapp,
         estado: 'activo',
       })
       .select()

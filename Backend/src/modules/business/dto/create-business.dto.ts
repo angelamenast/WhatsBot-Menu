@@ -8,8 +8,4 @@ export class CreateBusinessDto {
   @IsOptional()
   @IsString()
   descripcion?: string;
-
-  @IsNotEmpty()
-  @IsString()
-  numero_whatsapp: string;
 }

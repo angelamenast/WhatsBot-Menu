@@ -4,8 +4,9 @@ import { BusinessService } from './business.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [AuthModule], 
+  imports: [AuthModule],
   controllers: [BusinessController],
   providers: [BusinessService],
+  exports: [BusinessService],
 })
 export class BusinessModule {}
