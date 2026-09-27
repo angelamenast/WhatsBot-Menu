@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 export interface AgentConfigProps {
   id: string;
   businessId: string;
@@ -29,6 +31,38 @@ export class AgentConfig {
       createdAt: now,
       updatedAt: now,
     });
+  }
+
+  /** Crea una configuración nueva y vacía para un negocio que aún no configuró su agente. */
+  static initialize(businessId: string): AgentConfig {
+    const now = new Date();
+    return new AgentConfig({
+      id: randomUUID(),
+      businessId,
+      personality: null,
+      tone: null,
+      welcomeMessage: null,
+      businessHours: null,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  /** Aplica cambios parciales (undefined = "no tocar este campo", null = "borrarlo"). */
+  updateDetails(params: {
+    personality?: string | null;
+    tone?: string | null;
+    welcomeMessage?: string | null;
+    businessHours?: Record<string, unknown> | null;
+  }): void {
+    if (params.personality !== undefined)
+      this.props.personality = params.personality;
+    if (params.tone !== undefined) this.props.tone = params.tone;
+    if (params.welcomeMessage !== undefined)
+      this.props.welcomeMessage = params.welcomeMessage;
+    if (params.businessHours !== undefined)
+      this.props.businessHours = params.businessHours;
+    this.props.updatedAt = new Date();
   }
 
   get id(): string {

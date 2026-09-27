@@ -46,4 +46,27 @@ export class SupabaseAgentConfigRepository implements AgentConfigRepository {
       updatedAt: new Date(data.updated_at),
     });
   }
+
+  async save(config: AgentConfig): Promise<void> {
+    const client = this.supabaseService.getClient();
+
+    // No se incluye created_at: en un insert nuevo lo llena el DEFAULT now() de la
+    // tabla; en una actualización (conflicto por negocio_id) no debe tocarse.
+    const { error } = await client.from('configuracion_agente').upsert(
+      {
+        id: config.id,
+        negocio_id: config.businessId,
+        personalidad: config.personality,
+        tono: config.tone,
+        mensaje_bienvenida: config.welcomeMessage,
+        horario_atencion: config.businessHours,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'negocio_id' },
+    );
+
+    if (error) {
+      throw error;
+    }
+  }
 }
