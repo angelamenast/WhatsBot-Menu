@@ -4,6 +4,7 @@ import { SubscriptionsController } from './infrastructure/presentation/controlle
 import { ObtenerEstadoSuscripcionUseCase } from './application/use-cases/obtener-estado-suscripcion.use-case';
 import { SUSCRIPCION_CONSULTA_REPOSITORY } from './domain/repositories/suscripcion-consulta.repository';
 import { SupabaseSuscripcionConsultaRepository } from './infrastructure/persistence/supabase-suscripcion-consulta.repository';
+import { SubscriptionPlanStatusAdapter } from './infrastructure/adapters/subscription-plan-status.adapter';
 
 @Module({
   imports: [AuthModule],
@@ -12,7 +13,9 @@ import { SupabaseSuscripcionConsultaRepository } from './infrastructure/persiste
     ObtenerEstadoSuscripcionUseCase,
     SupabaseSuscripcionConsultaRepository,
     { provide: SUSCRIPCION_CONSULTA_REPOSITORY, useExisting: SupabaseSuscripcionConsultaRepository },
+    SubscriptionPlanStatusAdapter,
   ],
-  exports: [ObtenerEstadoSuscripcionUseCase],
+  // Los módulos que usen el adaptador de PlanStatusPort importan este módulo.
+  exports: [ObtenerEstadoSuscripcionUseCase, SubscriptionPlanStatusAdapter],
 })
 export class SubscriptionsModule {}
