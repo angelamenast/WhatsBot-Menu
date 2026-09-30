@@ -19,4 +19,15 @@ export class SupabasePlanRepository implements PlanRepository {
 
     return new Plan(data.id, data.nombre, data.precio, data.limite_mensajes, data.limite_tokens);
   }
+
+  async obtenerTodos(): Promise<Plan[]> {
+    const { data, error } = await this.supabaseService.getClient()
+      .from('planes')
+      .select('*')
+      .order('precio', { ascending: true });
+
+    if (error) throw new Error(error.message);
+
+    return (data || []).map(p => new Plan(p.id, p.nombre, p.precio, p.limite_mensajes, p.limite_tokens));
+  }
 }

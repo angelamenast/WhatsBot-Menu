@@ -1,6 +1,7 @@
-import { Body, Controller, Post, Req, UseGuards, HttpCode, Headers, BadRequestException, NotFoundException, UnauthorizedException, Inject } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards, HttpCode, Headers, BadRequestException, NotFoundException, UnauthorizedException, Inject } from '@nestjs/common';
 import { GenerarLinkPagoUseCase } from '../../../domain/repositories/application/use-cases/generar-link-pago.use-case';
 import { ProcesarWebhookPagoUseCase } from '../../../domain/repositories/application/use-cases/procesar-webhook-pago.use-case';
+import { GetPlanesUseCase } from '../../../domain/repositories/application/use-cases/get-planes.use-case';
 import { GenerarLinkPagoCommand } from '../../../domain/repositories/application/dto/generar-link-pago.command';
 import { ProcesarWebhookPagoCommand } from '../../../domain/repositories/application/dto/procesar-webhook-pago.command';
 import { GenerarLinkPagoRequestDto } from '../dto/generar-link-pago-request.dto';
@@ -17,9 +18,15 @@ export class PaymentsController {
   constructor(
     private readonly generarLinkPagoUseCase: GenerarLinkPagoUseCase,
     private readonly procesarWebhookPagoUseCase: ProcesarWebhookPagoUseCase,
+    private readonly getPlanesUseCase: GetPlanesUseCase,
     @Inject(PAYMENT_GATEWAY) private readonly paymentGateway: PaymentGatewayPort,
     @Inject(NEGOCIO_REPOSITORY) private readonly negocioRepository: NegocioRepository,
   ) {}
+
+  @Get('plans')
+  async getPlans() {
+    return this.getPlanesUseCase.execute();
+  }
 
   @UseGuards(SupabaseAuthGuard)
   @Post('generate-link')

@@ -3,6 +3,7 @@ import { AuthModule } from '../auth/auth.module';
 import { PaymentsController } from './infrastructure/presentation/controllers/payments.controller';
 import { GenerarLinkPagoUseCase } from './domain/repositories/application/use-cases/generar-link-pago.use-case';
 import { ProcesarWebhookPagoUseCase } from './domain/repositories/application/use-cases/procesar-webhook-pago.use-case';
+import { GetPlanesUseCase } from './domain/repositories/application/use-cases/get-planes.use-case';
 import { PLAN_REPOSITORY } from './domain/repositories/plan.repository';
 import { SUSCRIPCION_REPOSITORY } from './domain/repositories/suscripcion.repository';
 import { TRANSACCION_PAGO_REPOSITORY } from './domain/repositories/transaccion-pago.repository';
@@ -19,6 +20,7 @@ import { BusinessModule } from '../business/business.module';
 	providers: [
 		GenerarLinkPagoUseCase,
 		ProcesarWebhookPagoUseCase,
+		GetPlanesUseCase,
 		SupabasePlanRepository,
 		SupabaseSuscripcionRepository,
 		SupabaseTransaccionPagoRepository,
