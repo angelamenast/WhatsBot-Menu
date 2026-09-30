@@ -157,6 +157,29 @@ Estado del pago de una renovación iniciada por el mismo negocio.
 { "statusCode": 404, "error": "Not Found", "codigo": "RENOVACION_NO_ENCONTRADA", "message": "No encontramos esa renovación" }
 ```
 
+---
+
+## Alertas de vencimiento — HU-8.4
+
+**No hay endpoints nuevos.** Un job interno corre **todos los días a las 8:00 a. m. (hora de Colombia)** y:
+
+| Caso | Qué hace el backend | Qué ve el usuario |
+|---|---|---|
+| Faltan 3 días o menos (criterio 1) | Envía un correo: "Tu plan vence en 3 días. Renuévalo aquí." | En el dashboard, `alerta` de `GET /api/subscriptions/status` con `tipo: "POR_VENCER"` |
+| Se renovó antes de la alerta (criterio 2) | No envía nada: la nueva `fechaFin` ya no está a 3 días | `alerta: null` |
+| Venció sin renovar (criterio 3) | Marca la suscripción como vencida y envía un correo de restricción | `estado: "VENCIDO"`, `puedeEditar: false`, `alerta.tipo: "VENCIDO"` |
+
+Para el frontend no cambia nada: el banner y la restricción siguen saliendo de `GET /api/subscriptions/status`, que ya refleja el vencimiento aunque el job todavía no haya corrido.
+
+> Mientras el equipo no elija proveedor de correo, los correos **no se envían**: se registran en el log del backend (`EMAIL_PROVIDER=log`).
+
+### Variables de entorno (backend)
+| Variable | Valor por defecto | Uso |
+|---|---|---|
+| `EMAIL_PROVIDER` | `log` | Proveedor de correo. Hoy solo existe `log`. |
+| `VENCIMIENTOS_JOB_ENABLED` | activado | Con `false` el job no hace nada (útil en desarrollo local). |
+| `WOMPI_REDIRECT_URL` | placeholder de HU-8.1 | Página a la que Wompi redirige tras pagar una renovación. |
+
 ## Guía de integración (frontend)
 
 1. Al cargar el dashboard, llamar a `GET /api/subscriptions/status` y guardar la respuesta en un estado global. No repetir la llamada en cada navegación, por el límite de 10 peticiones por minuto.
