@@ -1,13 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-// Import de SOLO TIPO desde whatsapp: no arrastra WhatsappModule en tiempo de
-// ejecución, solo el contrato que este caso de uso debe cumplir.
-import type {
-  AgentDispatchCommand,
-  AgentDispatchPort,
-  AgentDispatchResult,
-} from '../../../whatsapp/application/ports/out/agent-dispatch.port';
-
 import type { AgentConfigRepository } from '../../domain/repositories/agent-config.repository';
 import { AGENT_CONFIG_REPOSITORY } from '../../domain/repositories/agent-config.repository';
 import type { CatalogRepository } from '../../domain/repositories/catalog.repository';
@@ -20,11 +12,17 @@ import type { TokenUsagePort } from '../ports/out/token-usage.port';
 import { TOKEN_USAGE_PORT } from '../ports/out/token-usage.port';
 
 import { AgentConfig } from '../../domain/entities/agent-config.entity';
+import { IncomingMessageNotPersistedError } from '../../domain/errors/agent.errors';
+import type { ProcessCustomerMessageCommand } from '../dto/process-customer-message.command';
+import type { ProcessCustomerMessageResult } from '../dto/process-customer-message.result';
 
 const HISTORY_MESSAGES_LIMIT = 10;
 
+const FALLBACK_RESPONSE_TEXT =
+  'Estamos teniendo un inconveniente para responderte en este momento. Intenta de nuevo en unos minutos.';
+
 @Injectable()
-export class ProcessCustomerMessageUseCase implements AgentDispatchPort {
+export class ProcessCustomerMessageUseCase {
   private readonly logger = new Logger(ProcessCustomerMessageUseCase.name);
 
   constructor(
@@ -38,18 +36,32 @@ export class ProcessCustomerMessageUseCase implements AgentDispatchPort {
     @Inject(TOKEN_USAGE_PORT) private readonly tokenUsagePort: TokenUsagePort,
   ) {}
 
-  async dispatch(command: AgentDispatchCommand): Promise<AgentDispatchResult> {
+  /**
+   * PRECONDICIÓN (no negociable): el mensaje entrante actual del cliente debe estar YA
+   * PERSISTIDO en `mensajes` antes de invocar este caso de uso.
+   *
+   * Este caso de uso lo asume en dos lugares y no hay otra señal que lo garantice:
+   *  - `isFirstMessage` (RF-10, bienvenida) se calcula como `count === 1`: el "1" es el
+   *    mensaje actual ya persistido.
+   *  - `findRecentByConversationId` descarta la fila más reciente con `slice(1)` porque
+   *    esa fila ES el mensaje actual (se pasa aparte como `customerMessage`).
+   * Si se invoca antes de persistir, la bienvenida sale mal y el historial se corrompe.
+   * Por eso, `count === 0` se trata como violación de la precondición y lanza.
+   */
+  async execute(command: ProcessCustomerMessageCommand): Promise<ProcessCustomerMessageResult> {
     const config =
       (await this.agentConfigRepository.findByBusinessId(command.businessId)) ??
       AgentConfig.default(command.businessId);
 
-    // Al llegar aquí, whatsapp ya persistió el mensaje entrante (ver handle-incoming-
-    // message.use-case.ts), así que el conteo ya incluye el mensaje actual.
-    const totalMessages =
-      await this.conversationHistoryRepository.countByConversationId(
-        command.conversationId,
-      );
-    const isFirstMessage = totalMessages <= 1;
+    const totalMessages = await this.conversationHistoryRepository.countByConversationId(
+      command.conversationId,
+    );
+
+    if (totalMessages === 0) {
+      throw new IncomingMessageNotPersistedError(command.conversationId);
+    }
+
+    const isFirstMessage = totalMessages === 1;
 
     const [catalog, history] = await Promise.all([
       this.catalogRepository.findAvailableByBusinessId(command.businessId),
@@ -60,6 +72,7 @@ export class ProcessCustomerMessageUseCase implements AgentDispatchPort {
     ]);
 
     let responseText: string;
+    let usage: { tokensInput: number; tokensOutput: number } | null = null;
 
     try {
       const generated = await this.llmPort.generateReply({
@@ -71,23 +84,34 @@ export class ProcessCustomerMessageUseCase implements AgentDispatchPort {
       });
 
       responseText = generated.text;
-
-      await this.tokenUsagePort.record({
-        businessId: command.businessId,
-        conversationId: command.conversationId,
-        tokensInput: generated.tokensInput,
-        tokensOutput: generated.tokensOutput,
-      });
+      usage = { tokensInput: generated.tokensInput, tokensOutput: generated.tokensOutput };
     } catch (error) {
       this.logger.error(
         `Fallo al generar respuesta del agente para el negocio ${command.businessId}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
-      // No propagamos: whatsapp siempre debe poder enviar algo al cliente, aunque
-      // sea un mensaje de contingencia, en vez de dejar la conversación sin respuesta.
-      responseText =
-        'Estamos teniendo un inconveniente para responderte en este momento. Intenta de nuevo en unos minutos.';
+      // No propagamos: el cliente siempre debe recibir algo, aunque sea un mensaje de contingencia.
+      responseText = FALLBACK_RESPONSE_TEXT;
+    }
+
+    // Bloque independiente del anterior: registrar consumo NUNCA debe descartar una
+    // respuesta del LLM ya generada. Si falla, se loguea y se sigue.
+    if (usage) {
+      try {
+        await this.tokenUsagePort.record({
+          businessId: command.businessId,
+          conversationId: command.conversationId,
+          tokensInput: usage.tokensInput,
+          tokensOutput: usage.tokensOutput,
+        });
+      } catch (error) {
+        this.logger.error(
+          `Fallo al registrar el consumo de tokens del negocio ${command.businessId} (la respuesta se entrega igual): ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
     }
 
     if (isFirstMessage && config.welcomeMessage) {

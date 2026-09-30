@@ -7,6 +7,7 @@ import { AGENT_CONFIG_REPOSITORY } from './domain/repositories/agent-config.repo
 import { SupabaseAgentConfigRepository } from './infrastructure/persistence/supabase-agent-config.repository';
 import { CATALOG_REPOSITORY } from './domain/repositories/catalog.repository';
 import { SupabaseCatalogRepository } from './infrastructure/persistence/supabase-catalog.repository';
+import { FakeCatalogRepository } from './infrastructure/persistence/fake-catalog.repository';
 import { CONVERSATION_HISTORY_REPOSITORY } from './domain/repositories/conversation-history.repository';
 import { SupabaseConversationHistoryRepository } from './infrastructure/persistence/supabase-conversation-history.repository';
 
@@ -31,7 +32,28 @@ import { AgentConfigController } from './presentation/controllers/agent-config.c
   controllers: [AgentConfigController],
   providers: [
     { provide: AGENT_CONFIG_REPOSITORY, useClass: SupabaseAgentConfigRepository },
-    { provide: CATALOG_REPOSITORY, useClass: SupabaseCatalogRepository },
+    // El catálogo es dominio de Business: se mantiene fake hasta que ese módulo exista.
+    FakeCatalogRepository,
+    SupabaseCatalogRepository,
+    {
+      provide: CATALOG_REPOSITORY,
+      inject: [ConfigService, FakeCatalogRepository, SupabaseCatalogRepository],
+      useFactory: (
+        configService: ConfigService,
+        fakeCatalogRepository: FakeCatalogRepository,
+        supabaseCatalogRepository: SupabaseCatalogRepository,
+      ) => {
+        const provider = configService.get<string>('CATALOG_PROVIDER') ?? 'fake';
+        switch (provider) {
+          case 'fake':
+            return fakeCatalogRepository;
+          case 'supabase':
+            return supabaseCatalogRepository;
+          default:
+            throw new Error(`CATALOG_PROVIDER inválido: "${provider}". Usa "fake" o "supabase".`);
+        }
+      },
+    },
     { provide: CONVERSATION_HISTORY_REPOSITORY, useClass: SupabaseConversationHistoryRepository },
 
     FakeLlmProvider,
@@ -79,8 +101,8 @@ import { AgentConfigController } from './presentation/controllers/agent-config.c
     GetAgentConfigUseCase,
     UpdateAgentConfigUseCase,
   ],
-  // ProcessCustomerMessageUseCase se exporta para que WhatsappModule lo use como
-  // implementación real de AGENT_DISPATCH_PORT en su propio wiring.
+  // API pública del módulo: WhatsappModule la consume desde su propio adapter
+  // (whatsapp/infrastructure/adapters/agent-dispatch.adapter.ts). agent no conoce a whatsapp.
   exports: [ProcessCustomerMessageUseCase],
 })
 export class AgentModule {}
