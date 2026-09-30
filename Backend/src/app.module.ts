@@ -11,6 +11,7 @@ import { SupabaseModule } from './shared/supabase/supabase.module';
 import { HealthController } from './health/health.controller';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { AgentModule } from './modules/agent/agent.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { APP_GUARD } from '@nestjs/core';
     SubscriptionsModule,
     PaymentsModule,
     SupabaseModule,
+    AgentModule,
   ],
   controllers: [AppController, HealthController],     
   providers: [AppService, 
