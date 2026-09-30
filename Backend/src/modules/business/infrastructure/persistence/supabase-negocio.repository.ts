@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../../../../shared/supabase/supabase.service';
-import type { NegocioRepository, CrearNegocioData } from '../../domain/repositories/negocio.repository';
+import type { NegocioRepository, CrearNegocioData, ActualizarNegocioData } from '../../domain/repositories/negocio.repository';
 import { Negocio } from '../../domain/entities/negocio.entity';
 import { NegocioMapper } from './negocio.mapper';
 
@@ -55,5 +55,28 @@ export class SupabaseNegocioRepository implements NegocioRepository {
     }
 
     return data ? NegocioMapper.toDomain(data) : null;
+  }
+
+  async actualizar(usuarioId: string, data: ActualizarNegocioData): Promise<Negocio> {
+    const client = this.supabaseService.getClient();
+
+    const updateData: any = {};
+    if (data.nombreNegocio !== undefined) updateData.nombre_negocio = data.nombreNegocio;
+    if (data.numeroWhatsapp !== undefined) updateData.numero_whatsapp = data.numeroWhatsapp;
+    if (data.descripcion !== undefined) updateData.descripcion = data.descripcion;
+
+    const { data: row, error } = await client
+      .from('negocios')
+      .update(updateData)
+      .eq('usuario_id', usuarioId)
+      .is('deleted_at', null)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return NegocioMapper.toDomain(row);
   }
 }

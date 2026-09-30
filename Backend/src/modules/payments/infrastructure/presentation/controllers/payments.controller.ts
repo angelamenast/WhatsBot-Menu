@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards, HttpCode, Headers, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards, HttpCode, Headers, BadRequestException, NotFoundException, UnauthorizedException, Inject } from '@nestjs/common';
 import { GenerarLinkPagoUseCase } from '../../../domain/repositories/application/use-cases/generar-link-pago.use-case';
 import { ProcesarWebhookPagoUseCase } from '../../../domain/repositories/application/use-cases/procesar-webhook-pago.use-case';
 import { GenerarLinkPagoCommand } from '../../../domain/repositories/application/dto/generar-link-pago.command';
@@ -7,8 +7,10 @@ import { GenerarLinkPagoRequestDto } from '../dto/generar-link-pago-request.dto'
 import { SupabaseAuthGuard } from '../../../../auth/infrastructure/presentation/guards/supabase-auth.guard';
 import type { PaymentGatewayPort } from '../../../domain/repositories/application/ports/out/payment-gateway.port';
 import { PAYMENT_GATEWAY } from '../../../domain/repositories/application/ports/out/payment-gateway.port';
-import { Inject } from '@nestjs/common';
 import { PlanNoEncontradoError, TransaccionNoEncontradaError } from '../../../domain/errors/payments.errors';
+import type { AuthenticatedRequest } from '../../../../../shared/types/authenticated-request';
+import type { NegocioRepository } from '../../../../business/domain/repositories/negocio.repository';
+import { NEGOCIO_REPOSITORY } from '../../../../business/domain/repositories/negocio.repository';
 
 @Controller('payments')
 export class PaymentsController {
@@ -16,13 +18,22 @@ export class PaymentsController {
     private readonly generarLinkPagoUseCase: GenerarLinkPagoUseCase,
     private readonly procesarWebhookPagoUseCase: ProcesarWebhookPagoUseCase,
     @Inject(PAYMENT_GATEWAY) private readonly paymentGateway: PaymentGatewayPort,
+    @Inject(NEGOCIO_REPOSITORY) private readonly negocioRepository: NegocioRepository,
   ) {}
 
   @UseGuards(SupabaseAuthGuard)
   @Post('generate-link')
-  async generarLink(@Body() dto: GenerarLinkPagoRequestDto) {
+  async generarLink(@Req() req: AuthenticatedRequest, @Body() dto: GenerarLinkPagoRequestDto) {
     try {
-      const command = new GenerarLinkPagoCommand(dto.negocioId, dto.planId);
+      let negocioId = dto.negocioId;
+      if (!negocioId) {
+        const negocio = await this.negocioRepository.buscarPorUsuario(req.user.id);
+        if (!negocio) {
+          throw new NotFoundException('No tienes un negocio registrado para asociar a este plan');
+        }
+        negocioId = negocio.id;
+      }
+      const command = new GenerarLinkPagoCommand(negocioId, dto.planId);
       return await this.generarLinkPagoUseCase.execute(command);
     } catch (error) {
       if (error instanceof PlanNoEncontradoError) {

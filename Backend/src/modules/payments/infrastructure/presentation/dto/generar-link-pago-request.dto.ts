@@ -1,8 +1,9 @@
-import { IsNotEmpty, IsUUID } from 'class-validator';
+import { IsUUID, IsOptional } from 'class-validator';
 
 export class GenerarLinkPagoRequestDto {
   @IsUUID()
-  negocioId: string;
+  @IsOptional()
+  negocioId?: string;
 
   @IsUUID()
   planId: string;

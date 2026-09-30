@@ -48,26 +48,26 @@ export class WompiPaymentGatewayAdapter implements PaymentGatewayPort {
   }
 
   verificarFirmaWebhook(payload: WebhookPagoPayload): boolean {
-    if (!this.eventsSecret) {
-      return false;
-    }
+  if (!this.eventsSecret) return false;
 
+  try {
     const crudo = payload.crudo as any;
     const props: string[] = crudo.signature.properties;
 
     let concatenado = '';
     for (const prop of props) {
-      const keys = prop.split('.');
-      let valor = crudo.data;
-      for (const k of keys) valor = valor[k];
-      concatenado += valor;
+      concatenado += prop.split('.').reduce((obj, k) => obj[k], crudo.data);
     }
+    concatenado += crudo.timestamp + this.eventsSecret;
 
-    concatenado += crudo.timestamp;
-    concatenado += this.eventsSecret;
+    const calculado = crypto.createHash('sha256').update(concatenado).digest('hex');
+    const recibido = (payload.firmaRecibida ?? '').toLowerCase();
 
-    const checksum = crypto.createHash('sha256').update(concatenado).digest('hex').toUpperCase();
-
-    return checksum === payload.firmaRecibida;
+    const a = Buffer.from(calculado);
+    const b = Buffer.from(recibido);
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  } catch {
+    return false;
   }
+}
 }

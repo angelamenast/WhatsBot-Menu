@@ -11,9 +11,10 @@ import { SupabaseSuscripcionRepository } from './infrastructure/persistence/supa
 import { SupabaseTransaccionPagoRepository } from './infrastructure/persistence/supabase-transaccion-pago.repository';
 import { WompiPaymentGatewayAdapter } from './infrastructure/adapters/wompi-payment-gateway.adapter';
 import { PAYMENT_GATEWAY } from './domain/repositories/application/ports/out/payment-gateway.port';
+import { BusinessModule } from '../business/business.module';
 
 @Module({
-	imports: [AuthModule],
+	imports: [AuthModule, BusinessModule],
 	controllers: [PaymentsController],
 	providers: [
 		GenerarLinkPagoUseCase,

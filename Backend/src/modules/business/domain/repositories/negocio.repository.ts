@@ -7,10 +7,17 @@ export interface CrearNegocioData {
   descripcion: string | null;
 }
 
+export interface ActualizarNegocioData {
+  nombreNegocio?: string;
+  numeroWhatsapp?: string;
+  descripcion?: string | null;
+}
+
 export interface NegocioRepository {
   existeNegocioActivoPorUsuario(usuarioId: string): Promise<boolean>;
   crear(data: CrearNegocioData): Promise<Negocio>;
   buscarPorUsuario(usuarioId: string): Promise<Negocio | null>;
+  actualizar(usuarioId: string, data: ActualizarNegocioData): Promise<Negocio>;
 }
 
 export const NEGOCIO_REPOSITORY = Symbol('NEGOCIO_REPOSITORY');

@@ -14,24 +14,35 @@ export class ProcesarWebhookPagoUseCase {
   ) {}
 
   async execute(command: ProcesarWebhookPagoCommand): Promise<void> {
-    const transaccion = await this.transaccionRepository.buscarPorReferencia(command.referenciaWompi);
+  const transaccion = await this.transaccionRepository.buscarPorReferencia(command.referenciaWompi);
 
-    if (!transaccion) {
-      throw new TransaccionNoEncontradaError();
-    }
-
-    const nuevoEstado = command.estadoTransaccion === 'APPROVED' ? 'aprobado' : 'rechazado';
-    await this.transaccionRepository.actualizarEstado(transaccion.id, nuevoEstado);
-
-    if (nuevoEstado === 'aprobado') {
-      const fechaInicio = new Date();
-      const fechaFin = new Date();
-      fechaFin.setMonth(fechaFin.getMonth() + 1);
-
-      await this.suscripcionRepository.actualizarEstado(transaccion.suscripcionId, 'activa', {
-        fechaInicio,
-        fechaFin,
-      });
-    }
+  if (!transaccion) {
+    throw new TransaccionNoEncontradaError();
   }
+
+  // Si ya fue procesada (aprobada o rechazada), no hacemos nada
+  if (transaccion.estado !== 'pendiente') {
+    return;
+  }
+
+  // Solo actuamos con estados finales (ignoramos, por ejemplo, PENDING)
+  const finales = ['APPROVED', 'DECLINED', 'VOIDED', 'ERROR'];
+  if (!finales.includes(command.estadoTransaccion)) {
+    return;
+  }
+
+  const nuevoEstado = command.estadoTransaccion === 'APPROVED' ? 'aprobado' : 'rechazado';
+  await this.transaccionRepository.actualizarEstado(transaccion.id, nuevoEstado);
+
+  if (nuevoEstado === 'aprobado') {
+    const fechaInicio = new Date();
+    const fechaFin = new Date();
+    fechaFin.setMonth(fechaFin.getMonth() + 1);
+
+    await this.suscripcionRepository.actualizarEstado(transaccion.suscripcionId, 'activa', {
+      fechaInicio,
+      fechaFin,
+    });
+  }
+}
 }
