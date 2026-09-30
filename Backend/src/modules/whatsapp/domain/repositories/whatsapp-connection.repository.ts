@@ -6,4 +6,4 @@ export interface WhatsappConnectionRepository {
   save(connection: WhatsappConnection): Promise<void>;
 }
 
-export const WHATSAPP_CONNECTION_REPOSITORY = Symbol('WhatsappConnectionRepository');
+export const WHATSAPP_CONNECTION_REPOSITORY = Symbol('WhatsappConnectionRepository'); 
