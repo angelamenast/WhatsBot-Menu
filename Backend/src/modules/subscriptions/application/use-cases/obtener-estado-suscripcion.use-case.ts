@@ -11,6 +11,8 @@ import {
   puedeUsarAgente,
 } from '../../domain/estado-acceso';
 import type { EstadoAcceso } from '../../domain/estado-acceso';
+import { MENSAJE_ALERTA_VENCIDO, mensajeAlertaPorVencer } from '../../domain/alertas-vencimiento';
+import type { TipoAlerta } from '../../domain/alertas-vencimiento';
 import { ObtenerEstadoSuscripcionCommand } from '../dto/obtener-estado-suscripcion.command';
 
 // Datos del plan que se exponen al frontend (contrato de GET /api/subscriptions/status).
@@ -21,7 +23,7 @@ export interface PlanResumen {
 }
 
 export interface AlertaSuscripcion {
-  tipo: 'POR_VENCER' | 'VENCIDO';
+  tipo: TipoAlerta;
   mensaje: string;
 }
 
@@ -96,16 +98,12 @@ export class ObtenerEstadoSuscripcionUseCase {
   }
 
   private construirAlerta(estado: EstadoAcceso, diasRestantes: number | null): AlertaSuscripcion | null {
-    if (estado === 'POR_VENCER') {
-      const dias = diasRestantes === 1 ? '1 día' : `${diasRestantes} días`;
-      return { tipo: 'POR_VENCER', mensaje: `Tu plan vence en ${dias}. Renuévalo aquí.` };
+    if (estado === 'POR_VENCER' && diasRestantes !== null) {
+      return { tipo: 'POR_VENCER', mensaje: mensajeAlertaPorVencer(diasRestantes) };
     }
 
     if (estado === 'VENCIDO') {
-      return {
-        tipo: 'VENCIDO',
-        mensaje: 'Tu plan venció y el servicio está restringido. Renuévalo para reactivarlo.',
-      };
+      return { tipo: 'VENCIDO', mensaje: MENSAJE_ALERTA_VENCIDO };
     }
 
     return null;
