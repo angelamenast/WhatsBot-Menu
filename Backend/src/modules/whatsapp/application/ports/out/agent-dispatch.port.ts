@@ -5,8 +5,12 @@ export interface AgentDispatchCommand {
   message: string;
 }
 
+export interface AgentDispatchResult {
+  responseText: string;
+}
+
 export interface AgentDispatchPort {
-  dispatch(command: AgentDispatchCommand): Promise<void>;
+  dispatch(command: AgentDispatchCommand): Promise<AgentDispatchResult>;
 }
 
 export const AGENT_DISPATCH_PORT = Symbol('AgentDispatchPort');

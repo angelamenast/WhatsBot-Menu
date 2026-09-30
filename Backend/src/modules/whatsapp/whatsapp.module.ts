@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { BusinessModule } from '../business/business.module';
+import { AgentModule } from '../agent/agent.module';
 
 import { MESSAGING_PORT } from './application/ports/out/messaging.port';
 import { FakeMessagingProvider } from './infrastructure/adapters/fake-messaging.adapter';
@@ -11,6 +12,7 @@ import { PLAN_STATUS_PORT } from './application/ports/out/plan-status.port';
 import { FakePlanStatusProvider } from './infrastructure/adapters/fake-plan-status.adapter';
 import { AGENT_DISPATCH_PORT } from './application/ports/out/agent-dispatch.port';
 import { FakeAgentDispatchProvider } from './infrastructure/adapters/fake-agent-dispatch.adapter';
+import { AgentDispatchAdapter } from './infrastructure/adapters/agent-dispatch.adapter';
 
 import { WHATSAPP_CONNECTION_REPOSITORY } from './domain/repositories/whatsapp-connection.repository';
 import { SupabaseWhatsappConnectionRepository } from './infrastructure/persistence/supabase-whatsapp-connection.repository';
@@ -31,7 +33,7 @@ import { TwilioStatusCallbackController } from './presentation/controllers/twili
 import { WhatsappOnboardingController } from './presentation/controllers/whatsapp-onboarding.controller';
 
 @Module({
-  imports: [ConfigModule, AuthModule, BusinessModule],
+  imports: [ConfigModule, AuthModule, BusinessModule, AgentModule],
   controllers: [TwilioWebhookController, TwilioStatusCallbackController, WhatsappOnboardingController],
   providers: [
     FakeMessagingProvider,
@@ -89,19 +91,24 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
     },
 
     FakeAgentDispatchProvider,
+    AgentDispatchAdapter,
     {
       provide: AGENT_DISPATCH_PORT,
-      inject: [ConfigService, FakeAgentDispatchProvider],
-      useFactory: (configService: ConfigService, fakeAgentDispatchProvider: FakeAgentDispatchProvider) => {
+      inject: [ConfigService, FakeAgentDispatchProvider, AgentDispatchAdapter],
+      useFactory: (
+        configService: ConfigService,
+        fakeAgentDispatchProvider: FakeAgentDispatchProvider,
+        agentDispatchAdapter: AgentDispatchAdapter,
+      ) => {
         const provider = configService.get<string>('AGENT_DISPATCH_PROVIDER') ?? 'fake';
 
         switch (provider) {
           case 'fake':
             return fakeAgentDispatchProvider;
+          case 'agent':
+            return agentDispatchAdapter;
           default:
-            throw new Error(
-              `AGENT_DISPATCH_PROVIDER inválido: "${provider}". Por ahora solo está implementado "fake".`,
-            );
+            throw new Error(`AGENT_DISPATCH_PROVIDER inválido: "${provider}". Usa "fake" o "agent".`);
         }
       },
     },

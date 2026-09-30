@@ -1,4 +1,6 @@
+import { Logger } from '@nestjs/common';
 import { HandleIncomingMessageUseCase } from './handle-incoming-message.use-case';
+import { SendMessageUseCase } from './send-message.use-case';
 import { WhatsappConnectionRepository } from '../../domain/repositories/whatsapp-connection.repository';
 import { ProcessedMessageRepository } from '../../domain/repositories/processed-message.repository';
 import { ConversationRepository } from '../../domain/repositories/conversation.repository';
@@ -20,6 +22,8 @@ describe('HandleIncomingMessageUseCase', () => {
   let messageRepository: jest.Mocked<MessageRepository>;
   let planStatusPort: jest.Mocked<PlanStatusPort>;
   let agentDispatchPort: jest.Mocked<AgentDispatchPort>;
+  let sendMessageUseCase: { execute: jest.Mock };
+  let errorSpy: jest.SpyInstance;
   let useCase: HandleIncomingMessageUseCase;
 
   const command: HandleIncomingMessageCommand = {
@@ -75,6 +79,10 @@ describe('HandleIncomingMessageUseCase', () => {
     agentDispatchPort = {
       dispatch: jest.fn(),
     };
+    sendMessageUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
+
+    agentDispatchPort.dispatch.mockResolvedValue({ responseText: 'Respuesta del agente' });
+    errorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
     useCase = new HandleIncomingMessageUseCase(
       whatsappConnectionRepository,
@@ -83,7 +91,12 @@ describe('HandleIncomingMessageUseCase', () => {
       messageRepository,
       planStatusPort,
       agentDispatchPort,
+      sendMessageUseCase as unknown as SendMessageUseCase,
     );
+  });
+
+  afterEach(() => {
+    errorSpy.mockRestore();
   });
 
   it('procesa un mensaje nuevo: crea conversación, persiste el mensaje y delega al agente si el plan está activo', async () => {
@@ -121,6 +134,10 @@ describe('HandleIncomingMessageUseCase', () => {
       conversationId: savedConversation.id,
       customerNumber: command.fromCustomerNumber,
       message: command.body,
+    });
+    expect(sendMessageUseCase.execute).toHaveBeenCalledWith({
+      conversationId: savedConversation.id,
+      body: 'Respuesta del agente',
     });
   });
 
@@ -177,5 +194,34 @@ describe('HandleIncomingMessageUseCase', () => {
     expect(messageRepository.save).toHaveBeenCalledTimes(1);
     expect(planStatusPort.isActive).toHaveBeenCalledWith('business-1');
     expect(agentDispatchPort.dispatch).not.toHaveBeenCalled();
+    expect(sendMessageUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('dispatch exitoso + envío falla: loguea, no propaga y el mensaje queda persistido', async () => {
+    processedMessageRepository.existsByProviderMessageId.mockResolvedValue(false);
+    whatsappConnectionRepository.findByPhoneNumber.mockResolvedValue(aConnection());
+    conversationRepository.findActiveByBusinessAndCustomer.mockResolvedValue(anActiveConversation());
+    planStatusPort.isActive.mockResolvedValue(true);
+    sendMessageUseCase.execute.mockRejectedValue(new Error('DB caída'));
+
+    await expect(useCase.execute(command)).resolves.toBeUndefined();
+
+    expect(messageRepository.save).toHaveBeenCalledTimes(1);
+    expect(sendMessageUseCase.execute).toHaveBeenCalledTimes(1);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('enviar la respuesta'));
+  });
+
+  it('dispatch falla: loguea, no propaga y no se llama a SendMessageUseCase', async () => {
+    processedMessageRepository.existsByProviderMessageId.mockResolvedValue(false);
+    whatsappConnectionRepository.findByPhoneNumber.mockResolvedValue(aConnection());
+    conversationRepository.findActiveByBusinessAndCustomer.mockResolvedValue(anActiveConversation());
+    planStatusPort.isActive.mockResolvedValue(true);
+    agentDispatchPort.dispatch.mockRejectedValue(new Error('agente caído'));
+
+    await expect(useCase.execute(command)).resolves.toBeUndefined();
+
+    expect(messageRepository.save).toHaveBeenCalledTimes(1);
+    expect(sendMessageUseCase.execute).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('despachar al agente'));
   });
 });
