@@ -50,7 +50,7 @@ export class GenerarLinkPagoUseCase {
       referenciaWompi: referencia,
       monto: plan.precio,
     });
-
+//coment para ricardo
     return { paymentUrl: link.url, suscripcionId: suscripcion.id };
   }
 }
