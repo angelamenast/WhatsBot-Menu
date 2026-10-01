@@ -2,26 +2,36 @@ import { jest } from '@jest/globals';
 import { SubscriptionPlanStatusAdapter } from './subscription-plan-status.adapter';
 import { ObtenerEstadoSuscripcionUseCase } from '../../application/use-cases/obtener-estado-suscripcion.use-case';
 import { SuscripcionConsultaRepository } from '../../domain/repositories/suscripcion-consulta.repository';
-import { SuscripcionVigente } from '../../domain/entities/suscripcion-vigente.entity';
-import type { EstadoSuscripcion } from '../../domain/entities/suscripcion-vigente.entity';
+import type { SuscripcionVigente } from '../../domain/entities/suscripcion-vigente.entity';
+import { Suscripcion } from '../../../payments/domain/entities/suscripcion.entity';
+import type { EstadoSuscripcion } from '../../../payments/domain/entities/suscripcion.entity';
+import type { NegocioRepository } from '../../../business/domain/repositories/negocio.repository';
 
 const DIA = 24 * 60 * 60 * 1000;
 
-const suscripcion = (estado: EstadoSuscripcion, diasParaVencer: number) =>
-  new SuscripcionVigente('sus-1', 'neg-1', estado, new Date(Date.now() + diasParaVencer * DIA), null);
+const suscripcion = (estado: EstadoSuscripcion, diasParaVencer: number): SuscripcionVigente => ({
+  suscripcion: new Suscripcion('sus-1', 'neg-1', 'plan-1', estado, null, new Date(Date.now() + diasParaVencer * DIA)),
+  plan: null,
+});
 
 // HU-8.5 criterio 1: el webhook de WhatsApp registra el mensaje y consulta isActive();
 // con false no despacha al Agente IA.
 describe('SubscriptionPlanStatusAdapter', () => {
   let adapter: SubscriptionPlanStatusAdapter;
   let repository: jest.Mocked<SuscripcionConsultaRepository>;
+  let negocioRepository: jest.Mocked<NegocioRepository>;
 
   beforeEach(() => {
     repository = {
-      buscarNegocioIdPorUsuario: jest.fn(),
       buscarVigentePorNegocio: jest.fn(),
     };
-    adapter = new SubscriptionPlanStatusAdapter(new ObtenerEstadoSuscripcionUseCase(repository));
+    negocioRepository = {
+      existeNegocioActivoPorUsuario: jest.fn(),
+      crear: jest.fn(),
+      buscarPorUsuario: jest.fn(),
+      actualizar: jest.fn(),
+    };
+    adapter = new SubscriptionPlanStatusAdapter(new ObtenerEstadoSuscripcionUseCase(repository, negocioRepository));
   });
 
   it('consulta la suscripción del negocio destinatario', async () => {
@@ -30,7 +40,7 @@ describe('SubscriptionPlanStatusAdapter', () => {
     await adapter.isActive('neg-1');
 
     expect(repository.buscarVigentePorNegocio).toHaveBeenCalledWith('neg-1');
-    expect(repository.buscarNegocioIdPorUsuario).not.toHaveBeenCalled();
+    expect(negocioRepository.buscarPorUsuario).not.toHaveBeenCalled();
   });
 
   it('devuelve false con el plan vencido', async () => {

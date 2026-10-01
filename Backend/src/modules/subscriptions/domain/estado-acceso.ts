@@ -1,4 +1,4 @@
-import type { SuscripcionVigente } from './entities/suscripcion-vigente.entity';
+import type { Suscripcion } from '../../payments/domain/entities/suscripcion.entity';
 
 export type EstadoAcceso = 'ACTIVO' | 'POR_VENCER' | 'VENCIDO' | 'SIN_PLAN';
 
@@ -10,7 +10,7 @@ const MS_POR_DIA = 24 * 60 * 60 * 1000;
 // Fuente única del estado de acceso: se calcula desde fecha_fin en cada consulta,
 // así la restricción aplica aunque el job de vencimientos (HU-8.4) aún no haya corrido.
 export function calcularEstadoAcceso(
-  suscripcion: Pick<SuscripcionVigente, 'estado' | 'fechaFin'> | null,
+  suscripcion: Pick<Suscripcion, 'estado' | 'fechaFin'> | null,
   ahora: Date,
 ): EstadoAcceso {
   if (!suscripcion) {

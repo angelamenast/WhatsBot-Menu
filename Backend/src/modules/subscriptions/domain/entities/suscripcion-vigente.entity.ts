@@ -1,19 +1,9 @@
-export type EstadoSuscripcion = 'activa' | 'vencida' | 'cancelada' | 'pendiente';
+import type { Suscripcion } from '../../../payments/domain/entities/suscripcion.entity';
+import type { Plan } from '../../../payments/domain/entities/plan.entity';
 
-export interface PlanResumen {
-  id: string;
-  nombre: string;
-  precio: number;
-}
-
-// Vista de solo lectura de la suscripción que determina el acceso de un negocio.
-// La escritura de suscripciones sigue siendo responsabilidad del módulo payments.
-export class SuscripcionVigente {
-  constructor(
-    public readonly id: string,
-    public readonly negocioId: string,
-    public readonly estado: EstadoSuscripcion,
-    public readonly fechaFin: Date | null,
-    public readonly plan: PlanResumen | null,
-  ) {}
+// Suscripción que determina el acceso de un negocio, junto con su plan. Reutiliza las entidades
+// del módulo payments, dueño de las tablas suscripciones y planes; este módulo solo las lee.
+export interface SuscripcionVigente {
+  suscripcion: Suscripcion;
+  plan: Plan | null;
 }

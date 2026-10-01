@@ -1,7 +1,8 @@
-import { SuscripcionVigente } from '../entities/suscripcion-vigente.entity';
+import type { SuscripcionVigente } from '../entities/suscripcion-vigente.entity';
 
+// Consulta propia de este módulo: el repositorio de suscripciones de payments solo busca por id.
+// El negocio del usuario se resuelve con NEGOCIO_REPOSITORY (módulo business).
 export interface SuscripcionConsultaRepository {
-  buscarNegocioIdPorUsuario(usuarioId: string): Promise<string | null>;
   buscarVigentePorNegocio(negocioId: string): Promise<SuscripcionVigente | null>;
 }
 

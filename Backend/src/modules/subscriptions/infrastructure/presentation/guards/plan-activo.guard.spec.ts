@@ -3,13 +3,19 @@ import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@ne
 import { PlanActivoGuard } from './plan-activo.guard';
 import { ObtenerEstadoSuscripcionUseCase } from '../../../application/use-cases/obtener-estado-suscripcion.use-case';
 import { SuscripcionConsultaRepository } from '../../../domain/repositories/suscripcion-consulta.repository';
-import { SuscripcionVigente } from '../../../domain/entities/suscripcion-vigente.entity';
-import type { EstadoSuscripcion } from '../../../domain/entities/suscripcion-vigente.entity';
+import type { SuscripcionVigente } from '../../../domain/entities/suscripcion-vigente.entity';
+import { Suscripcion } from '../../../../payments/domain/entities/suscripcion.entity';
+import type { EstadoSuscripcion } from '../../../../payments/domain/entities/suscripcion.entity';
+import { Negocio } from '../../../../business/domain/entities/negocio.entity';
+import type { NegocioRepository } from '../../../../business/domain/repositories/negocio.repository';
 
 const DIA = 24 * 60 * 60 * 1000;
+const NEGOCIO = new Negocio('neg-1', 'user-1', 'Mi negocio', '3001234567', 'activo', null);
 
-const suscripcion = (estado: EstadoSuscripcion, diasParaVencer: number) =>
-  new SuscripcionVigente('sus-1', 'neg-1', estado, new Date(Date.now() + diasParaVencer * DIA), null);
+const suscripcion = (estado: EstadoSuscripcion, diasParaVencer: number): SuscripcionVigente => ({
+  suscripcion: new Suscripcion('sus-1', 'neg-1', 'plan-1', estado, null, new Date(Date.now() + diasParaVencer * DIA)),
+  plan: null,
+});
 
 const contexto = (method: string, user: { id: string } | null = { id: 'user-1' }) =>
   ({
@@ -20,14 +26,20 @@ const contexto = (method: string, user: { id: string } | null = { id: 'user-1' }
 describe('PlanActivoGuard', () => {
   let guard: PlanActivoGuard;
   let repository: jest.Mocked<SuscripcionConsultaRepository>;
+  let negocioRepository: jest.Mocked<NegocioRepository>;
 
   beforeEach(() => {
     repository = {
-      buscarNegocioIdPorUsuario: jest.fn(),
       buscarVigentePorNegocio: jest.fn(),
     };
-    repository.buscarNegocioIdPorUsuario.mockResolvedValue('neg-1');
-    guard = new PlanActivoGuard(new ObtenerEstadoSuscripcionUseCase(repository));
+    negocioRepository = {
+      existeNegocioActivoPorUsuario: jest.fn(),
+      crear: jest.fn(),
+      buscarPorUsuario: jest.fn(),
+      actualizar: jest.fn(),
+    };
+    negocioRepository.buscarPorUsuario.mockResolvedValue(NEGOCIO);
+    guard = new PlanActivoGuard(new ObtenerEstadoSuscripcionUseCase(repository, negocioRepository));
   });
 
   it.each(['POST', 'PUT', 'PATCH', 'DELETE'])('bloquea %s con el plan vencido (403 PLAN_VENCIDO)', async (method) => {
@@ -59,7 +71,7 @@ describe('PlanActivoGuard', () => {
     repository.buscarVigentePorNegocio.mockResolvedValue(suscripcion('activa', 10));
 
     await expect(guard.canActivate(contexto('PATCH'))).resolves.toBe(true);
-    expect(repository.buscarNegocioIdPorUsuario).toHaveBeenCalledWith('user-1');
+    expect(negocioRepository.buscarPorUsuario).toHaveBeenCalledWith('user-1');
   });
 
   it('permite escribir con el plan por vencer', async () => {
@@ -75,7 +87,7 @@ describe('PlanActivoGuard', () => {
   });
 
   it('no bloquea a un usuario que aún no tiene negocio', async () => {
-    repository.buscarNegocioIdPorUsuario.mockResolvedValue(null);
+    negocioRepository.buscarPorUsuario.mockResolvedValue(null);
 
     await expect(guard.canActivate(contexto('POST'))).resolves.toBe(true);
   });

@@ -7,7 +7,7 @@ import type {
   EstadoSuscripcionResult,
 } from '../../../application/use-cases/obtener-estado-suscripcion.use-case';
 import { ObtenerEstadoSuscripcionCommand } from '../../../application/dto/obtener-estado-suscripcion.command';
-import type { PlanResumen } from '../../../domain/entities/suscripcion-vigente.entity';
+import type { PlanResumen } from '../../../application/use-cases/obtener-estado-suscripcion.use-case';
 import type { EstadoAcceso } from '../../../domain/estado-acceso';
 
 export interface EstadoSuscripcionResponse {
