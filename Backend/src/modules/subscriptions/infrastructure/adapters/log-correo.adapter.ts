@@ -4,7 +4,7 @@ import type {
   AlertaVencimientoCorreo,
   CorreoPort,
 } from '../../application/ports/out/correo.port';
-import { formatearFechaColombia } from '../../domain/periodo-suscripcion';
+import { formatearFechaColombia } from '../../../../shared/domain/periodo-suscripcion';
 
 // Oculta la parte local del correo para no dejar datos personales completos en los logs.
 export function enmascararCorreo(correo: string): string {

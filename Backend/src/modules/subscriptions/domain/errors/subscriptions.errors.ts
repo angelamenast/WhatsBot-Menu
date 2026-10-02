@@ -1,4 +1,4 @@
-import { formatearFechaColombia } from '../periodo-suscripcion';
+import { formatearFechaColombia } from '../../../../shared/domain/periodo-suscripcion';
 
 export class PlanVencidoError extends Error {
   readonly codigo = 'PLAN_VENCIDO';
