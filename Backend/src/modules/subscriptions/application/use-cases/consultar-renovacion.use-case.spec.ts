@@ -12,10 +12,10 @@ import type { NegocioRepository } from '../../../business/domain/repositories/ne
 
 const FECHA_FIN = new Date('2026-11-20T15:00:00.000Z');
 const NEGOCIO = new Negocio('neg-1', 'user-1', 'Mi negocio', '3001234567', 'activo', null);
-const transaccion = (estado: EstadoTransaccion) => new TransaccionPago('tx-1', 'sus-1', 'ren-sus-1-1', 50000, estado);
+const transaccion = (estado: EstadoTransaccion) => new TransaccionPago('tx-1', 'sus-1', 'test_AbC123', 50000, estado);
 const suscripcion = (negocioId = 'neg-1') =>
   new Suscripcion('sus-1', negocioId, 'plan-1', 'activa', new Date('2026-09-20T15:00:00.000Z'), FECHA_FIN);
-const command = new ConsultarRenovacionCommand('user-1', 'ren-sus-1-1');
+const command = new ConsultarRenovacionCommand('user-1', 'test_AbC123');
 
 describe('ConsultarRenovacionUseCase', () => {
   let useCase: ConsultarRenovacionUseCase;
@@ -42,7 +42,7 @@ describe('ConsultarRenovacionUseCase', () => {
     transacciones.buscarPorReferencia.mockResolvedValue(transaccion('aprobado'));
 
     await expect(useCase.execute(command)).resolves.toEqual({
-      referencia: 'ren-sus-1-1',
+      referencia: 'test_AbC123',
       estado: 'APROBADO',
       fechaFin: FECHA_FIN,
       mensaje: 'Plan renovado correctamente.',
@@ -54,7 +54,7 @@ describe('ConsultarRenovacionUseCase', () => {
     transacciones.buscarPorReferencia.mockResolvedValue(transaccion('rechazado'));
 
     await expect(useCase.execute(command)).resolves.toEqual({
-      referencia: 'ren-sus-1-1',
+      referencia: 'test_AbC123',
       estado: 'RECHAZADO',
       fechaFin: null,
       mensaje: 'No pudimos procesar la renovación. Intenta nuevamente.',

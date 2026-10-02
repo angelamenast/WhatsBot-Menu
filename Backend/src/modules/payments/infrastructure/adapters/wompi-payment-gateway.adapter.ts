@@ -34,7 +34,6 @@ export class WompiPaymentGatewayAdapter implements PaymentGatewayPort {
         currency: 'COP',
         amount_in_cents: params.montoEnCentavos,
         redirect_url: params.redirectUrl,
-        reference: params.referencia,
       }),
     });
 

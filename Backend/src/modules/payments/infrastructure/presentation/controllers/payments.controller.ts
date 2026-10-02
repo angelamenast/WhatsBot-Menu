@@ -1,4 +1,6 @@
 import { Body, Controller, Get, Post, Req, UseGuards, HttpCode, Headers, BadRequestException, NotFoundException, UnauthorizedException, Inject } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { SkipThrottle } from '@nestjs/throttler';
 import { GenerarLinkPagoUseCase } from '../../../domain/repositories/application/use-cases/generar-link-pago.use-case';
 import { ProcesarWebhookPagoUseCase } from '../../../domain/repositories/application/use-cases/procesar-webhook-pago.use-case';
 import { GetPlanesUseCase } from '../../../domain/repositories/application/use-cases/get-planes.use-case';
@@ -13,6 +15,9 @@ import type { AuthenticatedRequest } from '../../../../../shared/types/authentic
 import type { NegocioRepository } from '../../../../business/domain/repositories/negocio.repository';
 import { NEGOCIO_REPOSITORY } from '../../../../business/domain/repositories/negocio.repository';
 
+// Página de retorno mientras el frontend no defina WOMPI_REDIRECT_URL.
+const REDIRECT_URL_POR_DEFECTO = 'https://tu-frontend.com/pago-confirmado';
+
 @Controller('payments')
 export class PaymentsController {
   constructor(
@@ -21,6 +26,7 @@ export class PaymentsController {
     private readonly getPlanesUseCase: GetPlanesUseCase,
     @Inject(PAYMENT_GATEWAY) private readonly paymentGateway: PaymentGatewayPort,
     @Inject(NEGOCIO_REPOSITORY) private readonly negocioRepository: NegocioRepository,
+    private readonly configService: ConfigService,
   ) {}
 
   @Get('plans')
@@ -40,7 +46,11 @@ export class PaymentsController {
         }
         negocioId = negocio.id;
       }
-      const command = new GenerarLinkPagoCommand(negocioId, dto.planId);
+      const command = new GenerarLinkPagoCommand(
+        negocioId,
+        dto.planId,
+        this.configService.get<string>('WOMPI_REDIRECT_URL') ?? REDIRECT_URL_POR_DEFECTO,
+      );
       return await this.generarLinkPagoUseCase.execute(command);
     } catch (error) {
       if (error instanceof PlanNoEncontradoError) {
@@ -52,6 +62,8 @@ export class PaymentsController {
 
   // Sin guard de auth: quien llama esto es Wompi, no un usuario logueado.
   // La seguridad depende de verificar la firma, no de un Bearer token.
+  // Sin límite de peticiones: Wompi puede enviar varios eventos seguidos y reintenta los fallidos.
+  @SkipThrottle()
   @Post('webhook')
   @HttpCode(200)
   async webhook(@Body() payload: any, @Headers('x-signature') signature: string) {
@@ -67,9 +79,12 @@ export class PaymentsController {
     }
 
     try {
+      // Los pagos hechos desde un link de pago llegan con una referencia generada por Wompi;
+      // lo que identifica nuestra transacción es el id del link (payment_link_id).
+      const transaccion = payload.data.transaction;
       const command = new ProcesarWebhookPagoCommand(
-        payload.data.transaction.reference,
-        payload.data.transaction.status,
+        transaccion.payment_link_id ?? transaccion.reference,
+        transaccion.status,
       );
       await this.procesarWebhookPagoUseCase.execute(command);
       return { received: true };

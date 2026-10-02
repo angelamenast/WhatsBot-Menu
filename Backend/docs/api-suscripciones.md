@@ -108,13 +108,13 @@ Inicia la renovación manual del **mismo plan** de la suscripción vigente (camb
 ### 201 Created
 ```json
 {
-  "referencia": "ren-8f0c6a3e-2d1b-4f5a-9c7e-1a2b3c4d5e6f-1759331200000",
+  "referencia": "test_AbC123",
   "monto": 50000,
   "moneda": "COP",
   "paymentUrl": "https://checkout.wompi.co/l/test_AbC123"
 }
 ```
-Redirigir al usuario a `paymentUrl` y guardar la `referencia` para consultar el resultado.
+Redirigir al usuario a `paymentUrl` y guardar la `referencia` para consultar el resultado. La `referencia` es el id del link de pago de Wompi (en producción no lleva el prefijo `test_`); tratarla como un texto opaco.
 
 ### Errores
 **409 — plan aún vigente (más de 3 días)**: preguntar al usuario y reenviar con `"confirmarRenovacionAnticipada": true`.
@@ -142,13 +142,13 @@ Estado del pago de una renovación iniciada por el mismo negocio.
 
 ### 200 OK
 ```json
-{ "referencia": "ren-8f0c…-1759331200000", "estado": "APROBADO",
+{ "referencia": "test_AbC123", "estado": "APROBADO",
   "fechaFin": "2026-11-15T14:30:00.000Z", "mensaje": "Plan renovado correctamente." }
 ```
 | `estado` | `fechaFin` | `mensaje` |
 |---|---|---|
 | `PENDIENTE` | `null` | `Tu pago está siendo procesado. Te notificaremos cuando se confirme.` |
-| `APROBADO` | nueva fecha de vencimiento | `Plan renovado correctamente.` |
+| `APROBADO` | nueva fecha de vencimiento (la anterior + 1 mes si aún no vencía; hoy + 1 mes si ya venció) | `Plan renovado correctamente.` |
 | `RECHAZADO` | `null` | `No pudimos procesar la renovación. Intenta nuevamente.` |
 
 ### Errores
@@ -178,7 +178,7 @@ Para el frontend no cambia nada: el banner y la restricción siguen saliendo de 
 |---|---|---|
 | `EMAIL_PROVIDER` | `log` | Proveedor de correo. Hoy solo existe `log`. |
 | `VENCIMIENTOS_JOB_ENABLED` | activado | Con `false` el job no hace nada (útil en desarrollo local). |
-| `WOMPI_REDIRECT_URL` | placeholder de HU-8.1 | Página a la que Wompi redirige tras pagar una renovación. |
+| `WOMPI_REDIRECT_URL` | placeholder de HU-8.1 | Página del frontend a la que Wompi redirige tras pagar una compra o una renovación. |
 
 ## Guía de integración (frontend)
 

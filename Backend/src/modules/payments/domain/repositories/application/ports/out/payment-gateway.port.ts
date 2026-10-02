@@ -1,5 +1,6 @@
+// Los links de pago de Wompi no admiten una referencia propia: el pago se identifica con
+// el id del link (LinkPago.id), que Wompi envía en el webhook como payment_link_id.
 export interface CrearLinkPagoParams {
-  referencia: string;
   montoEnCentavos: number;
   descripcion: string;
   redirectUrl: string;

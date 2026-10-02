@@ -56,15 +56,16 @@ export class IniciarRenovacionUseCase {
 
     // El monto se recalcula siempre con el precio del plan en la BD.
     const monto = plan.precio;
-    const referencia = `ren-${suscripcion.id}-${ahora.getTime()}`;
 
     const link = await this.paymentGateway.crearLinkPago({
-      referencia,
       montoEnCentavos: Math.round(monto * 100),
       descripcion: `Renovación ${plan.nombre} - WhatsBot Menu`,
       redirectUrl: command.redirectUrl,
     });
 
+    // El id del link es la referencia: Wompi lo envía en el webhook (payment_link_id) y el
+    // frontend lo usa para consultar el estado en GET /renewal/:referencia.
+    const referencia = link.id;
     await this.transaccionPagoRepository.crear({
       suscripcionId: suscripcion.id,
       referenciaWompi: referencia,

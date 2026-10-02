@@ -99,14 +99,13 @@ describe('IniciarRenovacionUseCase', () => {
     await expect(useCase.execute(command(false), AHORA)).resolves.toBeDefined();
   });
 
-  it('genera el link con el precio del plan en centavos y registra el pago pendiente sobre la suscripción existente', async () => {
+  it('genera el link con el precio del plan en centavos y registra el pago pendiente con el id del link como referencia', async () => {
     consulta.buscarVigentePorNegocio.mockResolvedValue(suscripcion('vencida', -1));
 
     const result = await useCase.execute(command(), AHORA);
 
-    const referencia = `ren-sus-1-${AHORA.getTime()}`;
+    const referencia = 'link-1';
     expect(gateway.crearLinkPago).toHaveBeenCalledWith({
-      referencia,
       montoEnCentavos: 4990050,
       descripcion: 'Renovación Pro - WhatsBot Menu',
       redirectUrl: REDIRECT,

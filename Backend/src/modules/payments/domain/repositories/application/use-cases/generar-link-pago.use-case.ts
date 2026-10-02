@@ -35,22 +35,22 @@ export class GenerarLinkPagoUseCase {
       planId: command.planId,
     });
 
-    const referencia = `sub-${suscripcion.id}-${Date.now()}`;
     const montoEnCentavos = Math.round(plan.precio * 100);
 
     const link = await this.paymentGateway.crearLinkPago({
-      referencia,
       montoEnCentavos,
       descripcion: `Suscripción ${plan.nombre} - WhatsBot Menu`,
-      redirectUrl: 'https://tu-frontend.com/pago-confirmado',
+      redirectUrl: command.redirectUrl,
     });
 
+    // Wompi identifica el pago por el id del link (payment_link_id en el webhook),
+    // así que ese id es la referencia con la que se busca la transacción.
     await this.transaccionRepository.crear({
       suscripcionId: suscripcion.id,
-      referenciaWompi: referencia,
+      referenciaWompi: link.id,
       monto: plan.precio,
     });
-//coment para ricardo
+
     return { paymentUrl: link.url, suscripcionId: suscripcion.id };
   }
 }
