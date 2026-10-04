@@ -15,11 +15,11 @@ import { AgentModule } from './modules/agent/agent.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env.example' }),
     ThrottlerModule.forRoot([
       {
-        ttl: 60000,  // ventana de 60 segundos
-        limit: 10,   // 10 peticiones por ventana, por defecto global
+        ttl: 60000, // ventana de 60 segundos
+        limit: 10, // 10 peticiones por ventana, por defecto global
       },
     ]),
     AuthModule,
@@ -30,10 +30,7 @@ import { AgentModule } from './modules/agent/agent.module';
     SupabaseModule,
     AgentModule,
   ],
-  controllers: [AppController, HealthController],     
-  providers: [AppService, 
-     { provide: APP_GUARD, useClass: ThrottlerGuard },
-  ],
-
+  controllers: [AppController, HealthController],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

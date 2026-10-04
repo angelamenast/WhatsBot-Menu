@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { SupabaseService } from '../../shared/supabase/supabase.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -22,18 +26,18 @@ export class AuthService {
       handleSupabaseAuthError(error);
     }
 
-    const { error: insertError } = await client
-      .from('usuarios')
-      .insert({
-        id: data.user.id,
-        nombre: dto.nombre,
-        telefono: dto.telefono ?? null,
-      });
+    const { error: insertError } = await client.from('usuarios').insert({
+      id: data.user.id,
+      nombre: dto.nombre,
+      telefono: dto.telefono ?? null,
+    });
 
     if (insertError) {
       // Si falla el perfil, limpiamos el usuario de Auth para no dejar huérfanos
       await client.auth.admin.deleteUser(data.user.id);
-      throw new BadRequestException('No se pudo completar el registro. Intenta de nuevo');
+      throw new BadRequestException(
+        'No se pudo completar el registro. Intenta de nuevo',
+      );
     }
 
     return { id: data.user.id, email: data.user.email, nombre: dto.nombre };
@@ -70,7 +74,9 @@ export class AuthService {
     });
 
     if (error || !data.session) {
-      throw new UnauthorizedException('Sesión expirada, inicia sesión de nuevo');
+      throw new UnauthorizedException(
+        'Sesión expirada, inicia sesión de nuevo',
+      );
     }
 
     return {
@@ -99,6 +105,26 @@ export class AuthService {
       // Nunca revelamos si el correo existe o no (seguridad)
     }
 
-    return { message: 'Si el correo existe, recibirás instrucciones para recuperar tu contraseña' };
+    return {
+      message:
+        'Si el correo existe, recibirás instrucciones para recuperar tu contraseña',
+    };
+  }
+
+  async loginWithGoogle() {
+    const client = this.supabaseService.getClient();
+
+    const { data, error } = await client.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'http://localhost:4321/auth/callback', // URL a la que Google redireccionará al volver a tu front en Astro
+      },
+    });
+
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+
+    return data; // Devuelve { provider: 'google', url: 'https://...' }
   }
 }
