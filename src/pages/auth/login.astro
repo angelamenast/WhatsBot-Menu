@@ -1,0 +1,93 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Footer from "../../components/common/Footer.astro";
+import LoginForm from "../../components/auth/LoginForm.astro";
+import Logo from "../../components/common/Logo.astro";
+import ToastContainer from "../../components/common/ToastContainer.astro";
+---
+
+<Layout title="Iniciar Sesión - Tremia">
+  <!-- Micro Header Bar -->
+  <header
+    class="w-full px-gutter-mobile md:px-gutter-desktop py-unit-lg flex items-center justify-between border-b border-border-technical bg-surface-container-lowest"
+  >
+    <Logo />
+    <a
+      class="inline-flex items-center gap-unit-xs font-label-md text-label-md text-on-surface-variant hover:text-orange-600 transition-colors"
+      href="/"
+    >
+      <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+      <span>Volver al inicio</span>
+    </a>
+  </header>
+
+  <main
+    class="flex-1 flex items-center justify-center px-gutter-mobile md:px-gutter-desktop py-unit-xl"
+  >
+    <LoginForm />
+  </main>
+
+  <Footer />
+  <ToastContainer />
+</Layout>
+
+<script>
+  import { authService } from "../../services/auth.service";
+
+  const form = document.getElementById("loginForm") as HTMLFormElement;
+  const btnSubmit = document.getElementById("btnSubmit") as HTMLButtonElement;
+  const btnText = document.getElementById("btnText");
+  const btnGoogle = document.getElementById("btnGoogle");
+
+  // Evento Clic para Login con Google
+  btnGoogle?.addEventListener("click", () => {
+    authService.loginWithGoogle();
+  });
+
+  // Evento Submit para Login tradicional Email/Password
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const emailInput = document.getElementById("email") as HTMLInputElement;
+    const passwordInput = document.getElementById(
+      "password",
+    ) as HTMLInputElement;
+
+    const email = emailInput?.value.trim();
+    const password = passwordInput?.value;
+
+    if (!email || !password) return;
+
+    if (btnSubmit) btnSubmit.disabled = true;
+    if (btnText) btnText.textContent = "Autenticando...";
+
+    try {
+      const response = await authService.login({ email, password });
+
+      if (response.access_token) {
+        localStorage.setItem("auth_token", response.access_token);
+        document.cookie = `jwt_token=${response.access_token}; path=/; max-age=86400; SameSite=Lax`;
+      }
+
+      if ((window as any).showToast) {
+        (window as any).showToast("¡Sesión iniciada correctamente!", "success");
+      }
+
+      setTimeout(() => {
+        window.location.href = "/orders";
+      }, 1000);
+    } catch (error: any) {
+      if ((window as any).showToast) {
+        (window as any).showToast(
+          error.message || "Credenciales incorrectas. Intenta de nuevo.",
+          "warning",
+        );
+      } else {
+        alert(error.message || "Error al iniciar sesión");
+      }
+    } finally {
+      if (btnSubmit) btnSubmit.disabled = false;
+      if (btnText) btnText.textContent = "Iniciar Sesión";
+    }
+  });
+</script>

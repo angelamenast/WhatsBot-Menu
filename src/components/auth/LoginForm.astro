@@ -32,7 +32,8 @@
     <!-- Social Logins -->
     <div class="grid gap-unit-sm mb-unit-md">
       <button
-        class="group flex items-center justify-center gap-unit-xs py-unit-sm px-unit-sm rounded-lg bg-surface-container-low hover:bg-orange-50 text-on-surface transition-colors border border-surface-dim hover:border-orange-200"
+        id="btnGoogle"
+        class="group flex items-center justify-center gap-unit-xs py-unit-sm px-unit-sm rounded-lg bg-surface-container-low hover:bg-orange-50 text-on-surface transition-colors border border-surface-dim hover:border-orange-200 cursor-pointer"
         type="button"
       >
         <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
@@ -150,10 +151,11 @@
       </div>
 
       <button
-        class="w-full bg-[#f97316] hover:bg-[#ea580c] active:bg-orange-700 text-white py-unit-sm px-unit-lg font-headline-sm text-headline-sm rounded-lg shadow-md transition-all flex items-center justify-center gap-unit-xs group mt-unit-xs"
+        id="btnSubmit"
+        class="w-full bg-[#f97316] hover:bg-[#ea580c] active:bg-orange-700 text-white py-unit-sm px-unit-lg font-headline-sm text-headline-sm rounded-lg shadow-md transition-all flex items-center justify-center gap-unit-xs group mt-unit-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         type="submit"
       >
-        <span>Iniciar Sesión</span>
+        <span id="btnText">Iniciar Sesión</span>
         <span
           class="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-1"
           >arrow_forward</span
@@ -175,6 +177,8 @@
 </div>
 
 <script>
+  import { authService } from "../../services/auth.service";
+
   const togglePasswordBtn = document.getElementById("togglePassword");
   const passwordField = document.getElementById("password") as HTMLInputElement;
   const eyeIcon = document.getElementById("eyeIcon");
@@ -186,4 +190,10 @@
       eyeIcon.textContent = isPassword ? "visibility_off" : "visibility";
     });
   }
+
+  const btnGoogle = document.getElementById("btnGoogle");
+  btnGoogle?.addEventListener("click", (e) => {
+    e.preventDefault(); // Detiene cualquier comportamiento por defecto
+    authService.loginWithGoogle();
+  });
 </script>

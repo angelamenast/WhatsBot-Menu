@@ -22,7 +22,7 @@ import Logo from "../common/Logo.astro";
     <Logo />
     <a
       class="font-label-md text-label-md text-secondary hover:text-primary transition-colors flex items-center gap-space-xxs"
-      href="/login"
+      href="/auth/login"
     >
       <span>¿Ya tienes cuenta? </span>
       <span
@@ -184,40 +184,13 @@ import Logo from "../common/Logo.astro";
 </div>
 
 <script>
+  import { authService } from "../../services/auth.service";
+
   const googleBtn = document.getElementById("google-sso-btn");
-  const metaBtn = document.getElementById("meta-sso-btn");
 
   if (googleBtn) {
-    googleBtn.addEventListener("click", function () {
-      const originalContent = this.innerHTML;
-      this.style.pointerEvents = "none";
-      this.innerHTML = `
-        <div class="flex items-center justify-center gap-2 text-primary font-label-lg">
-          <span class="material-symbols-outlined animate-spin text-lg">progress_activity</span>
-          <span>Conectando con Google...</span>
-        </div>
-      `;
-      setTimeout(() => {
-        this.innerHTML = originalContent;
-        this.style.pointerEvents = "auto";
-      }, 1800);
-    });
-  }
-
-  if (metaBtn) {
-    metaBtn.addEventListener("click", function () {
-      const originalContent = this.innerHTML;
-      this.style.pointerEvents = "none";
-      this.innerHTML = `
-        <div class="flex items-center justify-center gap-2 text-secondary font-label-md">
-          <span class="material-symbols-outlined animate-spin text-sm">progress_activity</span>
-          <span>Abriendo Meta Auth...</span>
-        </div>
-      `;
-      setTimeout(() => {
-        this.innerHTML = originalContent;
-        this.style.pointerEvents = "auto";
-      }, 1600);
+    googleBtn.addEventListener("click", () => {
+      authService.loginWithGoogle();
     });
   }
 </script>
