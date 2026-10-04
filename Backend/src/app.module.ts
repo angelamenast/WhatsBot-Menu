@@ -12,6 +12,7 @@ import { HealthController } from './health/health.controller';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AgentModule } from './modules/agent/agent.module';
+import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AgentModule } from './modules/agent/agent.module';
     PaymentsModule,
     SupabaseModule,
     AgentModule,
+    OrdersModule,
   ],
   controllers: [AppController, HealthController],     
   providers: [AppService, 
