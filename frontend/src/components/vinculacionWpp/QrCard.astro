@@ -1,0 +1,263 @@
+---
+
+---
+
+<section
+  class="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-xs flex flex-col gap-6"
+>
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div
+        class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600"
+      >
+        <span class="material-symbols-outlined text-[24px]"
+          >qr_code_scanner</span
+        >
+      </div>
+      <div>
+        <h2 class="text-base font-bold text-zinc-900">
+          Vincular con Código QR
+        </h2>
+        <p class="text-xs text-zinc-500">
+          Sigue los 3 pasos desde la app oficial de WhatsApp
+        </p>
+      </div>
+    </div>
+    <span
+      class="px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-xs font-semibold"
+      >Multi-dispositivo</span
+    >
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div
+      class="flex items-start gap-2 p-3 rounded-xl bg-zinc-50 border border-zinc-100"
+    >
+      <span
+        class="w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5"
+        >1</span
+      >
+      <p class="text-xs text-zinc-700">Abre WhatsApp en tu teléfono móvil.</p>
+    </div>
+    <div
+      class="flex items-start gap-2 p-3 rounded-xl bg-zinc-50 border border-zinc-100"
+    >
+      <span
+        class="w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5"
+        >2</span
+      >
+      <p class="text-xs text-zinc-700">
+        Ve a Ajustes y toca <span class="font-semibold text-orange-600"
+          >Dispositivos vinculados</span
+        >.
+      </p>
+    </div>
+    <div
+      class="flex items-start gap-2 p-3 rounded-xl bg-zinc-50 border border-zinc-100"
+    >
+      <span
+        class="w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5"
+        >3</span
+      >
+      <p class="text-xs text-zinc-700">
+        Toca <span class="font-semibold text-orange-600"
+          >Vincular dispositivo</span
+        > y escanea.
+      </p>
+    </div>
+  </div>
+
+  <div
+    class="flex flex-col items-center justify-center p-6 rounded-2xl bg-zinc-50 border-2 border-dashed border-zinc-200 gap-4 text-center"
+  >
+    <div class="p-4 bg-white rounded-2xl shadow-sm border border-zinc-200/80">
+      <svg
+        class="w-52 h-52"
+        fill="none"
+        viewBox="0 0 250 250"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect fill="#18181b" height="60" rx="8" width="60" x="15" y="15"></rect>
+        <rect fill="#ffffff" height="44" rx="4" width="44" x="23" y="23"></rect>
+        <rect fill="#f97316" height="28" rx="4" width="28" x="31" y="31"></rect>
+
+        <rect fill="#18181b" height="60" rx="8" width="60" x="175" y="15"
+        ></rect>
+        <rect fill="#ffffff" height="44" rx="4" width="44" x="183" y="23"
+        ></rect>
+        <rect fill="#f97316" height="28" rx="4" width="28" x="191" y="31"
+        ></rect>
+
+        <rect fill="#18181b" height="60" rx="8" width="60" x="15" y="175"
+        ></rect>
+        <rect fill="#ffffff" height="44" rx="4" width="44" x="23" y="183"
+        ></rect>
+        <rect fill="#f97316" height="28" rx="4" width="28" x="31" y="191"
+        ></rect>
+
+        <rect
+          fill="#ffffff"
+          height="74"
+          rx="18"
+          stroke="#fdba74"
+          stroke-width="3"
+          width="74"
+          x="88"
+          y="88"></rect>
+        <rect fill="#f97316" height="58" rx="14" width="58" x="96" y="96"
+        ></rect>
+        <path
+          d="M125 110v5M114 115h22a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4h-22a4 4 0 0 1-4-4v-16a4 4 0 0 1 4-4zm-7 10h3m22 0h3m-19 8h10"
+          stroke="#ffffff"
+          stroke-linecap="round"
+          stroke-width="2.5"></path>
+      </svg>
+    </div>
+
+    <!-- Timer + Botón Regenerar -->
+    <div class="flex flex-wrap items-center justify-center gap-3">
+      <div
+        class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white text-zinc-700 text-xs border border-zinc-200"
+      >
+        <span
+          >⏱️ Expira en: <strong class="text-orange-600 font-bold" id="qr-timer"
+            >60s</strong
+          ></span
+        >
+      </div>
+      <button
+        id="btn-refresh-qr"
+        class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-zinc-200 hover:bg-zinc-300 text-zinc-800 text-xs font-semibold transition-colors cursor-pointer active:scale-95"
+      >
+        <span class="material-symbols-outlined text-[16px]">refresh</span>
+        <span>Regenerar código</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Formulario de código por teléfono -->
+  <div
+    class="p-4 rounded-xl bg-zinc-50 border border-zinc-200 flex flex-col gap-2"
+  >
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-orange-600 text-[20px]"
+        >dialpad</span
+      >
+      <h3 class="text-xs text-zinc-900 font-bold">
+        ¿Prefieres recibir un código de 8 dígitos?
+      </h3>
+    </div>
+
+    <form
+      id="phone-code-form"
+      class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-1"
+    >
+      <div
+        class="flex items-center rounded-xl bg-white border border-zinc-200 px-3 py-2 flex-1"
+      >
+        <select
+          class="bg-transparent border-none text-zinc-800 text-xs font-semibold focus:outline-none pr-1"
+        >
+          <option value="+57">🇨🇴 +57</option>
+          <option value="+34">🇪🇸 +34</option>
+          <option value="+52">🇲🇽 +52</option>
+          <option value="+1">🇺🇸 +1</option>
+        </select>
+        <span class="text-zinc-300 px-2">|</span>
+        <input
+          id="phone-input"
+          class="w-full bg-transparent border-none text-xs text-zinc-900 focus:outline-none"
+          placeholder="300 000 0000"
+          type="tel"
+          required
+        />
+      </div>
+      <button
+        type="submit"
+        class="px-4 py-2.5 rounded-xl bg-orange-500 text-white font-medium hover:bg-orange-600 transition-all text-xs flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-xs"
+      >
+        <span class="material-symbols-outlined text-[18px]">send_to_mobile</span
+        >
+        <span>Enviar código</span>
+      </button>
+    </form>
+  </div>
+
+  <div
+    class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-zinc-100"
+  >
+    <span class="text-xs text-zinc-500"
+      >Sesión continua multi-dispositivo sin interrupciones.</span
+    >
+    <button
+      id="btn-check-status"
+      class="w-full sm:w-auto bg-zinc-900 hover:bg-black text-white font-medium py-2.5 px-6 rounded-xl transition-all flex items-center justify-center gap-2 text-xs cursor-pointer active:scale-95"
+    >
+      <span class="material-symbols-outlined text-[18px]">sync</span>
+      <span>Comprobar Estado de Conexión</span>
+    </button>
+  </div>
+</section>
+
+<script>
+  // Timer regresivo
+  let timeLeft = 60;
+  const timerEl = document.getElementById("qr-timer");
+
+  const startTimer = () => {
+    timeLeft = 60;
+    const interval = setInterval(() => {
+      timeLeft--;
+      if (timerEl) timerEl.textContent = `${timeLeft}s`;
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        if (timerEl) timerEl.textContent = "Expirado";
+      }
+    }, 1000);
+  };
+
+  startTimer();
+
+  // Botón Regenerar QR
+  document.getElementById("btn-refresh-qr")?.addEventListener("click", () => {
+    startTimer();
+    if ((window as any).showToast) {
+      (window as any).showToast(
+        "Nuevo código QR generado con éxito",
+        "success",
+      );
+    }
+  });
+
+  // Envío del código de teléfono
+  document
+    .getElementById("phone-code-form")
+    ?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const phoneInput = document.getElementById(
+        "phone-input",
+      ) as HTMLInputElement;
+      if (phoneInput && phoneInput.value.trim() !== "") {
+        if ((window as any).showToast) {
+          (window as any).showToast(
+            `Código enviado al ${phoneInput.value}`,
+            "success",
+          );
+        }
+        phoneInput.value = "";
+      }
+    });
+
+  // Comprobar estado de conexión
+  document.getElementById("btn-check-status")?.addEventListener("click", () => {
+    if ((window as any).showToast) {
+      (window as any).showToast("Verificando señal con WhatsApp...", "info");
+      setTimeout(() => {
+        (window as any).showToast(
+          "Esperando escaneo del código QR...",
+          "warning",
+        );
+      }, 1500);
+    }
+  });
+</script>

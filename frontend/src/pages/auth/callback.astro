@@ -1,0 +1,30 @@
+---
+
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Autenticando...</title>
+  </head>
+  <body
+    class="flex items-center justify-center min-h-screen bg-slate-900 text-white"
+  >
+    <div class="text-center">
+      <p class="text-lg font-medium">Iniciando sesión con Google...</p>
+    </div>
+
+    <script>
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get("access_token");
+
+      if (accessToken) {
+        localStorage.setItem("auth_token", accessToken);
+        document.cookie = `jwt_token=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
+        window.location.href = "/profile"; // O la ruta a tu dashboard
+      } else {
+        window.location.href = "/auth/login";
+      }
+    </script>
+  </body>
+</html>

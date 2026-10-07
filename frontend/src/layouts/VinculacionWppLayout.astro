@@ -1,0 +1,41 @@
+---
+import "/src/styles/global.css";
+import Sidebar from "../components/common/Sidebar.astro";
+import ToastContainer from "../components/common/ToastContainer.astro";
+
+interface Props {
+  title: string;
+  activeRoute?: string;
+}
+
+const { title, activeRoute = "vincular" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-background font-sans text-on-surface min-h-screen">
+    <Sidebar activeRoute={activeRoute} />
+
+    <div class="pl-72 min-h-screen flex flex-col">
+      <main class="w-full pt-20 px-6 py-6 flex-1 bg-background">
+        <slot />
+      </main>
+    </div>
+    <ToastContainer />
+  </body>
+</html>

@@ -1,0 +1,172 @@
+---
+
+---
+
+<div class="flex flex-col gap-6">
+  <!-- Connected Accounts -->
+  <section
+    class="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-sm flex flex-col gap-6"
+  >
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center"
+        >
+          <span class="material-symbols-outlined text-[22px]">hub</span>
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-zinc-900">Cuentas Conectadas</h2>
+          <p class="text-xs text-zinc-500">
+            Integraciones directas para login y WhatsApp
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <!-- Google -->
+      <div
+        class="p-3.5 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-between gap-3"
+      >
+        <div class="flex items-center gap-3 min-w-0">
+          <div
+            class="w-10 h-10 rounded-xl bg-white border border-zinc-200/80 shadow-xs flex items-center justify-center shrink-0"
+          >
+            <svg class="w-5 h-5" viewBox="0 0 24 24">
+              <path
+                d="M12 5c1.54 0 2.92.54 4.02 1.43l3.01-3.01C17.21 1.74 14.77 1 12 1 7.42 1 3.53 3.61 1.63 7.37l3.66 2.84C6.17 7.23 8.84 5 12 5z"
+                fill="#EA4335"></path>
+              <path
+                d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.71 2.88c2.16-1.99 3.71-4.93 3.71-8.7z"
+                fill="#4285F4"></path>
+              <path
+                d="M5.29 14.79c-.23-.69-.36-1.43-.36-2.19s.13-1.5.36-2.19L1.63 7.57C.59 9.65 0 11.96 0 14.4s.59 4.75 1.63 6.83l3.66-2.84c-.03-.2-.05-.4-.05-.6z"
+                fill="#FBBC05"></path>
+              <path
+                d="M12 23.4c3.24 0 5.95-1.08 7.93-2.91l-3.71-2.88c-1.07.72-2.45 1.16-4.22 1.16-3.16 0-5.83-2.23-6.71-5.21L1.63 16.4C3.53 20.16 7.42 22.77 12 22.77z"
+                fill="#34A853"></path>
+            </svg>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-xs font-semibold text-zinc-900 truncate"
+              >alex.ramirez@gmail.com</span
+            >
+            <span class="text-[11px] text-zinc-500 truncate"
+              >Método principal de acceso</span
+            >
+          </div>
+        </div>
+        <span
+          class="px-2.5 py-1 rounded-lg bg-zinc-200/60 text-zinc-600 text-xs font-medium shrink-0"
+        >
+          Vinculado
+        </span>
+      </div>
+
+      <!-- WhatsApp -->
+      <div
+        class="p-3.5 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-between gap-3"
+      >
+        <div class="flex items-center gap-3 min-w-0">
+          <div
+            class="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0"
+          >
+            <span class="material-symbols-outlined text-[22px]">chat</span>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-xs font-semibold text-zinc-900 truncate"
+              >+34 600 000 000</span
+            >
+            <span class="text-[11px] text-zinc-500 truncate"
+              >WhatsApp Business API</span
+            >
+          </div>
+        </div>
+        <button
+          id="btn-manage-wa"
+          class="px-3 py-1.5 rounded-lg bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-100 text-xs font-medium transition-colors cursor-pointer shrink-0"
+          type="button"
+        >
+          Gestionar
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2FA -->
+  <section
+    class="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-sm flex flex-col gap-4"
+  >
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center"
+        >
+          <span class="material-symbols-outlined text-[22px]"
+            >phonelink_lock</span
+          >
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-zinc-900">
+            Seguridad Adicional (2FA)
+          </h2>
+          <span class="text-xs font-medium text-orange-600">Recomendado</span>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="flex items-center justify-between p-3.5 rounded-xl bg-zinc-50 border border-zinc-100"
+    >
+      <div class="flex flex-col">
+        <span class="text-xs font-semibold text-zinc-900"
+          >Verificación en Dos Pasos</span
+        >
+        <span
+          id="2fa-status-text"
+          class="text-[11px] text-emerald-600 font-medium"
+          >Activo mediante WhatsApp</span
+        >
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input id="toggle-2fa" checked class="sr-only peer" type="checkbox" />
+        <div
+          class="w-11 h-6 bg-zinc-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"
+        >
+        </div>
+      </label>
+    </div>
+  </section>
+</div>
+
+<script>
+  const toggle2FA = document.getElementById("toggle-2fa") as HTMLInputElement;
+  const status2FA = document.getElementById("2fa-status-text");
+  const btnManageWa = document.getElementById("btn-manage-wa");
+
+  toggle2FA?.addEventListener("change", () => {
+    if (toggle2FA.checked) {
+      if (status2FA) {
+        status2FA.textContent = "Activo mediante WhatsApp";
+        status2FA.className = "text-[11px] text-emerald-600 font-medium";
+      }
+      (window as any).showToast?.("Verificación en dos pasos activada");
+    } else {
+      if (status2FA) {
+        status2FA.textContent = "Desactivado";
+        status2FA.className = "text-[11px] text-zinc-400 font-medium";
+      }
+      (window as any).showToast?.(
+        "Autenticación de dos factores desactivada",
+        "info",
+      );
+    }
+  });
+
+  btnManageWa?.addEventListener("click", () => {
+    (window as any).showToast?.(
+      "Redirigiendo a la configuración de WhatsApp API...",
+      "info",
+    );
+  });
+</script>
