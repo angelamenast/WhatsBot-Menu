@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { SupabaseAuthGuard } from '../../../auth/guards/supabase-auth.guard';
+import { SupabaseAuthGuard } from '../../../auth/infrastructure/presentation/guards/supabase-auth.guard';
 import { BusinessService } from '../../../business/business.service';
 import { GetAgentConfigUseCase } from '../../application/use-cases/get-agent-config.use-case';
 import { UpdateAgentConfigUseCase } from '../../application/use-cases/update-agent-config.use-case';
