@@ -1,0 +1,368 @@
+---
+
+---
+
+<div class="text-center max-w-2xl mx-auto mb-space-3xl">
+  <div
+    class="inline-flex items-center gap-space-xs bg-primary-fixed/60 text-on-primary-fixed-variant px-space-md py-space-xxs rounded-full mb-space-md shadow-sm"
+  >
+    <span
+      class="material-symbols-outlined text-[16px] text-primary"
+      style="font-variation-settings: 'FILL' 1;">bolt</span
+    >
+    <span
+      class="font-label-sm text-label-sm font-semibold tracking-wide uppercase"
+      >Configuración de Licencia Oficial</span
+    >
+  </div>
+  <h1
+    class="font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface tracking-tight font-extrabold mb-space-sm"
+  >
+    Elige el plan ideal para tu negocio en WhatsApp
+  </h1>
+  <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+    Prueba gratis por 14 días sin compromiso. Activa agentes inteligentes,
+    automatiza respuestas y procesa cobros en minutos.
+  </p>
+
+  <!-- Toggle Mensual / Anual -->
+  <div
+    class="mt-space-2xl inline-flex p-1 bg-surface-container-high rounded-full shadow-inner items-center relative"
+  >
+    <button
+      class="py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 text-on-surface-variant hover:text-on-surface"
+      id="toggle-monthly"
+      type="button"
+    >
+      Mensual
+    </button>
+    <button
+      class="py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold flex items-center gap-space-xs"
+      id="toggle-annual"
+      type="button"
+    >
+      <span>Anual</span>
+      <span
+        class="bg-primary text-on-primary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+      >
+        2 Meses Gratis (-20%)
+      </span>
+    </button>
+  </div>
+</div>
+
+<!-- Grid de Planes -->
+<div
+  class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg mb-space-4xl items-stretch"
+>
+  <!-- Starter -->
+  <div
+    class="plan-card bg-surface-container-lowest rounded-xl p-space-xl flex flex-col justify-between shadow-sm transition-all duration-200 hover:-translate-y-1"
+  >
+    <div>
+      <div class="flex items-center justify-between mb-space-md">
+        <span
+          class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-bold"
+          >Starter</span
+        >
+        <span
+          class="font-label-sm text-label-sm bg-surface-container text-on-surface-variant px-2.5 py-1 rounded-full font-medium"
+          >Básico</span
+        >
+      </div>
+      <div class="flex items-baseline gap-1 mb-space-xs">
+        <span class="font-display-lg text-display-lg font-bold text-on-surface"
+          >$0</span
+        >
+        <span class="font-body-md text-body-md text-on-surface-variant"
+          >/ 14 días de prueba</span
+        >
+      </div>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-xl">
+        Ideal para emprendedores y pequeños negocios que inician su
+        automatización.
+      </p>
+      <div class="space-y-space-md mb-space-2xl">
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            >check_circle</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            ><strong>1 Agente</strong> Bot IA conversacional</span
+          >
+        </div>
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            >check_circle</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            >Hasta <strong>500 chats</strong> mensuales</span
+          >
+        </div>
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            >check_circle</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            >Menú y catálogo digital interactivo</span
+          >
+        </div>
+        <div class="flex items-start gap-space-sm text-on-surface-variant/60">
+          <span class="material-symbols-outlined text-[18px] mt-0.5"
+            >remove</span
+          >
+          <span class="font-body-md text-body-md"
+            >Cobros integrados en chat</span
+          >
+        </div>
+        <div class="flex items-start gap-space-sm text-on-surface-variant/60">
+          <span class="material-symbols-outlined text-[18px] mt-0.5"
+            >remove</span
+          >
+          <span class="font-body-md text-body-md">Soporte prioritario 24/7</span
+          >
+        </div>
+      </div>
+    </div>
+    <button
+      class="plan-select-btn w-full py-space-sm px-space-md rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-lg text-label-lg transition-colors"
+      type="button"
+    >
+      Elegir Starter
+    </button>
+  </div>
+
+  <!-- Professional -->
+  <div
+    class="plan-card relative bg-surface-container-lowest rounded-xl p-space-xl flex flex-col justify-between shadow-xl transition-all duration-200 hover:-translate-y-1 ring-2 ring-primary-container"
+  >
+    <div
+      class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary-container to-secondary-container text-on-primary font-label-sm text-label-sm uppercase tracking-wider font-extrabold px-space-md py-0.5 rounded-full shadow-md flex items-center gap-1"
+    >
+      <span
+        class="material-symbols-outlined text-[14px]"
+        style="font-variation-settings: 'FILL' 1;">star</span
+      >
+      Recomendado • Más Popular
+    </div>
+    <div>
+      <div class="flex items-center justify-between mb-space-md mt-space-xs">
+        <span
+          class="font-label-md text-label-md uppercase tracking-wider text-primary font-bold"
+          >Professional</span
+        >
+        <span
+          class="font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed-variant px-2.5 py-1 rounded-full font-bold"
+          >Ahorra 20%</span
+        >
+      </div>
+      <div class="flex items-baseline gap-1 mb-space-xs">
+        <span
+          class="font-display-lg text-display-lg font-bold text-on-surface"
+          id="pro-price">$24</span
+        >
+        <span class="font-body-md text-body-md text-on-surface-variant"
+          >USD / mes</span
+        >
+      </div>
+      <div
+        class="font-label-sm text-label-sm text-primary mb-space-md font-semibold"
+      >
+        Facturado anualmente ($288/año) • 14 días sin costo
+      </div>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-xl">
+        Potencia completa de ventas, atención automática fluida y cobro directo
+        por WhatsApp.
+      </p>
+      <div class="space-y-space-md mb-space-2xl">
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            style="font-variation-settings: 'FILL' 1;">verified</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            ><strong>5 Agentes IA</strong> con tono de voz adaptable</span
+          >
+        </div>
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            style="font-variation-settings: 'FILL' 1;">verified</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            ><strong>Mensajes y pedidos ilimitados</strong></span
+          >
+        </div>
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            style="font-variation-settings: 'FILL' 1;">verified</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            ><strong>Cobros integrados</strong> en WhatsApp (Stripe & Wompi)</span
+          >
+        </div>
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            style="font-variation-settings: 'FILL' 1;">verified</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            >Automatización de carritos abandonados</span
+          >
+        </div>
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            style="font-variation-settings: 'FILL' 1;">verified</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            ><strong>Soporte prioritario</strong> vía WhatsApp</span
+          >
+        </div>
+      </div>
+    </div>
+    <button
+      class="w-full py-space-sm px-space-md rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg font-bold shadow-md hover:bg-secondary-container transition-all flex items-center justify-center gap-space-xs"
+      id="btn-pro-selected"
+      type="button"
+    >
+      <span class="material-symbols-outlined text-[18px]">check</span>
+      Plan Seleccionado
+    </button>
+  </div>
+
+  <!-- Enterprise -->
+  <div
+    class="plan-card bg-surface-container-lowest rounded-xl p-space-xl flex flex-col justify-between shadow-sm transition-all duration-200 hover:-translate-y-1"
+  >
+    <div>
+      <div class="flex items-center justify-between mb-space-md">
+        <span
+          class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant font-bold"
+          >Enterprise</span
+        >
+        <span
+          class="font-label-sm text-label-sm bg-surface-container text-on-surface-variant px-2.5 py-1 rounded-full font-medium"
+          >Escala Masiva</span
+        >
+      </div>
+      <div class="flex items-baseline gap-1 mb-space-xs">
+        <span class="font-display-lg text-display-lg font-bold text-on-surface"
+          >$79</span
+        >
+        <span class="font-body-md text-body-md text-on-surface-variant"
+          >USD / mes</span
+        >
+      </div>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-xl">
+        Infraestructura dedicada, volumen empresarial y soporte estratégico
+        consultivo.
+      </p>
+      <div class="space-y-space-md mb-space-2xl">
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            >check_circle</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            ><strong>Agentes bot ilimitados</strong></span
+          >
+        </div>
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            >check_circle</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            ><strong>Fine-tuning profundo</strong> con tu catálogo y PDFs</span
+          >
+        </div>
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            >check_circle</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            >Garantía de SLA 99.9% uptime</span
+          >
+        </div>
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            >check_circle</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            >Account Manager dedicado & Onboarding</span
+          >
+        </div>
+        <div class="flex items-start gap-space-sm">
+          <span
+            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            >check_circle</span
+          >
+          <span class="font-body-md text-body-md text-on-surface"
+            >Webhooks personalizados & API dedicada</span
+          >
+        </div>
+      </div>
+    </div>
+    <button
+      class="plan-select-btn w-full py-space-sm px-space-md rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-lg text-label-lg transition-colors"
+      type="button"
+    >
+      Elegir Enterprise
+    </button>
+  </div>
+</div>
+
+<script>
+  const toggleMonthly = document.getElementById("toggle-monthly");
+  const toggleAnnual = document.getElementById("toggle-annual");
+  const proPrice = document.getElementById("pro-price");
+  const orderTotal = document.getElementById("order-total");
+  const btnProceed = document.getElementById("btn-proceed");
+
+  let isAnnual = true;
+  const discountRate = 0.2;
+
+  function updateTotal() {
+    let subtotal = isAnnual ? 24.0 : 29.0;
+    let discount = isAnnual ? subtotal * discountRate : 0;
+    let calculatedTotal = Math.max(0, subtotal - discount);
+
+    if (orderTotal) {
+      orderTotal.textContent = "$" + calculatedTotal.toFixed(2);
+    }
+    if (btnProceed) {
+      btnProceed.innerHTML = `<span>Continuar al Pago Seguro ($${calculatedTotal.toFixed(2)} USD)</span><span class="material-symbols-outlined text-[20px]">arrow_forward</span>`;
+    }
+  }
+
+  if (toggleMonthly && toggleAnnual) {
+    toggleMonthly.addEventListener("click", () => {
+      isAnnual = false;
+      toggleMonthly.className =
+        "py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold";
+      toggleAnnual.className =
+        "py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 text-on-surface-variant hover:text-on-surface flex items-center gap-space-xs";
+      if (proPrice) proPrice.textContent = "$29";
+      updateTotal();
+    });
+
+    toggleAnnual.addEventListener("click", () => {
+      isAnnual = true;
+      toggleAnnual.className =
+        "py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold flex items-center gap-space-xs";
+      toggleMonthly.className =
+        "py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 text-on-surface-variant hover:text-on-surface";
+      if (proPrice) proPrice.textContent = "$24";
+      updateTotal();
+    });
+  }
+
+  updateTotal();
+</script>
