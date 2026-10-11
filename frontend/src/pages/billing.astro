@@ -1,0 +1,85 @@
+---
+import AppLayout from "../layouts/BillingLayout.astro";
+import BillingAlert from "../components/billing/BillingAlert.astro";
+import CurrentPlanCard from "../components/billing/CurrentPlanCard.astro";
+import UsageMetrics from "../components/billing/UsageMetrics.astro";
+import PaymentMethodCard from "../components/billing/PaymentMethodCard.astro";
+import TaxInfoCard from "../components/billing/TaxInfoCard.astro";
+import InvoiceHistory from "../components/billing/InvoiceHistory.astro";
+import BillingSupportBanner from "../components/billing/BillingSupportBanner.astro";
+---
+
+<AppLayout title="Facturación y Suscripción | Tremia">
+  <div class="flex flex-col w-full gap-space-2xl">
+    <!-- Encabezado de la Sección -->
+    <div
+      class="flex flex-col md:flex-row md:items-end justify-between gap-space-lg"
+    >
+      <div class="flex flex-col gap-space-xs">
+        <div
+          class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm"
+        >
+          <span>Configuración de Cuenta</span>
+          <span class="material-symbols-outlined text-[14px]"
+            >chevron_right</span
+          >
+          <span class="text-primary font-label-md text-label-md"
+            >Facturación y Suscripción</span
+          >
+        </div>
+        <h1
+          class="font-display-lg text-display-lg text-on-surface tracking-tight"
+        >
+          Facturación y Suscripción
+        </h1>
+        <p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+          Gestiona tu suscripción activa, consulta el consumo de tu plan
+          comercial, actualiza tus métodos de pago y descarga facturas fiscales
+          oficiales en PDF/XML.
+        </p>
+      </div>
+
+      <div
+        class="flex flex-wrap items-center gap-space-sm self-start md:self-auto"
+      >
+        <div
+          class="flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm shadow-sm"
+        >
+          <span class="material-symbols-outlined text-[16px] text-tertiary"
+            >tag</span
+          >
+          <span
+            >ID: <strong class="text-on-surface font-semibold"
+              >WB-SUB-9421</strong
+            ></span
+          >
+        </div>
+        <div
+          class="flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm shadow-sm"
+        >
+          <span class="material-symbols-outlined text-[16px] text-primary"
+            >verified_user</span
+          >
+          <span>Facturación Stripe 256-bit</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Componentes del Módulo -->
+    <BillingAlert />
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+      <CurrentPlanCard />
+      <UsageMetrics />
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+      <PaymentMethodCard />
+      <TaxInfoCard />
+    </div>
+
+    <InvoiceHistory />
+
+    <BillingSupportBanner />
+  </div>
+</AppLayout>

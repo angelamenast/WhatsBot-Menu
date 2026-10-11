@@ -1,0 +1,159 @@
+---
+import BillingLayout from "../../layouts/BillingLayout.astro";
+---
+
+<div
+  class="rounded-xl bg-surface-container-lowest p-space-2xl shadow-sm flex flex-col gap-space-lg"
+>
+  <div
+    class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md"
+  >
+    <div class="flex flex-col">
+      <h3 class="font-headline-md text-headline-md text-on-surface">
+        Historial de Facturas y Recibos
+      </h3>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">
+        Descarga tus comprobantes en PDF o XML con plena validez contable y
+        tributaria.
+      </p>
+    </div>
+    <div class="flex items-center gap-space-sm">
+      <div
+        class="flex items-center px-space-md py-space-xs rounded-lg bg-surface-container text-on-surface-variant font-body-sm text-body-sm"
+      >
+        <span class="material-symbols-outlined text-[18px] mr-2">search</span>
+        <input
+          class="bg-transparent focus:outline-none w-32 placeholder:text-on-surface-variant"
+          placeholder="Buscar por ID..."
+          type="text"
+        />
+      </div>
+      <button
+        class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-label-md text-label-md cursor-pointer"
+        type="button"
+      >
+        <span class="material-symbols-outlined text-[16px]">download</span>
+        Exportar Todo (ZIP)
+      </button>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left">
+      <thead>
+        <tr
+          class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider"
+        >
+          <th class="py-space-md px-space-md rounded-l-lg">ID Factura</th>
+          <th class="py-space-md px-space-md">Fecha de Emisión</th>
+          <th class="py-space-md px-space-md">Concepto / Plan</th>
+          <th class="py-space-md px-space-md">Importe</th>
+          <th class="py-space-md px-space-md">Estado</th>
+          <th class="py-space-md px-space-md text-right rounded-r-lg"
+            >Descargas</th
+          >
+        </tr>
+      </thead>
+      <tbody
+        class="divide-y divide-surface-container-low text-on-surface font-body-md text-body-md"
+      >
+        <tr class="hover:bg-surface-container-low/50 transition-colors">
+          <td
+            class="py-space-md px-space-md font-mono font-semibold text-primary"
+            >INV-2024-0010</td
+          >
+          <td
+            class="py-space-md px-space-md text-on-surface-variant font-body-sm text-body-sm"
+            >10 Oct, 2024</td
+          >
+          <td class="py-space-md px-space-md">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-on-surface"
+                >Tremia Pro (Renovación Anual)</span
+              >
+              <span class="font-label-sm text-label-sm text-on-surface-variant"
+                >Periodo 2024 - 2025</span
+              >
+            </div>
+          </td>
+          <td class="py-space-md px-space-md font-semibold">$288.00 USD</td>
+          <td class="py-space-md px-space-md">
+            <span
+              class="px-space-sm py-space-xxs rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold inline-flex items-center gap-1"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+              Vencido
+            </span>
+          </td>
+          <td class="py-space-md px-space-md text-right">
+            <div class="flex items-center justify-end gap-space-xs">
+              <a
+                class="flex items-center gap-1 px-space-sm py-space-xxs rounded-lg bg-primary text-on-primary font-label-sm text-label-sm hover:bg-secondary transition-colors cursor-pointer"
+                href="/checkout/payment?plan=pro&billing=annual"
+              >
+                <span>Pagar Ahora</span>
+              </a>
+              <button
+                class="p-space-xs rounded-lg hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+                title="Descargar borrador PDF"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[18px]"
+                  >picture_as_pdf</span
+                >
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="hover:bg-surface-container-low/50 transition-colors">
+          <td class="py-space-md px-space-md font-mono text-on-surface"
+            >INV-2023-0009</td
+          >
+          <td
+            class="py-space-md px-space-md text-on-surface-variant font-body-sm text-body-sm"
+            >10 Oct, 2023</td
+          >
+          <td class="py-space-md px-space-md">
+            <div class="flex flex-col">
+              <span class="font-label-md text-label-md text-on-surface"
+                >Tremia Pro (Suscripción Anual)</span
+              >
+              <span class="font-label-sm text-label-sm text-on-surface-variant"
+                >Periodo 2023 - 2024</span
+              >
+            </div>
+          </td>
+          <td class="py-space-md px-space-md font-semibold">$288.00 USD</td>
+          <td class="py-space-md px-space-md">
+            <span
+              class="px-space-sm py-space-xxs rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-medium inline-flex items-center gap-1"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+              Pagado
+            </span>
+          </td>
+          <td class="py-space-md px-space-md text-right">
+            <div class="flex items-center justify-end gap-space-xs">
+              <button
+                class="p-space-xs rounded-lg hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+                title="Descargar PDF"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[18px]"
+                  >picture_as_pdf</span
+                >
+              </button>
+              <button
+                class="p-space-xs rounded-lg hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+                title="Descargar XML"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[18px]">code</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

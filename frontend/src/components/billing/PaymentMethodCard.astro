@@ -1,0 +1,105 @@
+---
+
+---
+
+<div
+  class="lg:col-span-6 rounded-xl bg-surface-container-lowest p-space-2xl shadow-sm flex flex-col justify-between"
+>
+  <div class="flex flex-col gap-space-md">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-space-sm">
+        <span
+          class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary"
+        >
+          <span class="material-symbols-outlined text-[22px]">credit_card</span>
+        </span>
+        <div class="flex flex-col">
+          <h3 class="font-headline-sm text-headline-sm text-on-surface">
+            Método de Pago Predeterminado
+          </h3>
+          <span class="font-body-sm text-body-sm text-on-surface-variant"
+            >Cobros automáticos procesados vía Stripe Gateway</span
+          >
+        </div>
+      </div>
+      <span
+        class="px-space-sm py-space-xxs rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm"
+        >Seguro</span
+      >
+    </div>
+
+    <div
+      class="relative overflow-hidden rounded-xl bg-gradient-to-br from-inverse-surface via-inverse-surface to-on-surface-variant p-space-lg text-surface-container-lowest shadow-md mt-space-sm"
+    >
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-space-xs">
+          <span
+            class="material-symbols-outlined text-[28px] text-tertiary-fixed"
+            >contactless</span
+          >
+          <span
+            class="font-label-sm text-label-sm uppercase tracking-widest text-surface-container-highest"
+            >Corporativa</span
+          >
+        </div>
+        <div class="flex -space-x-2">
+          <div class="w-6 h-6 rounded-full bg-primary-container opacity-90">
+          </div>
+          <div class="w-6 h-6 rounded-full bg-tertiary-fixed opacity-90"></div>
+        </div>
+      </div>
+      <div class="mt-space-lg mb-space-md">
+        <span
+          class="font-headline-md text-headline-md tracking-widest text-surface-bright font-mono"
+          >•••• •••• •••• 4242</span
+        >
+      </div>
+      <div
+        class="flex items-end justify-between font-label-sm text-label-sm text-surface-container-highest"
+      >
+        <div class="flex flex-col">
+          <span class="text-[10px] uppercase opacity-75">Titular</span>
+          <span
+            class="font-label-md text-label-md text-surface-container-lowest"
+            >MAIN STREET CAFE S.L.</span
+          >
+        </div>
+        <div class="flex flex-col text-right">
+          <span class="text-[10px] uppercase opacity-75">Expira</span>
+          <span
+            class="font-label-md text-label-md text-surface-container-lowest"
+            >08 / 2028</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="flex items-center gap-space-xs text-on-surface-variant font-body-sm text-body-sm mt-space-xxs"
+    >
+      <span class="material-symbols-outlined text-[16px] text-primary"
+        >check_circle</span
+      >
+      <span
+        >Tarjeta registrada para renovación automática y facturas de
+        contingencia.</span
+      >
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between pt-space-lg mt-space-md">
+    <a
+      class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-label-lg text-label-lg cursor-pointer"
+      href="/checkout/payment"
+    >
+      <span class="material-symbols-outlined text-[18px]">edit</span>
+      Actualizar Método de Pago
+    </a>
+    <button
+      class="font-label-md text-label-md text-error hover:underline cursor-pointer"
+      type="button"
+    >
+      Eliminar
+    </button>
+  </div>
+</div>

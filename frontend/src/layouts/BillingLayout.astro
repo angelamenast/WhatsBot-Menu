@@ -1,0 +1,87 @@
+---
+import Sidebar from "../components/common/Sidebar.astro";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+}
+
+const { title = "Tremia - Facturación" } = Astro.props;
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+
+    <!-- Fuentes e Iconos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body
+    class="bg-background font-sans antialiased text-on-surface font-body-md"
+  >
+    <!-- Tu Sidebar Real -->
+    <Sidebar />
+
+    <!-- Contenedor Principal Ajustado al Ancho del Sidebar (w-72 / pl-72) -->
+    <div class="pl-72 min-h-screen flex flex-col">
+      <!-- Top Header Interno de la App -->
+      <header
+        class="fixed top-0 left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-xs z-40 flex items-center justify-between px-gutter-desktop border-b border-surface-container-high"
+      >
+        <div class="flex items-center gap-space-md">
+          <div
+            class="flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
+          >
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"
+            ></span>
+            <span>Conectado a WhatsApp Business API</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-space-md">
+          <button
+            class="w-9 h-9 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer"
+            type="button"
+          >
+            <span class="material-symbols-outlined text-[20px]"
+              >notifications</span
+            >
+          </button>
+          <button
+            class="w-9 h-9 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer"
+            type="button"
+          >
+            <span class="material-symbols-outlined text-[20px]">help</span>
+          </button>
+          <a
+            class="w-8 h-8 rounded-full bg-primary flex items-center justify-center hover:bg-secondary transition-colors cursor-pointer"
+            href="/profile"
+          >
+            <span class="material-symbols-outlined text-on-primary text-[18px]"
+              >person</span
+            >
+          </a>
+        </div>
+      </header>
+
+      <!-- Slot para las páginas internas -->
+      <main
+        class="w-full pt-20 px-gutter-desktop pb-space-5xl flex-1 bg-background"
+      >
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>
