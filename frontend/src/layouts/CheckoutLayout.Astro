@@ -1,5 +1,6 @@
 ---
-import Logo from "../components/common/Logo.astro"; // Ajusta la ruta a tu componente Logo
+import Logo from "../components/common/Logo.astro";
+import "../styles/global.css";
 
 interface Props {
   title?: string;
@@ -58,7 +59,7 @@ const { title = "WhatsBot - Checkout" } = Astro.props;
         <nav class="hidden md:flex items-center gap-space-base">
           <a
             class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors px-space-sm py-space-xs rounded-lg"
-            href="#">Checkout</a
+            href="/checkout/plans">Checkout</a
           >
           <a
             class="transition-colors px-space-sm py-space-xs bg-primary-container text-on-primary-container font-semibold rounded-lg"
@@ -66,7 +67,7 @@ const { title = "WhatsBot - Checkout" } = Astro.props;
           >
           <a
             class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors px-space-sm py-space-xs rounded-lg"
-            href="#">Pago</a
+            href="/checkout/payment">Pago</a
           >
           <a
             class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors px-space-sm py-space-xs rounded-lg"
@@ -97,7 +98,7 @@ const { title = "WhatsBot - Checkout" } = Astro.props;
       </div>
     </header>
 
-    <!-- Contenido Dinámico de la Página -->
+    <!-- Contenido Dinámico -->
     <main class="w-full pt-16 bg-surface flex-1">
       <slot />
     </main>

@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@tailwind utilities;
 
 @theme {
   /* Paleta de Colores General */
@@ -17,18 +16,29 @@
   --color-surface-container-high: #ebe2dc;
   --color-surface-container-highest: #f0e6e0;
   --color-primary-container: #f97316;
+  --color-on-primary-container: #582200;
   --color-secondary-container: #fd651e;
+  --color-on-secondary-container: #571a00;
   --color-tertiary-container: #ca8e4c;
+  --color-on-tertiary-container: #4c2a00;
   --color-primary-fixed: #ffdbca;
   --color-primary-fixed-dim: #ffb690;
+  --color-on-primary-fixed: #341100;
+  --color-on-primary-fixed-variant: #783200;
   --color-secondary-fixed: #ffdbce;
+  --color-secondary-fixed-dim: #ffb599;
+  --color-on-secondary-fixed: #370e00;
+  --color-on-secondary-fixed-variant: #7f2b00;
   --color-tertiary-fixed: #ffdcbd;
+  --color-tertiary-fixed-dim: #fcb973;
+  --color-on-tertiary-fixed: #2c1600;
+  --color-on-tertiary-fixed-variant: #683c00;
   --color-outline: #8c7164;
   --color-outline-variant: #e0c0b1;
   --color-border-technical: #f3eae4;
   --color-background: #fff8f5;
 
-  /* Espaciados para la pantalla de Login (unit-*) */
+  /* Espaciados */
   --spacing-gutter-mobile: 1rem;
   --spacing-gutter-desktop: 1.5rem;
   --spacing-unit-2xs: 0.125rem;
@@ -39,7 +49,6 @@
   --spacing-unit-xl: 2rem;
   --spacing-unit-2xl: 3rem;
 
-  /* Espaciados para la pantalla de Registro (space-*) */
   --spacing-space-xxs: 0.125rem;
   --spacing-space-xs: 0.25rem;
   --spacing-space-sm: 0.5rem;
@@ -52,6 +61,43 @@
   --spacing-space-4xl: 3rem;
   --spacing-space-5xl: 4rem;
   --spacing-container-max: 80rem;
+
+  /* Tipografías */
+  --font-headline-lg: "Plus Jakarta Sans", sans-serif;
+  --font-headline-md: "Plus Jakarta Sans", sans-serif;
+  --font-headline-sm: "Plus Jakarta Sans", sans-serif;
+  --font-display-lg: "Plus Jakarta Sans", sans-serif;
+  --font-display-lg-mobile: "Plus Jakarta Sans", sans-serif;
+  --font-body-lg: "Plus Jakarta Sans", sans-serif;
+  --font-body-md: "Plus Jakarta Sans", sans-serif;
+  --font-body-sm: "Plus Jakarta Sans", sans-serif;
+  --font-label-lg: "Plus Jakarta Sans", sans-serif;
+  --font-label-md: "Plus Jakarta Sans", sans-serif;
+  --font-label-sm: "Plus Jakarta Sans", sans-serif;
+
+  /* Tamaños de texto */
+  --text-display-lg: 40px;
+  --text-display-lg--line-height: 48px;
+  --text-display-lg-mobile: 32px;
+  --text-display-lg-mobile--line-height: 40px;
+  --text-headline-lg: 28px;
+  --text-headline-lg--line-height: 36px;
+  --text-headline-md: 22px;
+  --text-headline-md--line-height: 28px;
+  --text-headline-sm: 18px;
+  --text-headline-sm--line-height: 24px;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 24px;
+  --text-body-md: 14px;
+  --text-body-md--line-height: 20px;
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 18px;
+  --text-label-lg: 14px;
+  --text-label-lg--line-height: 20px;
+  --text-label-md: 12px;
+  --text-label-md--line-height: 16px;
+  --text-label-sm: 11px;
+  --text-label-sm--line-height: 14px;
 }
 
 /* Configuración de Íconos */

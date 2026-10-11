@@ -28,23 +28,33 @@
     >
       <div class="flex items-center justify-between">
         <div class="flex flex-col">
-          <span class="font-body-md text-body-md font-semibold text-on-surface"
-            >Plan WhatsBot Professional</span
+          <span
+            class="font-body-md text-body-md font-semibold text-on-surface"
+            id="summary-plan-title">Plan WhatsBot Professional</span
           >
-          <span class="font-label-sm text-label-sm text-on-surface-variant"
+          <span
+            class="font-label-sm text-label-sm text-on-surface-variant"
+            id="summary-plan-billing"
             >Facturación Anual • Prueba gratis de 14 días</span
           >
         </div>
-        <span class="font-label-lg text-label-lg font-semibold text-on-surface"
-          >$24.00 USD</span
+        <span
+          class="font-label-lg text-label-lg font-semibold text-on-surface"
+          id="summary-base-price">$24.00 USD</span
         >
       </div>
-      <div class="flex items-center justify-between text-primary font-medium">
+      <div
+        class="flex items-center justify-between text-primary font-medium"
+        id="summary-discount-row"
+      >
         <span class="font-body-md text-body-md flex items-center gap-1">
           <span class="material-symbols-outlined text-[16px]">sell</span
           >Descuento Anual (2 meses gratis)
         </span>
-        <span class="font-label-lg text-label-lg font-bold">-$4.80 USD</span>
+        <span
+          class="font-label-lg text-label-lg font-bold"
+          id="summary-discount-amount">-$4.80 USD</span
+        >
       </div>
     </div>
 
@@ -73,48 +83,82 @@
     </div>
 
     <a
-      class="w-full py-space-md px-space-xl bg-primary-container hover:bg-secondary-container text-on-primary font-headline-sm text-headline-sm font-bold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-space-sm text-center"
-      href="#"
+      class="w-full py-space-md px-space-xl bg-primary-container hover:bg-secondary-container text-on-primary font-headline-sm text-headline-sm font-bold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-space-sm text-center cursor-pointer"
       id="btn-proceed"
+      href="/checkout/payment"
     >
-      <span>Continuar al Pago Seguro ($19.20 USD)</span>
+      <span id="proceed-btn-text">Continuar al Pago Seguro ($19.20 USD)</span>
       <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
     </a>
+
     <p
       class="font-body-sm text-body-sm text-center text-on-surface-variant mt-space-md mb-space-lg"
     >
       Próximo paso: ingresa tu método de pago protegido con cifrado SSL
       bancario.
     </p>
-
-    <div
-      class="border-t border-surface-container-high pt-space-md grid grid-cols-1 sm:grid-cols-3 gap-space-sm"
-    >
-      <div class="flex items-center gap-space-xs text-on-surface">
-        <span
-          class="material-symbols-outlined text-primary text-[18px]"
-          style="font-variation-settings: 'FILL' 1;">shield</span
-        >
-        <span class="font-label-sm text-label-sm font-medium"
-          >Garantía de 14 días</span
-        >
-      </div>
-      <div class="flex items-center gap-space-xs text-on-surface">
-        <span class="material-symbols-outlined text-primary text-[18px]"
-          >flash_on</span
-        >
-        <span class="font-label-sm text-label-sm font-medium"
-          >Activación inmediata</span
-        >
-      </div>
-      <div class="flex items-center gap-space-xs text-on-surface">
-        <span class="material-symbols-outlined text-primary text-[18px]"
-          >check_box</span
-        >
-        <span class="font-label-sm text-label-sm font-medium"
-          >Cancela en 1 clic</span
-        >
-      </div>
-    </div>
   </div>
 </div>
+
+<script is:inline>
+  (function initOrderSummary() {
+    const PLAN_DATA = {
+      starter: { name: "WhatsBot Starter", monthly: 0, annual: 0 },
+      pro: { name: "WhatsBot Professional", monthly: 29, annual: 24 },
+      enterprise: { name: "WhatsBot Enterprise", monthly: 99, annual: 79 },
+    };
+
+    function renderSummary(planKey, billing) {
+      const data = PLAN_DATA[planKey] || PLAN_DATA.pro;
+      const isAnnual = billing === "annual";
+      const price = isAnnual ? data.annual : data.monthly;
+      const discount = isAnnual ? price * 0.2 : 0;
+      const finalPrice = Math.max(0, price - discount);
+
+      const titleEl = document.getElementById("summary-plan-title");
+      const billingEl = document.getElementById("summary-plan-billing");
+      const basePriceEl = document.getElementById("summary-base-price");
+      const discountRow = document.getElementById("summary-discount-row");
+      const discountAmountEl = document.getElementById(
+        "summary-discount-amount",
+      );
+      const totalEl = document.getElementById("order-total");
+      const btnTextEl = document.getElementById("proceed-btn-text");
+      const btnEl = document.getElementById("btn-proceed");
+
+      if (titleEl) titleEl.textContent = data.name;
+      if (billingEl)
+        billingEl.textContent = isAnnual
+          ? "Facturación Anual • Prueba gratis de 14 días"
+          : "Facturación Mensual • Prueba gratis de 14 días";
+      if (basePriceEl)
+        basePriceEl.textContent = "$" + price.toFixed(2) + " USD";
+
+      if (discountRow) {
+        discountRow.style.display = isAnnual && price > 0 ? "flex" : "none";
+        if (discountAmountEl)
+          discountAmountEl.textContent = "-$" + discount.toFixed(2) + " USD";
+      }
+
+      if (totalEl) totalEl.textContent = "$" + finalPrice.toFixed(2);
+      if (btnTextEl)
+        btnTextEl.textContent =
+          "Continuar al Pago Seguro ($" + finalPrice.toFixed(2) + " USD)";
+      if (btnEl)
+        btnEl.setAttribute(
+          "href",
+          "/checkout/payment?plan=" + planKey + "&billing=" + billing,
+        );
+    }
+
+    window.addEventListener("plan-changed", function (e) {
+      if (e && e.detail) {
+        renderSummary(e.detail.plan, e.detail.billing);
+      }
+    });
+
+    const savedPlan = localStorage.getItem("checkout_plan") || "pro";
+    const savedBilling = localStorage.getItem("checkout_billing") || "annual";
+    renderSummary(savedPlan, savedBilling);
+  })();
+</script>

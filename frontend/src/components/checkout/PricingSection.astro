@@ -30,14 +30,14 @@
     class="mt-space-2xl inline-flex p-1 bg-surface-container-high rounded-full shadow-inner items-center relative"
   >
     <button
-      class="py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 text-on-surface-variant hover:text-on-surface"
+      class="py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 text-on-surface-variant hover:text-on-surface cursor-pointer"
       id="toggle-monthly"
       type="button"
     >
       Mensual
     </button>
     <button
-      class="py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold flex items-center gap-space-xs"
+      class="py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold flex items-center gap-space-xs cursor-pointer"
       id="toggle-annual"
       type="button"
     >
@@ -54,10 +54,12 @@
 <!-- Grid de Planes -->
 <div
   class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg mb-space-4xl items-stretch"
+  id="plans-grid"
 >
-  <!-- Starter -->
+  <!-- Plan Starter -->
   <div
-    class="plan-card bg-surface-container-lowest rounded-xl p-space-xl flex flex-col justify-between shadow-sm transition-all duration-200 hover:-translate-y-1"
+    class="plan-card bg-surface-container-lowest rounded-xl p-space-xl flex flex-col justify-between shadow-sm transition-all duration-200 hover:-translate-y-1 cursor-pointer"
+    data-plan="starter"
   >
     <div>
       <div class="flex items-center justify-between mb-space-md">
@@ -75,7 +77,7 @@
           >$0</span
         >
         <span class="font-body-md text-body-md text-on-surface-variant"
-          >/ 14 días de prueba</span
+          >/ 14 días gratis</span
         >
       </div>
       <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-xl">
@@ -110,34 +112,20 @@
             >Menú y catálogo digital interactivo</span
           >
         </div>
-        <div class="flex items-start gap-space-sm text-on-surface-variant/60">
-          <span class="material-symbols-outlined text-[18px] mt-0.5"
-            >remove</span
-          >
-          <span class="font-body-md text-body-md"
-            >Cobros integrados en chat</span
-          >
-        </div>
-        <div class="flex items-start gap-space-sm text-on-surface-variant/60">
-          <span class="material-symbols-outlined text-[18px] mt-0.5"
-            >remove</span
-          >
-          <span class="font-body-md text-body-md">Soporte prioritario 24/7</span
-          >
-        </div>
       </div>
     </div>
     <button
-      class="plan-select-btn w-full py-space-sm px-space-md rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-lg text-label-lg transition-colors"
+      class="btn-select-plan w-full py-space-sm px-space-md rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-lg text-label-lg transition-colors cursor-pointer"
       type="button"
     >
       Elegir Starter
     </button>
   </div>
 
-  <!-- Professional -->
+  <!-- Plan Professional -->
   <div
-    class="plan-card relative bg-surface-container-lowest rounded-xl p-space-xl flex flex-col justify-between shadow-xl transition-all duration-200 hover:-translate-y-1 ring-2 ring-primary-container"
+    class="plan-card relative bg-surface-container-lowest rounded-xl p-space-xl flex flex-col justify-between shadow-xl transition-all duration-200 hover:-translate-y-1 ring-2 ring-primary-container cursor-pointer"
+    data-plan="pro"
   >
     <div
       class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary-container to-secondary-container text-on-primary font-label-sm text-label-sm uppercase tracking-wider font-extrabold px-space-md py-0.5 rounded-full shadow-md flex items-center gap-1"
@@ -162,7 +150,7 @@
       <div class="flex items-baseline gap-1 mb-space-xs">
         <span
           class="font-display-lg text-display-lg font-bold text-on-surface"
-          id="pro-price">$24</span
+          id="pro-price-display">$24</span
         >
         <span class="font-body-md text-body-md text-on-surface-variant"
           >USD / mes</span
@@ -180,16 +168,16 @@
       <div class="space-y-space-md mb-space-2xl">
         <div class="flex items-start gap-space-sm">
           <span
-            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            class="material-symbols-outlined text-primary text-[18px]"
             style="font-variation-settings: 'FILL' 1;">verified</span
           >
           <span class="font-body-md text-body-md text-on-surface"
-            ><strong>5 Agentes IA</strong> con tono de voz adaptable</span
+            ><strong>5 Agentes IA</strong> con tono adaptable</span
           >
         </div>
         <div class="flex items-start gap-space-sm">
           <span
-            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            class="material-symbols-outlined text-primary text-[18px]"
             style="font-variation-settings: 'FILL' 1;">verified</span
           >
           <span class="font-body-md text-body-md text-on-surface"
@@ -198,46 +186,28 @@
         </div>
         <div class="flex items-start gap-space-sm">
           <span
-            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
+            class="material-symbols-outlined text-primary text-[18px]"
             style="font-variation-settings: 'FILL' 1;">verified</span
           >
           <span class="font-body-md text-body-md text-on-surface"
-            ><strong>Cobros integrados</strong> en WhatsApp (Stripe & Wompi)</span
-          >
-        </div>
-        <div class="flex items-start gap-space-sm">
-          <span
-            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
-            style="font-variation-settings: 'FILL' 1;">verified</span
-          >
-          <span class="font-body-md text-body-md text-on-surface"
-            >Automatización de carritos abandonados</span
-          >
-        </div>
-        <div class="flex items-start gap-space-sm">
-          <span
-            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
-            style="font-variation-settings: 'FILL' 1;">verified</span
-          >
-          <span class="font-body-md text-body-md text-on-surface"
-            ><strong>Soporte prioritario</strong> vía WhatsApp</span
+            ><strong>Cobros integrados</strong> en WhatsApp</span
           >
         </div>
       </div>
     </div>
     <button
-      class="w-full py-space-sm px-space-md rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg font-bold shadow-md hover:bg-secondary-container transition-all flex items-center justify-center gap-space-xs"
-      id="btn-pro-selected"
+      class="btn-select-plan w-full py-space-sm px-space-md rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg font-bold shadow-md hover:bg-secondary-container transition-all flex items-center justify-center gap-space-xs cursor-pointer"
       type="button"
     >
       <span class="material-symbols-outlined text-[18px]">check</span>
-      Plan Seleccionado
+      <span>Plan Seleccionado</span>
     </button>
   </div>
 
-  <!-- Enterprise -->
+  <!-- Plan Enterprise -->
   <div
-    class="plan-card bg-surface-container-lowest rounded-xl p-space-xl flex flex-col justify-between shadow-sm transition-all duration-200 hover:-translate-y-1"
+    class="plan-card bg-surface-container-lowest rounded-xl p-space-xl flex flex-col justify-between shadow-sm transition-all duration-200 hover:-translate-y-1 cursor-pointer"
+    data-plan="enterprise"
   >
     <div>
       <div class="flex items-center justify-between mb-space-md">
@@ -251,8 +221,9 @@
         >
       </div>
       <div class="flex items-baseline gap-1 mb-space-xs">
-        <span class="font-display-lg text-display-lg font-bold text-on-surface"
-          >$79</span
+        <span
+          class="font-display-lg text-display-lg font-bold text-on-surface"
+          id="enterprise-price-display">$79</span
         >
         <span class="font-body-md text-body-md text-on-surface-variant"
           >USD / mes</span
@@ -278,40 +249,13 @@
             >check_circle</span
           >
           <span class="font-body-md text-body-md text-on-surface"
-            ><strong>Fine-tuning profundo</strong> con tu catálogo y PDFs</span
-          >
-        </div>
-        <div class="flex items-start gap-space-sm">
-          <span
-            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
-            >check_circle</span
-          >
-          <span class="font-body-md text-body-md text-on-surface"
-            >Garantía de SLA 99.9% uptime</span
-          >
-        </div>
-        <div class="flex items-start gap-space-sm">
-          <span
-            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
-            >check_circle</span
-          >
-          <span class="font-body-md text-body-md text-on-surface"
-            >Account Manager dedicado & Onboarding</span
-          >
-        </div>
-        <div class="flex items-start gap-space-sm">
-          <span
-            class="material-symbols-outlined text-primary text-[18px] mt-0.5"
-            >check_circle</span
-          >
-          <span class="font-body-md text-body-md text-on-surface"
-            >Webhooks personalizados & API dedicada</span
+            ><strong>Fine-tuning profundo</strong> con tu catálogo</span
           >
         </div>
       </div>
     </div>
     <button
-      class="plan-select-btn w-full py-space-sm px-space-md rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-lg text-label-lg transition-colors"
+      class="btn-select-plan w-full py-space-sm px-space-md rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-lg text-label-lg transition-colors cursor-pointer"
       type="button"
     >
       Elegir Enterprise
@@ -319,50 +263,95 @@
   </div>
 </div>
 
-<script>
-  const toggleMonthly = document.getElementById("toggle-monthly");
-  const toggleAnnual = document.getElementById("toggle-annual");
-  const proPrice = document.getElementById("pro-price");
-  const orderTotal = document.getElementById("order-total");
-  const btnProceed = document.getElementById("btn-proceed");
+<script is:inline>
+  (function initPricingSection() {
+    let currentBilling = localStorage.getItem("checkout_billing") || "annual";
+    let currentPlan = localStorage.getItem("checkout_plan") || "pro";
 
-  let isAnnual = true;
-  const discountRate = 0.2;
+    function syncState() {
+      localStorage.setItem("checkout_plan", currentPlan);
+      localStorage.setItem("checkout_billing", currentBilling);
 
-  function updateTotal() {
-    let subtotal = isAnnual ? 24.0 : 29.0;
-    let discount = isAnnual ? subtotal * discountRate : 0;
-    let calculatedTotal = Math.max(0, subtotal - discount);
+      const proDisplay = document.getElementById("pro-price-display");
+      const entDisplay = document.getElementById("enterprise-price-display");
+      if (proDisplay)
+        proDisplay.textContent = currentBilling === "annual" ? "$24" : "$29";
+      if (entDisplay)
+        entDisplay.textContent = currentBilling === "annual" ? "$79" : "$99";
 
-    if (orderTotal) {
-      orderTotal.textContent = "$" + calculatedTotal.toFixed(2);
+      const cards = document.querySelectorAll(".plan-card");
+      cards.forEach((card) => {
+        const planKey = card.getAttribute("data-plan");
+        const btn = card.querySelector(".btn-select-plan");
+        if (planKey === currentPlan) {
+          card.classList.add("ring-2", "ring-primary-container", "shadow-xl");
+          if (btn) {
+            btn.className =
+              "btn-select-plan w-full py-space-sm px-space-md rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg font-bold shadow-md hover:bg-secondary-container transition-all flex items-center justify-center gap-space-xs cursor-pointer";
+            btn.innerHTML =
+              '<span class="material-symbols-outlined text-[18px]">check</span><span>Plan Seleccionado</span>';
+          }
+        } else {
+          card.classList.remove(
+            "ring-2",
+            "ring-primary-container",
+            "shadow-xl",
+          );
+          if (btn) {
+            btn.className =
+              "btn-select-plan w-full py-space-sm px-space-md rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-lg text-label-lg transition-colors cursor-pointer";
+            const name = planKey
+              ? planKey.charAt(0).toUpperCase() + planKey.slice(1)
+              : "";
+            btn.innerHTML = "Elegir " + name;
+          }
+        }
+      });
+
+      window.dispatchEvent(
+        new CustomEvent("plan-changed", {
+          detail: { plan: currentPlan, billing: currentBilling },
+        }),
+      );
     }
-    if (btnProceed) {
-      btnProceed.innerHTML = `<span>Continuar al Pago Seguro ($${calculatedTotal.toFixed(2)} USD)</span><span class="material-symbols-outlined text-[20px]">arrow_forward</span>`;
+
+    const grid = document.getElementById("plans-grid");
+    if (grid) {
+      grid.addEventListener("click", function (e) {
+        const card = e.target.closest(".plan-card");
+        if (card) {
+          const selectedPlan = card.getAttribute("data-plan");
+          if (selectedPlan) {
+            currentPlan = selectedPlan;
+            syncState();
+          }
+        }
+      });
     }
-  }
 
-  if (toggleMonthly && toggleAnnual) {
-    toggleMonthly.addEventListener("click", () => {
-      isAnnual = false;
-      toggleMonthly.className =
-        "py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold";
-      toggleAnnual.className =
-        "py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 text-on-surface-variant hover:text-on-surface flex items-center gap-space-xs";
-      if (proPrice) proPrice.textContent = "$29";
-      updateTotal();
-    });
+    const btnMonthly = document.getElementById("toggle-monthly");
+    const btnAnnual = document.getElementById("toggle-annual");
 
-    toggleAnnual.addEventListener("click", () => {
-      isAnnual = true;
-      toggleAnnual.className =
-        "py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold flex items-center gap-space-xs";
-      toggleMonthly.className =
-        "py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 text-on-surface-variant hover:text-on-surface";
-      if (proPrice) proPrice.textContent = "$24";
-      updateTotal();
-    });
-  }
+    if (btnMonthly && btnAnnual) {
+      btnMonthly.addEventListener("click", function () {
+        currentBilling = "monthly";
+        btnMonthly.className =
+          "py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold cursor-pointer";
+        btnAnnual.className =
+          "py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 text-on-surface-variant hover:text-on-surface flex items-center gap-space-xs cursor-pointer";
+        syncState();
+      });
 
-  updateTotal();
+      btnAnnual.addEventListener("click", function () {
+        currentBilling = "annual";
+        btnAnnual.className =
+          "py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold flex items-center gap-space-xs cursor-pointer";
+        btnMonthly.className =
+          "py-space-xs px-space-xl rounded-full font-label-md text-label-md transition-all duration-200 text-on-surface-variant hover:text-on-surface cursor-pointer";
+        syncState();
+      });
+    }
+
+    syncState();
+  })();
 </script>
