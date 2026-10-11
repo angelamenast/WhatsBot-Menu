@@ -5,20 +5,6 @@ export class EmptyOrderError extends Error {
   }
 }
 
-export class ProductNotFoundError extends Error {
-  constructor(productId: string) {
-    super(`El producto ${productId} no existe en el catálogo del negocio`);
-    this.name = 'ProductNotFoundError';
-  }
-}
-
-export class ProductUnavailableError extends Error {
-  constructor(productId: string) {
-    super(`El producto ${productId} no está disponible actualmente`);
-    this.name = 'ProductUnavailableError';
-  }
-}
-
 export class OrderNotFoundError extends Error {
   constructor(orderId: string) {
     super(`No existe un pedido con id ${orderId}`);
