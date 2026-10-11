@@ -1,58 +1,47 @@
 import { OrderItem } from './order-item.entity';
+import {
+  InvalidOrderItemPriceError,
+  InvalidOrderItemQuantityError,
+} from '../errors/order.errors';
 
 describe('OrderItem', () => {
-  it('calcula el subtotal como unitPrice * quantity', () => {
-    const item = OrderItem.create({
+  const build = (overrides: { unitPrice?: number; quantity?: number } = {}) =>
+    OrderItem.create({
       productId: 'product-1',
       productNameSnapshot: 'Limonada natural',
-      unitPrice: 6000,
-      quantity: 3,
+      unitPrice: overrides.unitPrice ?? 6000,
+      quantity: overrides.quantity ?? 1,
     });
 
-    expect(item.subtotal).toBe(18000);
+  it('calcula el subtotal como unitPrice * quantity', () => {
+    expect(build({ unitPrice: 6000, quantity: 3 }).subtotal).toBe(18000);
   });
 
-  it('cantidad 0: lanza error', () => {
-    expect(() =>
-      OrderItem.create({
-        productId: 'product-1',
-        productNameSnapshot: 'Limonada natural',
-        unitPrice: 6000,
-        quantity: 0,
-      }),
-    ).toThrow('La cantidad de un item debe ser mayor a cero');
+  it.each([0, -1])('cantidad %p: lanza InvalidOrderItemQuantityError', (quantity) => {
+    expect(() => build({ quantity })).toThrow(InvalidOrderItemQuantityError);
   });
 
-  it('cantidad negativa: lanza error', () => {
-    expect(() =>
-      OrderItem.create({
-        productId: 'product-1',
-        productNameSnapshot: 'Limonada natural',
-        unitPrice: 6000,
-        quantity: -1,
-      }),
-    ).toThrow('La cantidad de un item debe ser mayor a cero');
+  it.each([1.5, NaN, Infinity, -Infinity])(
+    'cantidad %p (no entera o no finita): lanza InvalidOrderItemQuantityError',
+    (quantity) => {
+      expect(() => build({ quantity })).toThrow(InvalidOrderItemQuantityError);
+    },
+  );
+
+  it('precio unitario negativo: lanza InvalidOrderItemPriceError', () => {
+    expect(() => build({ unitPrice: -100 })).toThrow(
+      InvalidOrderItemPriceError,
+    );
   });
 
-  it('precio unitario negativo: lanza error', () => {
-    expect(() =>
-      OrderItem.create({
-        productId: 'product-1',
-        productNameSnapshot: 'Limonada natural',
-        unitPrice: -100,
-        quantity: 1,
-      }),
-    ).toThrow('El precio unitario no puede ser negativo');
-  });
+  it.each([NaN, Infinity, -Infinity])(
+    'precio unitario %p (no finito): lanza InvalidOrderItemPriceError',
+    (unitPrice) => {
+      expect(() => build({ unitPrice })).toThrow(InvalidOrderItemPriceError);
+    },
+  );
 
   it('precio unitario 0: es válido (ej. ítem promocional)', () => {
-    const item = OrderItem.create({
-      productId: 'product-1',
-      productNameSnapshot: 'Propina sugerida',
-      unitPrice: 0,
-      quantity: 1,
-    });
-
-    expect(item.subtotal).toBe(0);
+    expect(build({ unitPrice: 0 }).subtotal).toBe(0);
   });
 });

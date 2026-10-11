@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { OrderItem } from './order-item.entity';
-import { InvalidOrderTransitionError } from '../errors/order.errors';
+import {
+  EmptyOrderError,
+  InvalidOrderTransitionError,
+} from '../errors/order.errors';
 
 export enum OrderStatus {
   PENDING = 'PENDING',
@@ -19,10 +22,19 @@ export interface OrderProps {
 }
 
 export class Order {
-  private constructor(private props: OrderProps) {}
+  private constructor(private props: OrderProps) {
+    // Copia defensiva: quien construyó el pedido no puede mutar sus items después.
+    this.props.items = [...props.items];
+  }
 
-  static create(props: OrderProps): Order {
-    return new Order(props);
+  /**
+   * Hidrata un pedido ya persistido. Sin validaciones a propósito: puede existir
+   * en BD un pedido huérfano sin items (creaciones fallidas anteriores a la RPC
+   * atómica) y leerlo no debe romper el listado. Nunca usar para crear pedidos
+   * nuevos — para eso está createPending().
+   */
+  static reconstitute(props: OrderProps): Order {
+    return new Order({ ...props });
   }
 
   /**
@@ -37,6 +49,10 @@ export class Order {
     conversationId: string;
     items: OrderItem[];
   }): Order {
+    if (params.items.length === 0) {
+      throw new EmptyOrderError();
+    }
+
     const now = new Date();
     return new Order({
       id: randomUUID(),
@@ -65,8 +81,8 @@ export class Order {
     return this.props.status;
   }
 
-  get items(): OrderItem[] {
-    return this.props.items;
+  get items(): readonly OrderItem[] {
+    return [...this.props.items];
   }
 
   get total(): number {

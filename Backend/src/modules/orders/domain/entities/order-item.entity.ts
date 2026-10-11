@@ -1,3 +1,8 @@
+import {
+  InvalidOrderItemPriceError,
+  InvalidOrderItemQuantityError,
+} from '../errors/order.errors';
+
 export interface OrderItemProps {
   productId: string;
   productNameSnapshot: string;
@@ -16,11 +21,11 @@ export class OrderItem {
   private constructor(private props: OrderItemProps) {}
 
   static create(props: OrderItemProps): OrderItem {
-    if (props.quantity <= 0) {
-      throw new Error('La cantidad de un item debe ser mayor a cero');
+    if (!Number.isInteger(props.quantity) || props.quantity <= 0) {
+      throw new InvalidOrderItemQuantityError(props.quantity);
     }
-    if (props.unitPrice < 0) {
-      throw new Error('El precio unitario no puede ser negativo');
+    if (!Number.isFinite(props.unitPrice) || props.unitPrice < 0) {
+      throw new InvalidOrderItemPriceError(props.unitPrice);
     }
     return new OrderItem(props);
   }

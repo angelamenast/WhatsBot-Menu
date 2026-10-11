@@ -32,3 +32,46 @@ export class InvalidOrderTransitionError extends Error {
     this.name = 'InvalidOrderTransitionError';
   }
 }
+
+export class OrderStateConflictError extends Error {
+  constructor(orderId: string) {
+    super(
+      `El pedido ${orderId} cambió de estado mientras se procesaba la solicitud; vuelve a consultarlo e inténtalo de nuevo`,
+    );
+    this.name = 'OrderStateConflictError';
+  }
+}
+
+export class InvalidOrderItemQuantityError extends Error {
+  constructor(quantity: number) {
+    super(
+      `La cantidad de un item debe ser un entero mayor a cero (recibido: ${quantity})`,
+    );
+    this.name = 'InvalidOrderItemQuantityError';
+  }
+}
+
+export class InvalidOrderItemPriceError extends Error {
+  constructor(unitPrice: number) {
+    super(
+      `El precio unitario debe ser un número finito mayor o igual a cero (recibido: ${unitPrice})`,
+    );
+    this.name = 'InvalidOrderItemPriceError';
+  }
+}
+
+export class UnknownOrderStatusError extends Error {
+  constructor(estadoCodigo: string) {
+    super(`El estado de pedido "${estadoCodigo}" no es reconocido`);
+    this.name = 'UnknownOrderStatusError';
+  }
+}
+
+export class ConversationNotInBusinessError extends Error {
+  constructor(conversationId: string, businessId: string) {
+    super(
+      `La conversación ${conversationId} no pertenece al negocio ${businessId}`,
+    );
+    this.name = 'ConversationNotInBusinessError';
+  }
+}
