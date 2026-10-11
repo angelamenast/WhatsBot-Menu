@@ -32,7 +32,8 @@ describe('CancelOrderUseCase', () => {
   beforeEach(() => {
     orderRepository = {
       findById: jest.fn(),
-      findAllByBusinessId: jest.fn(),
+      findViewById: jest.fn(),
+      findViewsByBusiness: jest.fn(),
       insert: jest.fn(),
       updateStatus: jest.fn(),
     };

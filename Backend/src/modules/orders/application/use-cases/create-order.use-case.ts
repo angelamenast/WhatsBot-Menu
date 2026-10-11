@@ -4,7 +4,10 @@ import { ORDER_REPOSITORY } from '../../domain/repositories/order.repository';
 import type { CatalogLookupRepository } from '../../domain/repositories/catalog-lookup.repository';
 import { CATALOG_LOOKUP_REPOSITORY } from '../../domain/repositories/catalog-lookup.repository';
 import { Order } from '../../domain/entities/order.entity';
-import { OrderItem } from '../../domain/entities/order-item.entity';
+import {
+  MAX_ITEM_QUANTITY,
+  OrderItem,
+} from '../../domain/entities/order-item.entity';
 import { EmptyOrderError } from '../../domain/errors/order.errors';
 import { CreateOrderCommand } from '../dto/create-order.command';
 import type {
@@ -56,7 +59,11 @@ export class CreateOrderUseCase {
     >();
 
     for (const line of command.items) {
-      if (!Number.isInteger(line.quantity) || line.quantity <= 0) {
+      if (
+        !Number.isInteger(line.quantity) ||
+        line.quantity <= 0 ||
+        line.quantity > MAX_ITEM_QUANTITY
+      ) {
         reject(line.productId, 'INVALID_QUANTITY');
         continue;
       }
@@ -77,6 +84,15 @@ export class CreateOrderUseCase {
           originalProductId: line.productId,
           quantity: line.quantity,
         });
+      }
+    }
+
+    // Cada línea cabía en el tope, pero la suma de un producto repetido puede
+    // pasarse: ese producto se rechaza completo (no se recorta la cantidad).
+    for (const [key, line] of merged) {
+      if (line.quantity > MAX_ITEM_QUANTITY) {
+        reject(line.originalProductId, 'INVALID_QUANTITY');
+        merged.delete(key);
       }
     }
 

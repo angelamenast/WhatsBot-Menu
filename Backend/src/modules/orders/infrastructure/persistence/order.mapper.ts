@@ -1,6 +1,10 @@
 import { Order, OrderStatus } from '../../domain/entities/order.entity';
 import { OrderItem } from '../../domain/entities/order-item.entity';
-import { UnknownOrderStatusError } from '../../domain/errors/order.errors';
+import {
+  OrderCustomerPhoneMissingError,
+  UnknownOrderStatusError,
+} from '../../domain/errors/order.errors';
+import type { OrderView } from '../../domain/repositories/order.repository';
 
 export type EstadoPedido = 'pendiente' | 'confirmado' | 'cancelado';
 
@@ -17,7 +21,7 @@ const STATUS_TO_ESTADO: Record<OrderStatus, EstadoPedido> = {
 };
 
 interface PedidoItemRow {
-  producto_id: string;
+  producto_id: string | null;
   nombre_producto_snapshot: string;
   precio_unitario: number;
   cantidad: number;
@@ -31,12 +35,20 @@ interface PedidoRow {
   created_at: string;
   updated_at: string;
   pedido_items: PedidoItemRow[];
+  // Solo viene en las consultas de lectura (embed conversaciones!inner). PostgREST
+  // devuelve un objeto para relaciones many-to-one; se acepta también un array de
+  // un elemento por defensa, sin depender de la forma exacta.
+  conversaciones?: ConversacionEmbed | ConversacionEmbed[] | null;
+}
+
+interface ConversacionEmbed {
+  numero_cliente: string | null;
 }
 
 export class OrderMapper {
   static toDomain(row: PedidoRow): Order {
     const items = row.pedido_items.map((item) =>
-      OrderItem.create({
+      OrderItem.reconstitute({
         productId: item.producto_id,
         productNameSnapshot: item.nombre_producto_snapshot,
         unitPrice: item.precio_unitario,
@@ -53,6 +65,20 @@ export class OrderMapper {
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     });
+  }
+
+  static toView(row: PedidoRow): OrderView {
+    const embed = Array.isArray(row.conversaciones)
+      ? row.conversaciones[0]
+      : row.conversaciones;
+    const customerPhone = embed?.numero_cliente;
+
+    // Nunca se devuelve '' como si fuera un teléfono. El mensaje no incluye el número.
+    if (typeof customerPhone !== 'string' || customerPhone.length === 0) {
+      throw new OrderCustomerPhoneMissingError(row.id);
+    }
+
+    return { order: OrderMapper.toDomain(row), customerPhone };
   }
 
   static toStatus(estadoCodigo: string): OrderStatus {

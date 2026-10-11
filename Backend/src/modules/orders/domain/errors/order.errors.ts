@@ -31,7 +31,7 @@ export class OrderStateConflictError extends Error {
 export class InvalidOrderItemQuantityError extends Error {
   constructor(quantity: number) {
     super(
-      `La cantidad de un item debe ser un entero mayor a cero (recibido: ${quantity})`,
+      `La cantidad de un item debe ser un entero mayor a cero y no superar el máximo permitido (recibido: ${quantity})`,
     );
     this.name = 'InvalidOrderItemQuantityError';
   }
@@ -59,5 +59,28 @@ export class ConversationNotInBusinessError extends Error {
       `La conversación ${conversationId} no pertenece al negocio ${businessId}`,
     );
     this.name = 'ConversationNotInBusinessError';
+  }
+}
+
+export class InvalidOrderItemProductError extends Error {
+  constructor() {
+    super('Un item nuevo necesita el id del producto');
+    this.name = 'InvalidOrderItemProductError';
+  }
+}
+
+export class InvalidOrderListFilterError extends Error {
+  constructor(reason: string) {
+    super(`Filtro de listado inválido: ${reason}`);
+    this.name = 'InvalidOrderListFilterError';
+  }
+}
+
+export class OrderCustomerPhoneMissingError extends Error {
+  constructor(orderId: string) {
+    super(
+      `El pedido ${orderId} no tiene número de cliente asociado en su conversación`,
+    );
+    this.name = 'OrderCustomerPhoneMissingError';
   }
 }

@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../../../../shared/supabase/supabase.service';
-import { OrderRepository } from '../../domain/repositories/order.repository';
+import {
+  OrderListFilter,
+  OrderPage,
+  OrderRepository,
+  OrderView,
+} from '../../domain/repositories/order.repository';
 import { Order, OrderStatus } from '../../domain/entities/order.entity';
 import {
   ConversationNotInBusinessError,
@@ -9,6 +14,10 @@ import {
 import { OrderMapper } from './order.mapper';
 
 const PEDIDO_CON_ITEMS_SELECT = '*, pedido_items(*)';
+// Una sola query: pedido + ítems + teléfono del cliente (sin N+1). !inner porque
+// pedidos.conversacion_id es NOT NULL con FK: nunca debería faltar la conversación.
+const PEDIDO_VISTA_SELECT =
+  '*, pedido_items(*), conversaciones!inner(numero_cliente)';
 
 // Marcadores que lanza la función SQL crear_pedido con RAISE EXCEPTION.
 const RPC_CONVERSATION_NOT_IN_BUSINESS = 'CONVERSATION_NOT_IN_BUSINESS';
@@ -35,20 +44,57 @@ export class SupabaseOrderRepository implements OrderRepository {
     return data ? OrderMapper.toDomain(data) : null;
   }
 
-  async findAllByBusinessId(businessId: string): Promise<Order[]> {
+  async findViewById(
+    orderId: string,
+    businessId: string,
+  ): Promise<OrderView | null> {
     const client = this.supabaseService.getClient();
 
     const { data, error } = await client
       .from('pedidos')
-      .select(PEDIDO_CON_ITEMS_SELECT)
+      .select(PEDIDO_VISTA_SELECT)
+      .eq('id', orderId)
       .eq('negocio_id', businessId)
-      .order('created_at', { ascending: false });
+      .maybeSingle();
 
     if (error) {
       throw error;
     }
 
-    return (data ?? []).map((row) => OrderMapper.toDomain(row));
+    return data ? OrderMapper.toView(data) : null;
+  }
+
+  async findViewsByBusiness(
+    businessId: string,
+    filter: OrderListFilter,
+  ): Promise<OrderPage> {
+    const client = this.supabaseService.getClient();
+
+    let query = client
+      .from('pedidos')
+      .select(PEDIDO_VISTA_SELECT, { count: 'exact' })
+      .eq('negocio_id', businessId);
+
+    if (filter.from) {
+      query = query.gte('created_at', filter.from.toISOString());
+    }
+    if (filter.to) {
+      query = query.lt('created_at', filter.to.toISOString());
+    }
+
+    const { data, error, count } = await query
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(filter.offset, filter.offset + filter.limit - 1);
+
+    if (error) {
+      throw error;
+    }
+
+    return {
+      items: (data ?? []).map((row) => OrderMapper.toView(row)),
+      total: count ?? 0,
+    };
   }
 
   async insert(order: Order): Promise<void> {

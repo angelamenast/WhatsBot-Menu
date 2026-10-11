@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   ConflictException,
   Get,
@@ -6,8 +7,10 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
+  Query,
   Req,
   UseGuards,
+  ValidationPipe,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
@@ -18,11 +21,20 @@ import { GetOrderUseCase } from '../../application/use-cases/get-order.use-case'
 import { CancelOrderUseCase } from '../../application/use-cases/cancel-order.use-case';
 import { ConfirmOrderUseCase } from '../../application/use-cases/confirm-order.use-case';
 import {
+  InvalidOrderListFilterError,
   OrderNotFoundError,
   OrderStateConflictError,
   InvalidOrderTransitionError,
 } from '../../domain/errors/order.errors';
-import { OrderResponse, toOrderResponse } from '../dto/order-response.dto';
+import { ListOrdersQueryDto } from '../dto/list-orders-query.dto';
+import {
+  OrderDetailResponse,
+  OrderListResponse,
+  OrderResponse,
+  toOrderDetailResponse,
+  toOrderListResponse,
+  toOrderResponse,
+} from '../dto/order-response.dto';
 
 // El límite global (10/min) es demasiado bajo para un dashboard que lista y consulta pedidos.
 @Throttle({ default: { limit: 60, ttl: 60000 } })
@@ -40,22 +52,40 @@ export class OrdersController {
   @Get()
   async list(
     @Req() request: Request & { user: { id: string } },
-  ): Promise<OrderResponse[]> {
+    // El ValidationPipe global no tiene transform: sin este pipe local limit y
+    // offset llegarían como strings y los defaults del DTO no se aplicarían.
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: ListOrdersQueryDto,
+  ): Promise<OrderListResponse> {
     const business = await this.resolveBusiness(request.user.id);
-    const orders = await this.listOrdersByBusinessUseCase.execute(business.id);
-    return orders.map(toOrderResponse);
+
+    try {
+      const page = await this.listOrdersByBusinessUseCase.execute({
+        businessId: business.id,
+        from: query.from,
+        to: query.to,
+        limit: query.limit,
+        offset: query.offset,
+      });
+      return toOrderListResponse(page, query.limit, query.offset);
+    } catch (error) {
+      if (error instanceof InvalidOrderListFilterError) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
   }
 
   @Get(':id')
   async getOne(
     @Req() request: Request & { user: { id: string } },
     @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<OrderResponse> {
+  ): Promise<OrderDetailResponse> {
     const business = await this.resolveBusiness(request.user.id);
 
     try {
-      const order = await this.getOrderUseCase.execute(id, business.id);
-      return toOrderResponse(order);
+      const view = await this.getOrderUseCase.execute(id, business.id);
+      return toOrderDetailResponse(view);
     } catch (error) {
       if (error instanceof OrderNotFoundError) {
         throw new NotFoundException(error.message);

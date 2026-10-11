@@ -86,7 +86,9 @@ export class Order {
   }
 
   get total(): number {
-    return this.props.items.reduce((acc, item) => acc + item.subtotal, 0);
+    // Redondeo a 2 decimales (la BD guarda numeric(12,2)): evita colas de punto flotante como 0.30000000000000004.
+    const sum = this.props.items.reduce((acc, item) => acc + item.subtotal, 0);
+    return Math.round(sum * 100) / 100;
   }
 
   get createdAt(): Date {

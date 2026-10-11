@@ -1,7 +1,10 @@
 import { OrderMapper } from './order.mapper';
 import { Order, OrderStatus } from '../../domain/entities/order.entity';
 import { OrderItem } from '../../domain/entities/order-item.entity';
-import { UnknownOrderStatusError } from '../../domain/errors/order.errors';
+import {
+  OrderCustomerPhoneMissingError,
+  UnknownOrderStatusError,
+} from '../../domain/errors/order.errors';
 
 describe('OrderMapper', () => {
   const aRow = (estado_codigo: string, pedido_items: unknown[] = []) =>
@@ -57,6 +60,90 @@ describe('OrderMapper', () => {
 
       expect(order.items[0].productNameSnapshot).toBe('Hamburguesa clásica');
       expect(order.total).toBe(30000);
+    });
+  });
+
+  describe('items hidratados', () => {
+    it('productId nulo (producto eliminado del catálogo): se hidrata y conserva el snapshot', () => {
+      const order = OrderMapper.toDomain(
+        aRow('pendiente', [
+          {
+            producto_id: null,
+            nombre_producto_snapshot: 'Producto retirado',
+            precio_unitario: 8000,
+            cantidad: 2,
+          },
+        ]),
+      );
+
+      expect(order.items[0].productId).toBeNull();
+      expect(order.items[0].productNameSnapshot).toBe('Producto retirado');
+      expect(order.total).toBe(16000);
+    });
+
+    it('cantidad por encima del tope (dato persistido): no rompe la lectura', () => {
+      const order = OrderMapper.toDomain(
+        aRow('pendiente', [
+          {
+            producto_id: 'product-1',
+            nombre_producto_snapshot: 'Hamburguesa clásica',
+            precio_unitario: 1000,
+            cantidad: 150,
+          },
+        ]),
+      );
+
+      expect(order.items[0].quantity).toBe(150);
+    });
+  });
+
+  describe('toView', () => {
+    const rowWith = (conversaciones: unknown) =>
+      ({
+        ...(aRow('pendiente') as object),
+        conversaciones,
+      }) as never;
+
+    it('embed many-to-one como objeto: extrae el teléfono', () => {
+      const view = OrderMapper.toView(
+        rowWith({ numero_cliente: '+573001112233' }),
+      );
+
+      expect(view.customerPhone).toBe('+573001112233');
+      expect(view.order.id).toBe('order-1');
+    });
+
+    it('embed como array de un elemento (por defensa): extrae el teléfono', () => {
+      const view = OrderMapper.toView(
+        rowWith([{ numero_cliente: '+573001112233' }]),
+      );
+
+      expect(view.customerPhone).toBe('+573001112233');
+    });
+
+    it.each([
+      ['sin embed', undefined],
+      ['embed null', null],
+      ['array vacío', []],
+      ['número null', { numero_cliente: null }],
+      ['número vacío', { numero_cliente: '' }],
+    ])(
+      '%s: lanza OrderCustomerPhoneMissingError (nunca devuelve string vacío)',
+      (_label, embed) => {
+        expect(() => OrderMapper.toView(rowWith(embed))).toThrow(
+          OrderCustomerPhoneMissingError,
+        );
+      },
+    );
+
+    it('el mensaje del error identifica el pedido y no contiene datos del cliente', () => {
+      expect.assertions(2);
+      try {
+        OrderMapper.toView(rowWith({ numero_cliente: '' }));
+      } catch (error) {
+        expect((error as Error).message).toContain('order-1');
+        expect((error as Error).message).not.toMatch(/\+57/);
+      }
     });
   });
 

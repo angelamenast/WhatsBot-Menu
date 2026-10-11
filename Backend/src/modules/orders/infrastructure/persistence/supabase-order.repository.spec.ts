@@ -5,6 +5,7 @@ import { OrderItem } from '../../domain/entities/order-item.entity';
 import {
   ConversationNotInBusinessError,
   EmptyOrderError,
+  OrderCustomerPhoneMissingError,
 } from '../../domain/errors/order.errors';
 
 type Result = { data?: unknown; error?: { message: string } | null };
@@ -166,6 +167,187 @@ describe('SupabaseOrderRepository', () => {
       const { promise } = run({ error: dbError });
 
       await expect(promise).rejects.toBe(dbError);
+    });
+  });
+
+  describe('vistas con teléfono del cliente', () => {
+    const viewRow = (id: string) => ({
+      id,
+      negocio_id: 'business-1',
+      conversacion_id: 'conversation-1',
+      estado_codigo: 'pendiente',
+      created_at: '2026-01-01T10:00:00.000Z',
+      updated_at: '2026-01-01T10:00:00.000Z',
+      pedido_items: [],
+      conversaciones: { numero_cliente: '+573001112233' },
+    });
+
+    const filter = { limit: 20, offset: 0 };
+
+    const listWith = (
+      result: Result & { count?: number | null },
+      listFilter: {
+        from?: Date;
+        to?: Date;
+        limit: number;
+        offset: number;
+      } = filter,
+    ) => {
+      const { builder, calls } = queryBuilder(result);
+      from.mockReturnValue(builder);
+      return {
+        calls,
+        promise: repository.findViewsByBusiness('business-1', listFilter),
+      };
+    };
+
+    describe('findViewById', () => {
+      it('una sola query a pedidos con embed de conversaciones, filtrando por id y negocio', async () => {
+        const { builder, calls } = queryBuilder({ data: viewRow('order-1') });
+        from.mockReturnValue(builder);
+
+        const view = await repository.findViewById('order-1', 'business-1');
+
+        expect(from).toHaveBeenCalledTimes(1);
+        expect(from).toHaveBeenCalledWith('pedidos');
+        expect(calls).toContainEqual([
+          'select',
+          ['*, pedido_items(*), conversaciones!inner(numero_cliente)'],
+        ]);
+        expect(calls).toContainEqual(['eq', ['id', 'order-1']]);
+        expect(calls).toContainEqual(['eq', ['negocio_id', 'business-1']]);
+        expect(view?.customerPhone).toBe('+573001112233');
+        expect(view?.order.id).toBe('order-1');
+      });
+
+      it('pedido de otro negocio o inexistente: null', async () => {
+        const { builder } = queryBuilder({ data: null });
+        from.mockReturnValue(builder);
+
+        await expect(
+          repository.findViewById('order-1', 'business-2'),
+        ).resolves.toBeNull();
+      });
+
+      it('fila sin teléfono: lanza OrderCustomerPhoneMissingError', async () => {
+        const { builder } = queryBuilder({
+          data: { ...viewRow('order-1'), conversaciones: null },
+        });
+        from.mockReturnValue(builder);
+
+        await expect(
+          repository.findViewById('order-1', 'business-1'),
+        ).rejects.toThrow(OrderCustomerPhoneMissingError);
+      });
+
+      it('error de Supabase: se propaga', async () => {
+        const dbError = { message: 'boom' };
+        const { builder } = queryBuilder({ error: dbError });
+        from.mockReturnValue(builder);
+
+        await expect(
+          repository.findViewById('order-1', 'business-1'),
+        ).rejects.toBe(dbError);
+      });
+    });
+
+    describe('findViewsByBusiness', () => {
+      it('sin fechas: filtra por negocio, cuenta exacto, ordena created_at DESC / id DESC y pagina con range', async () => {
+        const { calls, promise } = listWith(
+          { data: [viewRow('order-2'), viewRow('order-1')], count: 57 },
+          { limit: 20, offset: 40 },
+        );
+
+        const page = await promise;
+
+        expect(from).toHaveBeenCalledTimes(1);
+        expect(calls).toContainEqual([
+          'select',
+          [
+            '*, pedido_items(*), conversaciones!inner(numero_cliente)',
+            { count: 'exact' },
+          ],
+        ]);
+        expect(calls).toContainEqual(['eq', ['negocio_id', 'business-1']]);
+        expect(calls.filter(([method]) => method === 'gte')).toHaveLength(0);
+        expect(calls.filter(([method]) => method === 'lt')).toHaveLength(0);
+        expect(calls.filter(([method]) => method === 'order')).toEqual([
+          ['order', ['created_at', { ascending: false }]],
+          ['order', ['id', { ascending: false }]],
+        ]);
+        expect(calls).toContainEqual(['range', [40, 59]]);
+        expect(page.total).toBe(57);
+        expect(page.items.map((v) => v.order.id)).toEqual([
+          'order-2',
+          'order-1',
+        ]);
+        expect(page.items[0].customerPhone).toBe('+573001112233');
+      });
+
+      it('solo from: aplica gte (inclusivo) y no lt', async () => {
+        const { calls, promise } = listWith(
+          { data: [], count: 0 },
+          { ...filter, from: new Date('2026-10-10T05:00:00.000Z') },
+        );
+
+        await promise;
+
+        expect(calls).toContainEqual([
+          'gte',
+          ['created_at', '2026-10-10T05:00:00.000Z'],
+        ]);
+        expect(calls.filter(([method]) => method === 'lt')).toHaveLength(0);
+      });
+
+      it('solo to: aplica lt (exclusivo) y no gte', async () => {
+        const { calls, promise } = listWith(
+          { data: [], count: 0 },
+          { ...filter, to: new Date('2026-10-11T05:00:00.000Z') },
+        );
+
+        await promise;
+
+        expect(calls).toContainEqual([
+          'lt',
+          ['created_at', '2026-10-11T05:00:00.000Z'],
+        ]);
+        expect(calls.filter(([method]) => method === 'gte')).toHaveLength(0);
+      });
+
+      it('from y to: aplica ambos', async () => {
+        const { calls, promise } = listWith(
+          { data: [], count: 0 },
+          {
+            ...filter,
+            from: new Date('2026-10-10T05:00:00.000Z'),
+            to: new Date('2026-10-11T05:00:00.000Z'),
+          },
+        );
+
+        await promise;
+
+        expect(calls).toContainEqual([
+          'gte',
+          ['created_at', '2026-10-10T05:00:00.000Z'],
+        ]);
+        expect(calls).toContainEqual([
+          'lt',
+          ['created_at', '2026-10-11T05:00:00.000Z'],
+        ]);
+      });
+
+      it('sin resultados: items vacío y total 0', async () => {
+        const { promise } = listWith({ data: null, count: 0 });
+
+        await expect(promise).resolves.toEqual({ items: [], total: 0 });
+      });
+
+      it('error de Supabase: se propaga', async () => {
+        const dbError = { message: 'boom' };
+        const { promise } = listWith({ error: dbError });
+
+        await expect(promise).rejects.toBe(dbError);
+      });
     });
   });
 

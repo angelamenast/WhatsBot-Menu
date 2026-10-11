@@ -51,7 +51,8 @@ describe('CreateOrderUseCase', () => {
   beforeEach(() => {
     orderRepository = {
       findById: jest.fn(),
-      findAllByBusinessId: jest.fn(),
+      findViewById: jest.fn(),
+      findViewsByBusiness: jest.fn(),
       insert: jest.fn(),
       updateStatus: jest.fn(),
     };
@@ -216,6 +217,85 @@ describe('CreateOrderUseCase', () => {
         { productId: LEMONADE_ID, reason: 'INVALID_QUANTITY' },
         { productId: MISSING_ID, reason: 'NOT_FOUND' },
       ]);
+    });
+  });
+
+  describe('tope de cantidad por producto (MAX_ITEM_QUANTITY = 99)', () => {
+    it('cantidad 99: se acepta', async () => {
+      catalogLookupRepository.findManyByIds.mockResolvedValue([burger]);
+
+      const { order, rejectedItems } = await useCase.execute(
+        commandWith([{ productId: BURGER_ID, quantity: 99 }]),
+      );
+
+      expect(rejectedItems).toEqual([]);
+      expect(order?.items[0].quantity).toBe(99);
+    });
+
+    it('cantidad 100: se rechaza con INVALID_QUANTITY antes de consultar el catálogo', async () => {
+      const result = await useCase.execute(
+        commandWith([{ productId: BURGER_ID, quantity: 100 }]),
+      );
+
+      expect(result.order).toBeNull();
+      expect(result.rejectedItems).toEqual([
+        { productId: BURGER_ID, reason: 'INVALID_QUANTITY' },
+      ]);
+      expect(catalogLookupRepository.findManyByIds).not.toHaveBeenCalled();
+      expect(orderRepository.insert).not.toHaveBeenCalled();
+    });
+
+    it('dos líneas de 60 del mismo producto: la suma pasa el tope, se rechaza el producto completo y se reporta una vez', async () => {
+      catalogLookupRepository.findManyByIds.mockResolvedValue([lemonade]);
+
+      const { order, rejectedItems } = await useCase.execute(
+        commandWith([
+          { productId: BURGER_ID, quantity: 60 },
+          { productId: LEMONADE_ID, quantity: 1 },
+          { productId: BURGER_ID, quantity: 60 },
+        ]),
+      );
+
+      expect(order?.items.map((i) => i.productId)).toEqual([LEMONADE_ID]);
+      expect(rejectedItems).toEqual([
+        { productId: BURGER_ID, reason: 'INVALID_QUANTITY' },
+      ]);
+      // el producto rechazado por tope ni siquiera se consulta
+      expect(catalogLookupRepository.findManyByIds).toHaveBeenCalledWith(
+        'business-1',
+        [LEMONADE_ID],
+      );
+    });
+
+    it('línea de 100 más línea válida de 5 del mismo producto: se conserva la de 5 y se reporta la de 100', async () => {
+      catalogLookupRepository.findManyByIds.mockResolvedValue([burger]);
+
+      const { order, rejectedItems } = await useCase.execute(
+        commandWith([
+          { productId: BURGER_ID, quantity: 100 },
+          { productId: BURGER_ID, quantity: 5 },
+        ]),
+      );
+
+      expect(order?.items).toHaveLength(1);
+      expect(order?.items[0].quantity).toBe(5);
+      expect(rejectedItems).toEqual([
+        { productId: BURGER_ID, reason: 'INVALID_QUANTITY' },
+      ]);
+    });
+
+    it('líneas que suman exactamente 99: se aceptan fusionadas', async () => {
+      catalogLookupRepository.findManyByIds.mockResolvedValue([burger]);
+
+      const { order, rejectedItems } = await useCase.execute(
+        commandWith([
+          { productId: BURGER_ID, quantity: 50 },
+          { productId: BURGER_ID, quantity: 49 },
+        ]),
+      );
+
+      expect(rejectedItems).toEqual([]);
+      expect(order?.items[0].quantity).toBe(99);
     });
   });
 

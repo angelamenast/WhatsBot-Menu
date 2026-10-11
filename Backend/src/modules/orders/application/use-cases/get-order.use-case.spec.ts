@@ -1,5 +1,8 @@
 import { GetOrderUseCase } from './get-order.use-case';
-import { OrderRepository } from '../../domain/repositories/order.repository';
+import {
+  OrderRepository,
+  OrderView,
+} from '../../domain/repositories/order.repository';
 import { Order, OrderStatus } from '../../domain/entities/order.entity';
 import { OrderNotFoundError } from '../../domain/errors/order.errors';
 
@@ -10,7 +13,8 @@ describe('GetOrderUseCase', () => {
   beforeEach(() => {
     orderRepository = {
       findById: jest.fn(),
-      findAllByBusinessId: jest.fn(),
+      findViewById: jest.fn(),
+      findViewsByBusiness: jest.fn(),
       insert: jest.fn(),
       updateStatus: jest.fn(),
     };
@@ -18,39 +22,47 @@ describe('GetOrderUseCase', () => {
     useCase = new GetOrderUseCase(orderRepository);
   });
 
-  it('pedido existente del propio negocio: lo devuelve', async () => {
-    const order = Order.reconstitute({
-      id: 'order-1',
-      businessId: 'business-1',
-      conversationId: 'conversation-1',
-      status: OrderStatus.PENDING,
-      items: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    orderRepository.findById.mockResolvedValue(order);
+  it('pedido existente del propio negocio: devuelve la vista con el teléfono del cliente', async () => {
+    const view: OrderView = {
+      order: Order.reconstitute({
+        id: 'order-1',
+        businessId: 'business-1',
+        conversationId: 'conversation-1',
+        status: OrderStatus.PENDING,
+        items: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+      customerPhone: '+573001112233',
+    };
+    orderRepository.findViewById.mockResolvedValue(view);
 
     const result = await useCase.execute('order-1', 'business-1');
 
-    expect(result).toBe(order);
+    expect(result).toBe(view);
+    expect(result.customerPhone).toBe('+573001112233');
+    expect(orderRepository.findViewById).toHaveBeenCalledWith(
+      'order-1',
+      'business-1',
+    );
   });
 
   it('pedido inexistente: lanza OrderNotFoundError', async () => {
-    orderRepository.findById.mockResolvedValue(null);
+    orderRepository.findViewById.mockResolvedValue(null);
 
     await expect(useCase.execute('order-1', 'business-1')).rejects.toThrow(
       OrderNotFoundError,
     );
   });
 
-  it('consulta el repositorio filtrando por el negocio recibido (un pedido ajeno llega como null)', async () => {
-    orderRepository.findById.mockResolvedValue(null);
+  it('pedido de otro negocio (el repositorio filtra por negocio y devuelve null): lanza OrderNotFoundError', async () => {
+    orderRepository.findViewById.mockResolvedValue(null);
 
     await expect(useCase.execute('order-1', 'business-2')).rejects.toThrow(
       OrderNotFoundError,
     );
 
-    expect(orderRepository.findById).toHaveBeenCalledWith(
+    expect(orderRepository.findViewById).toHaveBeenCalledWith(
       'order-1',
       'business-2',
     );

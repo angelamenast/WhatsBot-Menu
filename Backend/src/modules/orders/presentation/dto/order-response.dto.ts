@@ -1,7 +1,12 @@
 import { Order } from '../../domain/entities/order.entity';
+import type {
+  OrderPage,
+  OrderView,
+} from '../../domain/repositories/order.repository';
 
 export interface OrderItemResponse {
-  productId: string;
+  /** null si el producto fue eliminado del catálogo; el snapshot de nombre y precio se conserva. */
+  productId: string | null;
   productName: string;
   unitPrice: number;
   quantity: number;
@@ -17,6 +22,18 @@ export interface OrderResponse {
   total: number;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Respuesta de lectura (GET): incluye el teléfono del cliente. */
+export interface OrderDetailResponse extends OrderResponse {
+  customerPhone: string;
+}
+
+export interface OrderListResponse {
+  data: OrderDetailResponse[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 export function toOrderResponse(order: Order): OrderResponse {
@@ -35,5 +52,22 @@ export function toOrderResponse(order: Order): OrderResponse {
     total: order.total,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
+  };
+}
+
+export function toOrderDetailResponse(view: OrderView): OrderDetailResponse {
+  return { ...toOrderResponse(view.order), customerPhone: view.customerPhone };
+}
+
+export function toOrderListResponse(
+  page: OrderPage,
+  limit: number,
+  offset: number,
+): OrderListResponse {
+  return {
+    data: page.items.map(toOrderDetailResponse),
+    total: page.total,
+    limit,
+    offset,
   };
 }

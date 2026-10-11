@@ -51,6 +51,29 @@ describe('Order', () => {
   });
 
   describe('total', () => {
+    it('redondea a 2 decimales: 0.1 x 3 es 0.3 y no 0.30000000000000004', () => {
+      const order = Order.createPending({
+        businessId: 'business-1',
+        conversationId: 'conversation-1',
+        items: [anItem({ unitPrice: 0.1, quantity: 3 })],
+      });
+
+      expect(order.total).toBe(0.3);
+    });
+
+    it('redondea la suma completa, no cada subtotal', () => {
+      const order = Order.createPending({
+        businessId: 'business-1',
+        conversationId: 'conversation-1',
+        items: [
+          anItem({ unitPrice: 0.1, quantity: 1 }),
+          anItem({ unitPrice: 0.2, quantity: 1 }),
+        ],
+      });
+
+      expect(order.total).toBe(0.3);
+    });
+
     it('suma el subtotal de todos los items', () => {
       const order = Order.createPending({
         businessId: 'business-1',
