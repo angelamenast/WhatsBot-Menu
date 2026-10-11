@@ -1,22 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../../../../shared/supabase/supabase.service';
 import { OrderRepository } from '../../domain/repositories/order.repository';
-import { Order } from '../../domain/entities/order.entity';
+import { Order, OrderStatus } from '../../domain/entities/order.entity';
+import {
+  ConversationNotInBusinessError,
+  EmptyOrderError,
+} from '../../domain/errors/order.errors';
 import { OrderMapper } from './order.mapper';
 
 const PEDIDO_CON_ITEMS_SELECT = '*, pedido_items(*)';
+
+// Marcadores que lanza la función SQL crear_pedido con RAISE EXCEPTION.
+const RPC_CONVERSATION_NOT_IN_BUSINESS = 'CONVERSATION_NOT_IN_BUSINESS';
+const RPC_ORDER_WITHOUT_ITEMS = 'ORDER_WITHOUT_ITEMS';
 
 @Injectable()
 export class SupabaseOrderRepository implements OrderRepository {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async findById(id: string): Promise<Order | null> {
+  async findById(orderId: string, businessId: string): Promise<Order | null> {
     const client = this.supabaseService.getClient();
 
     const { data, error } = await client
       .from('pedidos')
       .select(PEDIDO_CON_ITEMS_SELECT)
-      .eq('id', id)
+      .eq('id', orderId)
+      .eq('negocio_id', businessId)
       .maybeSingle();
 
     if (error) {
@@ -42,35 +51,54 @@ export class SupabaseOrderRepository implements OrderRepository {
     return (data ?? []).map((row) => OrderMapper.toDomain(row));
   }
 
-  async save(order: Order): Promise<void> {
+  async insert(order: Order): Promise<void> {
     const client = this.supabaseService.getClient();
 
-    // Los items de un pedido nunca cambian después de creado (Order no expone
-    // ningún método para modificarlos) — createdAt === updatedAt identifica de
-    // forma confiable "este es el primer save", el único momento en que hace
-    // falta escribir pedido_items. Guardados posteriores (ej. confirm()/cancel())
-    // solo tocan la fila de `pedidos`.
-    const isFirstSave = order.createdAt.getTime() === order.updatedAt.getTime();
+    // Una sola llamada = una sola transacción en Postgres: pedido e items se
+    // crean juntos o no se crea nada (no quedan pedidos huérfanos).
+    const { error } = await client.rpc(
+      'crear_pedido',
+      OrderMapper.toCrearPedidoParams(order),
+    );
 
-    const { error: pedidoError } = await client
-      .from('pedidos')
-      .upsert(OrderMapper.toPedidoRow(order));
-
-    if (pedidoError) {
-      throw pedidoError;
-    }
-
-    if (isFirstSave) {
-      const { error: itemsError } = await client
-        .from('pedido_items')
-        .insert(OrderMapper.toPedidoItemRows(order));
-
-      if (itemsError) {
-        // Sin transacciones multi-tabla desde supabase-js: si esto falla, el
-        // pedido queda creado sin items. Requiere revisión manual — mismo
-        // caveat documentado en el adapter provisional que tuvo `agent`.
-        throw itemsError;
+    if (error) {
+      if (error.message?.includes(RPC_CONVERSATION_NOT_IN_BUSINESS)) {
+        throw new ConversationNotInBusinessError(
+          order.conversationId,
+          order.businessId,
+        );
       }
+      if (error.message?.includes(RPC_ORDER_WITHOUT_ITEMS)) {
+        throw new EmptyOrderError();
+      }
+      throw error;
     }
+  }
+
+  async updateStatus(
+    orderId: string,
+    businessId: string,
+    expectedStatus: OrderStatus,
+    newStatus: OrderStatus,
+    updatedAt: Date,
+  ): Promise<boolean> {
+    const client = this.supabaseService.getClient();
+
+    const { data, error } = await client
+      .from('pedidos')
+      .update({
+        estado_codigo: OrderMapper.toEstadoCodigo(newStatus),
+        updated_at: updatedAt.toISOString(),
+      })
+      .eq('id', orderId)
+      .eq('negocio_id', businessId)
+      .eq('estado_codigo', OrderMapper.toEstadoCodigo(expectedStatus))
+      .select('id');
+
+    if (error) {
+      throw error;
+    }
+
+    return (data?.length ?? 0) === 1;
   }
 }

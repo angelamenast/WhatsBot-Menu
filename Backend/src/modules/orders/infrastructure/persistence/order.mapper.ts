@@ -1,7 +1,8 @@
 import { Order, OrderStatus } from '../../domain/entities/order.entity';
 import { OrderItem } from '../../domain/entities/order-item.entity';
+import { UnknownOrderStatusError } from '../../domain/errors/order.errors';
 
-type EstadoPedido = 'pendiente' | 'confirmado' | 'cancelado';
+export type EstadoPedido = 'pendiente' | 'confirmado' | 'cancelado';
 
 const ESTADO_TO_STATUS: Record<EstadoPedido, OrderStatus> = {
   pendiente: OrderStatus.PENDING,
@@ -43,35 +44,44 @@ export class OrderMapper {
       }),
     );
 
-    return Order.create({
+    return Order.reconstitute({
       id: row.id,
       businessId: row.negocio_id,
       conversationId: row.conversacion_id,
-      status: ESTADO_TO_STATUS[row.estado_codigo],
+      status: OrderMapper.toStatus(row.estado_codigo),
       items,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
     });
   }
 
-  static toPedidoRow(order: Order) {
-    return {
-      id: order.id,
-      negocio_id: order.businessId,
-      conversacion_id: order.conversationId,
-      estado_codigo: STATUS_TO_ESTADO[order.status],
-      total: order.total,
-      updated_at: order.updatedAt.toISOString(),
-    };
+  static toStatus(estadoCodigo: string): OrderStatus {
+    // hasOwn: evita que claves heredadas ("constructor", "toString"...) pasen por estado.
+    if (!Object.hasOwn(ESTADO_TO_STATUS, estadoCodigo)) {
+      throw new UnknownOrderStatusError(estadoCodigo);
+    }
+    return ESTADO_TO_STATUS[estadoCodigo as EstadoPedido];
   }
 
-  static toPedidoItemRows(order: Order) {
-    return order.items.map((item) => ({
-      pedido_id: order.id,
-      producto_id: item.productId,
-      nombre_producto_snapshot: item.productNameSnapshot,
-      precio_unitario: item.unitPrice,
-      cantidad: item.quantity,
-    }));
+  static toEstadoCodigo(status: OrderStatus): EstadoPedido {
+    return STATUS_TO_ESTADO[status];
+  }
+
+  /**
+   * Parámetros de la función SQL crear_pedido. Sin total ni subtotal: la función
+   * calcula el total desde los items (y subtotal es una columna generada).
+   */
+  static toCrearPedidoParams(order: Order) {
+    return {
+      p_pedido_id: order.id,
+      p_negocio_id: order.businessId,
+      p_conversacion_id: order.conversationId,
+      p_items: order.items.map((item) => ({
+        producto_id: item.productId,
+        nombre_producto_snapshot: item.productNameSnapshot,
+        precio_unitario: item.unitPrice,
+        cantidad: item.quantity,
+      })),
+    };
   }
 }
