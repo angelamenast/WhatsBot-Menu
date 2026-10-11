@@ -10,7 +10,8 @@ describe('ListOrdersByBusinessUseCase', () => {
     orderRepository = {
       findById: jest.fn(),
       findAllByBusinessId: jest.fn(),
-      save: jest.fn(),
+      insert: jest.fn(),
+      updateStatus: jest.fn(),
     };
 
     useCase = new ListOrdersByBusinessUseCase(orderRepository);
@@ -18,7 +19,7 @@ describe('ListOrdersByBusinessUseCase', () => {
 
   it('delega directamente en el repositorio con el businessId recibido', async () => {
     const orders = [
-      Order.create({
+      Order.reconstitute({
         id: 'order-1',
         businessId: 'business-1',
         conversationId: 'conversation-1',

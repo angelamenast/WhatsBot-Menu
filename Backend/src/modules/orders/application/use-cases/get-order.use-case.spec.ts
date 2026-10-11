@@ -11,14 +11,15 @@ describe('GetOrderUseCase', () => {
     orderRepository = {
       findById: jest.fn(),
       findAllByBusinessId: jest.fn(),
-      save: jest.fn(),
+      insert: jest.fn(),
+      updateStatus: jest.fn(),
     };
 
     useCase = new GetOrderUseCase(orderRepository);
   });
 
   it('pedido existente del propio negocio: lo devuelve', async () => {
-    const order = Order.create({
+    const order = Order.reconstitute({
       id: 'order-1',
       businessId: 'business-1',
       conversationId: 'conversation-1',
@@ -42,20 +43,16 @@ describe('GetOrderUseCase', () => {
     );
   });
 
-  it('pedido de otro negocio: lanza OrderNotFoundError', async () => {
-    const otherBusinessOrder = Order.create({
-      id: 'order-1',
-      businessId: 'business-2',
-      conversationId: 'conversation-1',
-      status: OrderStatus.PENDING,
-      items: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    orderRepository.findById.mockResolvedValue(otherBusinessOrder);
+  it('consulta el repositorio filtrando por el negocio recibido (un pedido ajeno llega como null)', async () => {
+    orderRepository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute('order-1', 'business-1')).rejects.toThrow(
+    await expect(useCase.execute('order-1', 'business-2')).rejects.toThrow(
       OrderNotFoundError,
+    );
+
+    expect(orderRepository.findById).toHaveBeenCalledWith(
+      'order-1',
+      'business-2',
     );
   });
 });

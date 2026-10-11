@@ -11,9 +11,9 @@ export class GetOrderUseCase {
   ) {}
 
   async execute(orderId: string, businessId: string): Promise<Order> {
-    const order = await this.orderRepository.findById(orderId);
+    const order = await this.orderRepository.findById(orderId, businessId);
 
-    if (!order || order.businessId !== businessId) {
+    if (!order) {
       throw new OrderNotFoundError(orderId);
     }
 

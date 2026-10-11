@@ -3,7 +3,9 @@ import { OrderRepository } from '../../domain/repositories/order.repository';
 import { CatalogLookupRepository } from '../../domain/repositories/catalog-lookup.repository';
 import { OrderStatus } from '../../domain/entities/order.entity';
 import {
+  ConversationNotInBusinessError,
   EmptyOrderError,
+  InvalidOrderItemQuantityError,
   ProductNotFoundError,
   ProductUnavailableError,
 } from '../../domain/errors/order.errors';
@@ -24,7 +26,8 @@ describe('CreateOrderUseCase', () => {
     orderRepository = {
       findById: jest.fn(),
       findAllByBusinessId: jest.fn(),
-      save: jest.fn(),
+      insert: jest.fn(),
+      updateStatus: jest.fn(),
     };
     catalogLookupRepository = {
       findManyByIds: jest.fn(),
@@ -54,7 +57,7 @@ describe('CreateOrderUseCase', () => {
     expect(result.items[0].productNameSnapshot).toBe('Hamburguesa clásica');
     expect(result.items[0].unitPrice).toBe(15000);
     expect(result.total).toBe(30000);
-    expect(orderRepository.save).toHaveBeenCalledTimes(1);
+    expect(orderRepository.insert).toHaveBeenCalledTimes(1);
   });
 
   it('no confía en un nombre/precio enviado por el invocador: siempre usa lo que devuelve el catálogo', async () => {
@@ -73,6 +76,44 @@ describe('CreateOrderUseCase', () => {
     expect(result.items[0].unitPrice).toBe(99999);
   });
 
+  it('conversación de otro negocio (la rechaza el repositorio): propaga ConversationNotInBusinessError', async () => {
+    catalogLookupRepository.findManyByIds.mockResolvedValue([
+      {
+        id: 'product-1',
+        name: 'Hamburguesa clásica',
+        price: 15000,
+        available: true,
+      },
+    ]);
+    orderRepository.insert.mockRejectedValue(
+      new ConversationNotInBusinessError('conversation-1', 'business-1'),
+    );
+
+    await expect(useCase.execute(command)).rejects.toThrow(
+      ConversationNotInBusinessError,
+    );
+  });
+
+  it('cantidad inválida (decimal): lanza error tipado y no inserta', async () => {
+    catalogLookupRepository.findManyByIds.mockResolvedValue([
+      {
+        id: 'product-1',
+        name: 'Hamburguesa clásica',
+        price: 15000,
+        available: true,
+      },
+    ]);
+
+    await expect(
+      useCase.execute({
+        ...command,
+        items: [{ productId: 'product-1', quantity: 1.5 }],
+      }),
+    ).rejects.toThrow(InvalidOrderItemQuantityError);
+
+    expect(orderRepository.insert).not.toHaveBeenCalled();
+  });
+
   it('lista de items vacía: lanza EmptyOrderError y no consulta el catálogo', async () => {
     const emptyCommand: CreateOrderCommand = { ...command, items: [] };
 
@@ -81,7 +122,7 @@ describe('CreateOrderUseCase', () => {
     );
 
     expect(catalogLookupRepository.findManyByIds).not.toHaveBeenCalled();
-    expect(orderRepository.save).not.toHaveBeenCalled();
+    expect(orderRepository.insert).not.toHaveBeenCalled();
   });
 
   it('producto inexistente en el catálogo del negocio: lanza ProductNotFoundError', async () => {
@@ -91,7 +132,7 @@ describe('CreateOrderUseCase', () => {
       ProductNotFoundError,
     );
 
-    expect(orderRepository.save).not.toHaveBeenCalled();
+    expect(orderRepository.insert).not.toHaveBeenCalled();
   });
 
   it('producto existente pero no disponible: lanza ProductUnavailableError', async () => {
@@ -108,7 +149,7 @@ describe('CreateOrderUseCase', () => {
       ProductUnavailableError,
     );
 
-    expect(orderRepository.save).not.toHaveBeenCalled();
+    expect(orderRepository.insert).not.toHaveBeenCalled();
   });
 
   it('un item inválido entre varios: ninguno se guarda (falla todo el pedido, no parcialmente)', async () => {
@@ -133,6 +174,6 @@ describe('CreateOrderUseCase', () => {
       ProductNotFoundError,
     );
 
-    expect(orderRepository.save).not.toHaveBeenCalled();
+    expect(orderRepository.insert).not.toHaveBeenCalled();
   });
 });

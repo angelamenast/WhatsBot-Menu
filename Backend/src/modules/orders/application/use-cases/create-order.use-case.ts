@@ -58,7 +58,7 @@ export class CreateOrderUseCase {
       items: orderItems,
     });
 
-    await this.orderRepository.save(order);
+    await this.orderRepository.insert(order);
 
     return order;
   }

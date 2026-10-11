@@ -4,6 +4,7 @@ import { Order, OrderStatus } from '../../domain/entities/order.entity';
 import { OrderItem } from '../../domain/entities/order-item.entity';
 import {
   OrderNotFoundError,
+  OrderStateConflictError,
   InvalidOrderTransitionError,
 } from '../../domain/errors/order.errors';
 import { UpdateOrderStatusCommand } from '../dto/update-order-status.command';
@@ -18,12 +19,12 @@ describe('ConfirmOrderUseCase', () => {
     action: 'CONFIRM',
   };
 
-  const aPendingOrder = () =>
-    Order.create({
+  const anOrder = (status: OrderStatus = OrderStatus.PENDING) =>
+    Order.reconstitute({
       id: 'order-1',
       businessId: 'business-1',
       conversationId: 'conversation-1',
-      status: OrderStatus.PENDING,
+      status,
       items: [
         OrderItem.create({
           productId: 'product-1',
@@ -40,68 +41,76 @@ describe('ConfirmOrderUseCase', () => {
     orderRepository = {
       findById: jest.fn(),
       findAllByBusinessId: jest.fn(),
-      save: jest.fn(),
+      insert: jest.fn(),
+      updateStatus: jest.fn(),
     };
 
     useCase = new ConfirmOrderUseCase(orderRepository);
   });
 
-  it('pedido PENDING del propio negocio: lo confirma y lo persiste', async () => {
-    orderRepository.findById.mockResolvedValue(aPendingOrder());
+  it('pedido PENDING del propio negocio: lo confirma con compare-and-set desde PENDING', async () => {
+    orderRepository.findById.mockResolvedValue(anOrder());
+    orderRepository.updateStatus.mockResolvedValue(true);
 
     const result = await useCase.execute(command);
 
     expect(result.status).toBe(OrderStatus.CONFIRMED);
-    expect(orderRepository.save).toHaveBeenCalledTimes(1);
-    expect(orderRepository.save.mock.calls[0][0].status).toBe(
+    expect(orderRepository.updateStatus).toHaveBeenCalledTimes(1);
+    expect(orderRepository.updateStatus).toHaveBeenCalledWith(
+      'order-1',
+      'business-1',
+      OrderStatus.PENDING,
       OrderStatus.CONFIRMED,
+      result.updatedAt,
     );
   });
 
-  it('pedido inexistente: lanza OrderNotFoundError y no guarda', async () => {
+  it('consulta el pedido filtrando por el negocio del comando', async () => {
+    orderRepository.findById.mockResolvedValue(anOrder());
+    orderRepository.updateStatus.mockResolvedValue(true);
+
+    await useCase.execute(command);
+
+    expect(orderRepository.findById).toHaveBeenCalledWith(
+      'order-1',
+      'business-1',
+    );
+  });
+
+  it('pedido inexistente (o de otro negocio, el repositorio no lo distingue): lanza OrderNotFoundError y no escribe', async () => {
     orderRepository.findById.mockResolvedValue(null);
 
     await expect(useCase.execute(command)).rejects.toThrow(OrderNotFoundError);
 
-    expect(orderRepository.save).not.toHaveBeenCalled();
+    expect(orderRepository.updateStatus).not.toHaveBeenCalled();
   });
 
-  it('pedido de otro negocio: lanza OrderNotFoundError (no revela que el pedido existe)', async () => {
-    const otherBusinessOrder = Order.create({
-      id: 'order-1',
-      businessId: 'business-2',
-      conversationId: 'conversation-1',
-      status: OrderStatus.PENDING,
-      items: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    orderRepository.findById.mockResolvedValue(otherBusinessOrder);
+  it('otro proceso cambió el estado entre la lectura y la escritura: lanza OrderStateConflictError', async () => {
+    orderRepository.findById.mockResolvedValue(anOrder());
+    orderRepository.updateStatus.mockResolvedValue(false);
 
-    await expect(useCase.execute(command)).rejects.toThrow(OrderNotFoundError);
-
-    expect(orderRepository.save).not.toHaveBeenCalled();
+    await expect(useCase.execute(command)).rejects.toThrow(
+      OrderStateConflictError,
+    );
   });
 
-  it('pedido ya CONFIRMED: lanza InvalidOrderTransitionError y no vuelve a guardar', async () => {
-    const order = aPendingOrder();
-    order.confirm();
-    orderRepository.findById.mockResolvedValue(order);
+  it('pedido ya CONFIRMED: lanza InvalidOrderTransitionError y no escribe', async () => {
+    orderRepository.findById.mockResolvedValue(anOrder(OrderStatus.CONFIRMED));
 
     await expect(useCase.execute(command)).rejects.toThrow(
       InvalidOrderTransitionError,
     );
 
-    expect(orderRepository.save).not.toHaveBeenCalled();
+    expect(orderRepository.updateStatus).not.toHaveBeenCalled();
   });
 
-  it('pedido CANCELLED: lanza InvalidOrderTransitionError', async () => {
-    const order = aPendingOrder();
-    order.cancel();
-    orderRepository.findById.mockResolvedValue(order);
+  it('pedido CANCELLED: lanza InvalidOrderTransitionError y no escribe', async () => {
+    orderRepository.findById.mockResolvedValue(anOrder(OrderStatus.CANCELLED));
 
     await expect(useCase.execute(command)).rejects.toThrow(
       InvalidOrderTransitionError,
     );
+
+    expect(orderRepository.updateStatus).not.toHaveBeenCalled();
   });
 });
