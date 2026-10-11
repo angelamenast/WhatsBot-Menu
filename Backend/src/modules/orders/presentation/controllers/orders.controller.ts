@@ -4,10 +4,12 @@ import {
   Get,
   NotFoundException,
   Param,
+  ParseUUIDPipe,
   Patch,
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { SupabaseAuthGuard } from '../../../auth/guards/supabase-auth.guard';
 import { BusinessService } from '../../../business/business.service';
@@ -17,10 +19,13 @@ import { CancelOrderUseCase } from '../../application/use-cases/cancel-order.use
 import { ConfirmOrderUseCase } from '../../application/use-cases/confirm-order.use-case';
 import {
   OrderNotFoundError,
+  OrderStateConflictError,
   InvalidOrderTransitionError,
 } from '../../domain/errors/order.errors';
 import { OrderResponse, toOrderResponse } from '../dto/order-response.dto';
 
+// El límite global (10/min) es demasiado bajo para un dashboard que lista y consulta pedidos.
+@Throttle({ default: { limit: 60, ttl: 60000 } })
 @Controller('orders')
 @UseGuards(SupabaseAuthGuard)
 export class OrdersController {
@@ -44,7 +49,7 @@ export class OrdersController {
   @Get(':id')
   async getOne(
     @Req() request: Request & { user: { id: string } },
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<OrderResponse> {
     const business = await this.resolveBusiness(request.user.id);
 
@@ -62,7 +67,7 @@ export class OrdersController {
   @Patch(':id/confirm')
   async confirm(
     @Req() request: Request & { user: { id: string } },
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<OrderResponse> {
     const business = await this.resolveBusiness(request.user.id);
 
@@ -77,7 +82,10 @@ export class OrdersController {
       if (error instanceof OrderNotFoundError) {
         throw new NotFoundException(error.message);
       }
-      if (error instanceof InvalidOrderTransitionError) {
+      if (
+        error instanceof InvalidOrderTransitionError ||
+        error instanceof OrderStateConflictError
+      ) {
         throw new ConflictException(error.message);
       }
       throw error;
@@ -87,7 +95,7 @@ export class OrdersController {
   @Patch(':id/cancel')
   async cancel(
     @Req() request: Request & { user: { id: string } },
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<OrderResponse> {
     const business = await this.resolveBusiness(request.user.id);
 
@@ -102,7 +110,10 @@ export class OrdersController {
       if (error instanceof OrderNotFoundError) {
         throw new NotFoundException(error.message);
       }
-      if (error instanceof InvalidOrderTransitionError) {
+      if (
+        error instanceof InvalidOrderTransitionError ||
+        error instanceof OrderStateConflictError
+      ) {
         throw new ConflictException(error.message);
       }
       throw error;
