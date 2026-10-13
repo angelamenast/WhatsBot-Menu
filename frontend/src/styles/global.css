@@ -1,10 +1,6 @@
 @import "tailwindcss";
 
 @theme {
-  /* Definir la fuente sans por defecto para todo Tailwind */
-  --font-sans: "Plus Jakarta Sans", sans-serif;
-
-  /* Paleta de Colores General */
   --color-primary: #f97316;
   --color-secondary: #ea580c;
   --color-on-primary: #ffffff;
@@ -64,37 +60,6 @@
   --spacing-space-4xl: 3rem;
   --spacing-space-5xl: 4rem;
   --spacing-container-max: 80rem;
-
-  /* Tamaños de texto */
-  --text-display-lg: 40px;
-  --text-display-lg--line-height: 48px;
-  --text-display-lg-mobile: 32px;
-  --text-display-lg-mobile--line-height: 40px;
-  --text-headline-lg: 28px;
-  --text-headline-lg--line-height: 36px;
-  --text-headline-md: 22px;
-  --text-headline-md--line-height: 28px;
-  --text-headline-sm: 18px;
-  --text-headline-sm--line-height: 24px;
-  --text-body-lg: 16px;
-  --text-body-lg--line-height: 24px;
-  --text-body-md: 14px;
-  --text-body-md--line-height: 20px;
-  --text-body-sm: 13px;
-  --text-body-sm--line-height: 18px;
-  --text-label-lg: 14px;
-  --text-label-lg--line-height: 20px;
-  --text-label-md: 12px;
-  --text-label-md--line-height: 16px;
-  --text-label-sm: 11px;
-  --text-label-sm--line-height: 14px;
-}
-
-/* Regla base para forzar Plus Jakarta Sans en todo el HTML */
-@layer base {
-  html, body {
-    font-family: var(--font-sans);
-  }
 }
 
 /* Configuración de Íconos */

@@ -3,7 +3,6 @@ import Logo from "../common/Logo.astro";
 
 const pathname = Astro.url.pathname;
 
-// Función para determinar si un enlace está activo
 const isActive = (path: string) => {
   if (path === "/") return pathname === "/";
   return pathname.startsWith(path);
@@ -15,12 +14,29 @@ const getLinkClass = (path: string) =>
     : "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors text-sm font-medium";
 ---
 
+<!-- Fondo Oscuro Backdrop para Móvil -->
+<div
+  id="sidebar-backdrop"
+  class="fixed inset-0 bg-zinc-900/50 backdrop-blur-xs z-40 lg:hidden hidden transition-opacity duration-300"
+>
+</div>
+
+<!-- Sidebar Drawer Responsivo -->
 <aside
-  class="fixed top-0 left-0 h-screen w-72 bg-white border-r border-zinc-200/80 z-50 flex flex-col justify-between p-6 overflow-y-auto"
+  id="app-sidebar"
+  class="fixed top-0 left-0 h-screen w-72 bg-white border-r border-zinc-200/80 z-50 flex flex-col justify-between p-6 overflow-y-auto transition-transform duration-300 -translate-x-full lg:translate-x-0 shadow-xl lg:shadow-none"
 >
   <div class="flex flex-col gap-6">
-    <div class="px-2">
+    <!-- Header del Sidebar con Logo y Botón Cerrar en Móvil -->
+    <div class="flex items-center justify-between px-2">
       <Logo />
+      <button
+        id="btn-close-sidebar"
+        class="lg:hidden p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer"
+        type="button"
+      >
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
     </div>
 
     <!-- Active Store Switcher -->
@@ -36,8 +52,9 @@ const getLinkClass = (path: string) =>
         <span
           id="sidebar-business-name"
           class="font-semibold text-sm text-zinc-900 truncate"
-          >Main Street Cafe</span
         >
+          Main Street Cafe
+        </span>
         <div class="flex items-center gap-1.5 mt-0.5">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"
           ></span>
@@ -46,7 +63,7 @@ const getLinkClass = (path: string) =>
       </div>
     </div>
 
-    <!-- Action Button con Toast -->
+    <!-- Action Button -->
     <button
       id="btn-create-bot"
       class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-orange-500 text-white font-medium text-sm shadow-sm hover:bg-orange-600 active:scale-95 transition-all cursor-pointer"
@@ -115,22 +132,56 @@ const getLinkClass = (path: string) =>
         <span
           id="sidebar-user-name"
           class="text-xs font-semibold text-zinc-900 truncate group-hover:text-orange-600 transition-colors"
-          >Alex Ramírez</span
         >
-        <span id="sidebar-user-email" class="text-[11px] text-zinc-500 truncate"
-          >alex.ramirez@gmail.com</span
+          Alex Ramírez
+        </span>
+        <span
+          id="sidebar-user-email"
+          class="text-[11px] text-zinc-500 truncate"
         >
+          alex.ramirez@gmail.com
+        </span>
       </div>
       <span
         class="material-symbols-outlined text-zinc-400 group-hover:text-orange-600 text-[18px] transition-colors"
-        >chevron_right</span
       >
+        chevron_right
+      </span>
     </a>
   </div>
 </aside>
 
 <script>
-  // Evento interactivo al hacer clic en "Crear Nuevo Bot"
+  // Control de apertura/cierre responsivo
+  const sidebar = document.getElementById("app-sidebar");
+  const backdrop = document.getElementById("sidebar-backdrop");
+  const btnClose = document.getElementById("btn-close-sidebar");
+
+  function openSidebar() {
+    sidebar?.classList.remove("-translate-x-full");
+    backdrop?.classList.remove("hidden");
+    document.body.classList.add("overflow-hidden", "lg:overflow-auto");
+  }
+
+  function closeSidebar() {
+    sidebar?.classList.add("-translate-x-full");
+    backdrop?.classList.add("hidden");
+    document.body.classList.remove("overflow-hidden", "lg:overflow-auto");
+  }
+
+  btnClose?.addEventListener("click", closeSidebar);
+  backdrop?.addEventListener("click", closeSidebar);
+
+  // Escuchar evento global emitido desde el Header
+  window.addEventListener("open-sidebar", openSidebar);
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth >= 1024) {
+      closeSidebar();
+    }
+  });
+
+  // Botón "Crear Nuevo Bot"
   document.getElementById("btn-create-bot")?.addEventListener("click", () => {
     if ((window as any).showToast) {
       (window as any).showToast(

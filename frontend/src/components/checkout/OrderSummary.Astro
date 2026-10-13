@@ -82,21 +82,33 @@
       </div>
     </div>
 
-    <a
-      class="w-full py-space-md px-space-xl bg-primary-container hover:bg-secondary-container text-on-primary font-headline-sm text-headline-sm font-bold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-space-sm text-center cursor-pointer"
-      id="btn-proceed"
-      href="/checkout/payment"
+    <!-- Anuncio Informativo para Plan Gratuito (Oculto por defecto) -->
+    <div
+      id="free-plan-notice"
+      class="hidden p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-start gap-2.5 my-3 animate-fade-in"
     >
-      <span id="proceed-btn-text">Continuar al Pago Seguro ($19.20 USD)</span>
-      <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
-    </a>
+      <span
+        class="material-symbols-outlined text-emerald-600 text-[20px] shrink-0 mt-0.5"
+        >verified</span
+      >
+      <div class="flex flex-col">
+        <span class="font-bold text-emerald-900">¡Plan Starter Gratuito!</span>
+        <span
+          >No necesitas registrar ninguna tarjeta ni realizar pagos hoy. Tu
+          prueba se activará automáticamente.</span
+        >
+      </div>
+    </div>
 
-    <p
-      class="font-body-sm text-body-sm text-center text-on-surface-variant mt-space-md mb-space-lg"
+    <!-- Botón de Continuar al Pago -->
+    <button
+      id="btn-proceed-pay"
+      class="w-full py-3 px-4 rounded-xl bg-orange-500 text-white font-bold text-sm shadow-sm hover:bg-orange-600 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-orange-500"
+      type="button"
     >
-      Próximo paso: ingresa tu método de pago protegido con cifrado SSL
-      bancario.
-    </p>
+      <span>Continuar al Pago</span>
+      <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+    </button>
   </div>
 </div>
 
@@ -160,5 +172,47 @@
     const savedPlan = localStorage.getItem("checkout_plan") || "pro";
     const savedBilling = localStorage.getItem("checkout_billing") || "annual";
     renderSummary(savedPlan, savedBilling);
+  })();
+
+  (function initFreePlanHandler() {
+    const freeNotice = document.getElementById("free-plan-notice");
+    const btnPay = document.getElementById("btn-proceed-pay");
+
+    function handlePlanUI(plan) {
+      if (!btnPay) return;
+
+      if (plan === "starter") {
+        // Mostrar anuncio
+        if (freeNotice) freeNotice.classList.remove("hidden");
+
+        // Desactivar botón y cambiar texto
+        btnPay.disabled = true;
+        btnPay.innerHTML = `
+          <span class="material-symbols-outlined text-[18px]">block</span>
+          <span>No requiere pago</span>
+        `;
+      } else {
+        // Ocultar anuncio
+        if (freeNotice) freeNotice.classList.add("hidden");
+
+        // Habilitar botón
+        btnPay.disabled = false;
+        btnPay.innerHTML = `
+          <span>Continuar al Pago</span>
+          <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+        `;
+      }
+    }
+
+    // Escuchar cambios enviados desde la tarjeta de precios
+    window.addEventListener("plan-changed", function (e) {
+      if (e.detail && e.detail.plan) {
+        handlePlanUI(e.detail.plan);
+      }
+    });
+
+    // Carga inicial según el estado guardado en localStorage
+    const initialPlan = localStorage.getItem("checkout_plan") || "pro";
+    handlePlanUI(initialPlan);
   })();
 </script>

@@ -15,13 +15,19 @@
     </div>
 
     <script>
+      import { syncUserSession } from "../../services/userSession";
+
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get("access_token");
 
       if (accessToken) {
         localStorage.setItem("auth_token", accessToken);
         document.cookie = `jwt_token=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
-        window.location.href = "/profile"; // O la ruta a tu dashboard
+
+        // Sincronizar la información del perfil en el almacenamiento local
+        syncUserSession();
+
+        window.location.href = "/profile";
       } else {
         window.location.href = "/auth/login";
       }

@@ -1,7 +1,8 @@
 ---
-import "/src/styles/global.css";
 import Sidebar from "../components/common/Sidebar.astro";
+import Navbar from "../components/common/Navbar.astro";
 import ToastContainer from "../components/common/ToastContainer.astro";
+import "../styles/global.css";
 
 interface Props {
   title: string;
@@ -20,7 +21,7 @@ const { title, activeRoute = "vincular" } = Astro.props;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link
@@ -28,14 +29,25 @@ const { title, activeRoute = "vincular" } = Astro.props;
       rel="stylesheet"
     />
   </head>
-  <body class="bg-background font-sans text-on-surface min-h-screen">
+  <body
+    class="bg-background font-body-md text-on-surface min-h-screen antialiased overflow-x-hidden"
+  >
+    <!-- Sidebar Drawer Responsivo -->
     <Sidebar activeRoute={activeRoute} />
 
-    <div class="pl-72 min-h-screen flex flex-col">
-      <main class="w-full pt-20 px-6 py-6 flex-1 bg-background">
+    <!-- Padding corregido: pl-0 en móvil y lg:pl-72 en escritorio -->
+    <div class="pl-0 lg:pl-72 min-h-screen flex flex-col w-full min-w-0">
+      <!-- Navbar Unificado en Modo App -->
+      <Navbar variant="app" />
+
+      <!-- Contenido de la vista -->
+      <main
+        class="w-full pt-20 px-4 sm:px-6 lg:px-8 pb-12 flex-1 bg-background min-w-0 overflow-hidden"
+      >
         <slot />
       </main>
     </div>
+
     <ToastContainer />
   </body>
 </html>

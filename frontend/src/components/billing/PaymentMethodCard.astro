@@ -3,100 +3,95 @@
 ---
 
 <div
-  class="lg:col-span-6 rounded-xl bg-surface-container-lowest p-space-2xl shadow-sm flex flex-col justify-between"
+  class="lg:col-span-6 rounded-2xl bg-white border border-zinc-200/80 p-5 sm:p-6 shadow-xs flex flex-col justify-between gap-5 min-w-0"
 >
-  <div class="flex flex-col gap-space-md">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-space-sm">
+  <div class="flex flex-col gap-4">
+    <div
+      class="flex items-center justify-between pb-3 border-b border-zinc-100"
+    >
+      <div class="flex items-center gap-3 min-w-0">
         <span
-          class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary"
+          class="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 shrink-0"
         >
-          <span class="material-symbols-outlined text-[22px]">credit_card</span>
+          <span class="material-symbols-outlined text-[20px]">credit_card</span>
         </span>
-        <div class="flex flex-col">
-          <h3 class="font-headline-sm text-headline-sm text-on-surface">
+        <div class="flex flex-col min-w-0">
+          <h3 class="text-lg sm:text-xl font-bold text-zinc-900 truncate">
             Método de Pago Predeterminado
           </h3>
-          <span class="font-body-sm text-body-sm text-on-surface-variant"
+          <span class="text-xs text-zinc-500 truncate"
             >Cobros automáticos procesados vía Stripe Gateway</span
           >
         </div>
       </div>
       <span
-        class="px-space-sm py-space-xxs rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm"
+        class="px-2.5 py-0.5 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-700 text-xs font-bold shrink-0"
         >Seguro</span
       >
     </div>
 
+    <!-- Mockup Tarjeta -->
     <div
-      class="relative overflow-hidden rounded-xl bg-gradient-to-br from-inverse-surface via-inverse-surface to-on-surface-variant p-space-lg text-surface-container-lowest shadow-md mt-space-sm"
+      class="relative overflow-hidden rounded-xl bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-5 text-white shadow-md"
     >
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-space-xs">
-          <span
-            class="material-symbols-outlined text-[28px] text-tertiary-fixed"
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[24px] text-amber-400"
             >contactless</span
           >
           <span
-            class="font-label-sm text-label-sm uppercase tracking-widest text-surface-container-highest"
+            class="text-[11px] font-bold uppercase tracking-widest text-zinc-400"
             >Corporativa</span
           >
         </div>
         <div class="flex -space-x-2">
-          <div class="w-6 h-6 rounded-full bg-primary-container opacity-90">
-          </div>
-          <div class="w-6 h-6 rounded-full bg-tertiary-fixed opacity-90"></div>
+          <div class="w-6 h-6 rounded-full bg-orange-500 opacity-90"></div>
+          <div class="w-6 h-6 rounded-full bg-amber-400 opacity-90"></div>
         </div>
       </div>
-      <div class="mt-space-lg mb-space-md">
+      <div class="my-5">
         <span
-          class="font-headline-md text-headline-md tracking-widest text-surface-bright font-mono"
+          class="text-xl sm:text-2xl font-bold tracking-widest text-zinc-100 font-mono"
           >•••• •••• •••• 4242</span
         >
       </div>
-      <div
-        class="flex items-end justify-between font-label-sm text-label-sm text-surface-container-highest"
-      >
+      <div class="flex items-end justify-between text-xs text-zinc-400">
         <div class="flex flex-col">
-          <span class="text-[10px] uppercase opacity-75">Titular</span>
+          <span class="text-[10px] uppercase font-bold opacity-75">Titular</span
+          >
           <span
-            class="font-label-md text-label-md text-surface-container-lowest"
+            class="font-bold text-zinc-100 truncate max-w-[160px] sm:max-w-none"
             >MAIN STREET CAFE S.L.</span
           >
         </div>
         <div class="flex flex-col text-right">
-          <span class="text-[10px] uppercase opacity-75">Expira</span>
-          <span
-            class="font-label-md text-label-md text-surface-container-lowest"
-            >08 / 2028</span
-          >
+          <span class="text-[10px] uppercase font-bold opacity-75">Expira</span>
+          <span class="font-bold text-zinc-100">08 / 2028</span>
         </div>
       </div>
     </div>
 
-    <div
-      class="flex items-center gap-space-xs text-on-surface-variant font-body-sm text-body-sm mt-space-xxs"
-    >
-      <span class="material-symbols-outlined text-[16px] text-primary"
+    <div class="flex items-center gap-1.5 text-xs text-zinc-600 font-medium">
+      <span
+        class="material-symbols-outlined text-[16px] text-emerald-600 shrink-0"
         >check_circle</span
       >
-      <span
-        >Tarjeta registrada para renovación automática y facturas de
-        contingencia.</span
-      >
+      <span>Tarjeta registrada para renovación automática.</span>
     </div>
   </div>
 
-  <div class="flex items-center justify-between pt-space-lg mt-space-md">
+  <div
+    class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-zinc-100"
+  >
     <a
-      class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-label-lg text-label-lg cursor-pointer"
+      class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold text-sm transition-colors cursor-pointer text-center"
       href="/checkout/payment"
     >
       <span class="material-symbols-outlined text-[18px]">edit</span>
-      Actualizar Método de Pago
+      <span>Actualizar Método de Pago</span>
     </a>
     <button
-      class="font-label-md text-label-md text-error hover:underline cursor-pointer"
+      class="text-xs font-bold text-red-600 hover:underline cursor-pointer py-1 text-center"
       type="button"
     >
       Eliminar

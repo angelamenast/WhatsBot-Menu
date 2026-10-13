@@ -163,71 +163,49 @@
 </section>
 
 <script>
-  const fileInput = document.getElementById(
-    "avatar-upload",
-  ) as HTMLInputElement;
-  const btnChange = document.getElementById("btn-change-avatar");
-  const btnRemove = document.getElementById("btn-remove-avatar");
-  const avatarImg = document.getElementById("avatar-image") as HTMLImageElement;
-  const avatarInitials = document.getElementById("avatar-initials");
-  const profileForm = document.getElementById("profile-form");
-  const btnSave = document.getElementById("btn-save-profile");
+  function populateProfileForm() {
+    const savedData = localStorage.getItem("user_profile_data");
+    if (!savedData) return;
 
-  // Trigger File Input
-  btnChange?.addEventListener("click", () => fileInput?.click());
+    try {
+      const data = JSON.parse(savedData);
 
-  // Previsualizar foto elegida
-  fileInput?.addEventListener("change", (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        (window as any).showToast?.(
-          "La imagen supera el límite de 2MB",
-          "error",
-        );
-        return;
+      const nameInput = document.getElementById(
+        "admin-name",
+      ) as HTMLInputElement;
+      const businessInput = document.getElementById(
+        "business-name",
+      ) as HTMLInputElement;
+      const initialsEl = document.getElementById("profile-avatar-initials");
+      const imgEl = document.getElementById(
+        "profile-avatar-img",
+      ) as HTMLImageElement;
+
+      if (nameInput && data.adminName) nameInput.value = data.adminName;
+      if (businessInput && data.businessName)
+        businessInput.value = data.businessName;
+
+      if (data.adminName && initialsEl) {
+        const initials = data.adminName
+          .split(" ")
+          .map((n: string) => n[0])
+          .join("")
+          .substring(0, 2)
+          .toUpperCase();
+        initialsEl.textContent = initials;
       }
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (avatarImg && avatarInitials && btnRemove) {
-          avatarImg.src = event.target?.result as string;
-          avatarImg.classList.remove("hidden");
-          avatarInitials.classList.add("hidden");
-          btnRemove.classList.remove("hidden");
-          (window as any).showToast?.(
-            "Foto de perfil cargada correctamente",
-            "info",
-          );
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  });
 
-  // Eliminar foto previsualizada
-  btnRemove?.addEventListener("click", () => {
-    if (avatarImg && avatarInitials && btnRemove && fileInput) {
-      avatarImg.src = "";
-      avatarImg.classList.add("hidden");
-      avatarInitials.classList.remove("hidden");
-      btnRemove.classList.add("hidden");
-      fileInput.value = "";
-      (window as any).showToast?.("Foto removida", "info");
-    }
-  });
+      if (data.avatarUrl && imgEl && initialsEl) {
+        imgEl.src = data.avatarUrl;
+        imgEl.classList.remove("hidden");
+        initialsEl.classList.add("hidden");
+      }
+    } catch (e) {}
+  }
 
-  // Submit Handler con animación de carga
-  profileForm?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    if (btnSave) {
-      btnSave.setAttribute("disabled", "true");
-      btnSave.innerHTML = `<span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span><span>Guardando...</span>`;
+  // Ejecutar al cargar la vista
+  populateProfileForm();
 
-      setTimeout(() => {
-        btnSave.removeAttribute("disabled");
-        btnSave.innerHTML = `<span class="material-symbols-outlined text-[18px]">save</span><span>Guardar Cambios de Perfil</span>`;
-        (window as any).showToast?.("Perfil actualizado correctamente");
-      }, 1000);
-    }
-  });
+  // Escuchar si los datos se actualizan dinámicamente
+  window.addEventListener("profile-updated", populateProfileForm);
 </script>

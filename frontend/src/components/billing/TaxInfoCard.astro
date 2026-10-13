@@ -3,83 +3,76 @@
 ---
 
 <div
-  class="lg:col-span-6 rounded-xl bg-surface-container-lowest p-space-2xl shadow-sm flex flex-col justify-between"
+  class="lg:col-span-6 rounded-2xl bg-white border border-zinc-200/80 p-5 sm:p-6 shadow-xs flex flex-col justify-between gap-5 min-w-0"
 >
-  <div class="flex flex-col gap-space-md">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-space-sm">
+  <div class="flex flex-col gap-4">
+    <div
+      class="flex items-center justify-between pb-3 border-b border-zinc-100"
+    >
+      <div class="flex items-center gap-3 min-w-0">
         <span
-          class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary"
+          class="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 shrink-0"
         >
-          <span class="material-symbols-outlined text-[22px]">badge</span>
+          <span class="material-symbols-outlined text-[20px]">badge</span>
         </span>
-        <div class="flex flex-col">
-          <h3 class="font-headline-sm text-headline-sm text-on-surface">
+        <div class="flex flex-col min-w-0">
+          <h3 class="text-lg sm:text-xl font-bold text-zinc-900 truncate">
             Datos Fiscales de Facturación
           </h3>
-          <span class="font-body-sm text-body-sm text-on-surface-variant"
-            >Información incluida en tus recibos oficiales descargables</span
+          <span class="text-xs text-zinc-500 truncate"
+            >Información en tus recibos oficiales descargables</span
           >
         </div>
       </div>
       <span
-        class="px-space-sm py-space-xxs rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm font-semibold"
+        class="px-2.5 py-0.5 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold shrink-0"
         >Validado</span
       >
     </div>
 
     <div
-      class="flex flex-col gap-space-sm p-space-md rounded-xl bg-surface-container-low mt-space-sm"
+      class="flex flex-col gap-2.5 p-3.5 rounded-xl bg-zinc-50 border border-zinc-100 text-xs sm:text-sm"
     >
-      <div class="flex justify-between items-center py-space-xxs">
-        <span class="font-body-sm text-body-sm text-on-surface-variant"
-          >Razón Social</span
-        >
-        <span
-          class="font-label-md text-label-md text-on-surface text-right font-medium"
+      <div
+        class="flex justify-between items-center py-1 border-b border-zinc-200/50 gap-2"
+      >
+        <span class="text-zinc-500 font-medium shrink-0">Razón Social</span>
+        <span class="font-bold text-zinc-900 text-right truncate"
           >Main Street Cafe S.L.</span
         >
       </div>
-      <div class="flex justify-between items-center py-space-xxs">
-        <span class="font-body-sm text-body-sm text-on-surface-variant"
-          >Identificador Fiscal (NIF / RFC)</span
-        >
-        <span
-          class="font-label-md text-label-md text-on-surface text-right font-mono"
+      <div
+        class="flex justify-between items-center py-1 border-b border-zinc-200/50 gap-2"
+      >
+        <span class="text-zinc-500 font-medium shrink-0">RFC / NIF</span>
+        <span class="font-bold text-zinc-900 text-right font-mono"
           >B-87654321</span
         >
       </div>
-      <div class="flex justify-between items-center py-space-xxs">
-        <span class="font-body-sm text-body-sm text-on-surface-variant"
-          >Correo Electrónico de Facturas</span
-        >
-        <span class="font-label-md text-label-md text-on-surface text-right"
+      <div
+        class="flex justify-between items-center py-1 border-b border-zinc-200/50 gap-2"
+      >
+        <span class="text-zinc-500 font-medium shrink-0">Correo Facturas</span>
+        <span class="font-bold text-zinc-900 text-right truncate"
           >facturacion@mainst.com</span
         >
       </div>
-      <div class="flex justify-between items-start py-space-xxs">
-        <span class="font-body-sm text-body-sm text-on-surface-variant"
-          >Dirección Registrada</span
-        >
-        <span
-          class="font-label-md text-label-md text-on-surface text-right max-w-xs"
-          >Calle Mayor 42, 28013 Madrid, España</span
+      <div class="flex justify-between items-start py-1 gap-2">
+        <span class="text-zinc-500 font-medium shrink-0">Dirección</span>
+        <span class="font-bold text-zinc-900 text-right max-w-xs break-words"
+          >Calle Mayor 42, 28013 Madrid</span
         >
       </div>
     </div>
-    <p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xxs">
-      Las facturas mensuales se emiten de forma automática con desglose de
-      impuestos correspondiente a la Unión Europea.
-    </p>
   </div>
 
-  <div class="pt-space-lg mt-space-md flex justify-end">
+  <div class="pt-4 border-t border-zinc-100 flex justify-end">
     <button
-      class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-label-lg text-label-lg cursor-pointer"
+      class="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold text-sm transition-colors cursor-pointer"
       type="button"
     >
       <span class="material-symbols-outlined text-[18px]">edit_note</span>
-      Editar Datos Fiscales
+      <span>Editar Datos Fiscales</span>
     </button>
   </div>
 </div>

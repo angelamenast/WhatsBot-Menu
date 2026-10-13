@@ -33,6 +33,7 @@ import ToastContainer from "../../components/common/ToastContainer.astro";
 
 <script>
   import { authService } from "../../services/auth.service";
+  import { syncUserSession } from "../../services/userSession"; // <-- Importado del lado del cliente
 
   const form = document.getElementById("loginForm") as HTMLFormElement;
   const btnSubmit = document.getElementById("btnSubmit") as HTMLButtonElement;
@@ -67,6 +68,9 @@ import ToastContainer from "../../components/common/ToastContainer.astro";
       if (response.access_token) {
         localStorage.setItem("auth_token", response.access_token);
         document.cookie = `jwt_token=${response.access_token}; path=/; max-age=86400; SameSite=Lax`;
+
+        // Sincroniza la información del usuario en localStorage y emite el evento global
+        syncUserSession();
       }
 
       if ((window as any).showToast) {

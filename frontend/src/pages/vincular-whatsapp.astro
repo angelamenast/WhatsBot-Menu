@@ -10,13 +10,15 @@ import VinculacionWppLayout from "../layouts/VinculacionWppLayout.astro";
   title="Vincular Número de WhatsApp | Tremia"
   activeRoute="vincular"
 >
-  <div class="flex flex-col w-full gap-6">
-    <!-- Encabezado y Badges -->
+  <div class="flex flex-col w-full max-w-full gap-6 sm:gap-8 min-w-0">
+    <!-- Encabezado de la Sección -->
     <section
-      class="flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+      class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-2 border-b border-zinc-200/60"
     >
-      <div class="flex flex-col gap-1">
-        <div class="flex items-center gap-1.5 text-on-surface-variant text-xs">
+      <div class="flex flex-col gap-1.5 min-w-0">
+        <div
+          class="flex items-center gap-1.5 text-xs text-zinc-500 font-medium flex-wrap"
+        >
           <span>Configuración</span>
           <span class="material-symbols-outlined text-[14px]"
             >chevron_right</span
@@ -25,52 +27,61 @@ import VinculacionWppLayout from "../layouts/VinculacionWppLayout.astro";
           <span class="material-symbols-outlined text-[14px]"
             >chevron_right</span
           >
-          <span class="text-primary font-semibold">Vincular WhatsApp</span>
+          <span class="text-orange-600 font-bold">Vincular WhatsApp</span>
         </div>
-        <h1 class="text-2xl font-bold text-on-surface">
+        <h1
+          class="text-3xl sm:text-4xl font-extrabold text-zinc-900 tracking-tight leading-tight"
+        >
           Vincular Número de WhatsApp
         </h1>
-        <p class="text-xs text-on-surface-variant max-w-2xl">
+        <p
+          class="text-sm sm:text-base text-zinc-600 max-w-2xl leading-relaxed mt-0.5"
+        >
           Sincroniza tu línea comercial de WhatsApp para activar las respuestas
           del agente de IA y gestionar pedidos automáticamente.
         </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2 self-start lg:self-auto">
+      <!-- Badges de Certificación y Estado -->
+      <div class="flex flex-wrap items-center gap-2 shrink-0">
         <div
-          class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface text-xs border border-outline-variant/40"
+          class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-zinc-200/80 text-zinc-700 text-xs font-semibold shadow-2xs"
         >
-          <span class="material-symbols-outlined text-[16px] text-primary"
+          <span class="material-symbols-outlined text-[16px] text-orange-600"
             >verified</span
           >
-          <span class="font-semibold">Meta Cloud API Partner</span>
+          <span>Meta Cloud API Partner</span>
         </div>
         <div
-          class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface text-xs border border-outline-variant/40"
+          class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-zinc-200/80 text-zinc-700 text-xs font-semibold shadow-2xs"
         >
-          <span class="material-symbols-outlined text-[16px] text-primary"
+          <span class="material-symbols-outlined text-[16px] text-orange-600"
             >lock</span
           >
           <span>Cifrado SSL 256 bits</span>
         </div>
         <div
-          class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed text-xs border border-primary-container/20"
+          class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-orange-50 border border-orange-200/80 text-orange-800 text-xs font-bold shadow-2xs"
         >
           <span
-            class="w-2.5 h-2.5 rounded-full bg-primary-container animate-ping"
+            class="w-2.5 h-2.5 rounded-full bg-orange-500 animate-ping shrink-0"
           ></span>
-          <span class="font-semibold">Esperando vinculación</span>
+          <span>Esperando vinculación</span>
         </div>
       </div>
     </section>
 
-    <!-- Grid Principal de 2 Columnas -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      <div class="lg:col-span-7 flex flex-col gap-6">
+    <!-- Grid Principal Responsivo (1 Columna en Móvil, 12 Columnas en Escritorio) -->
+    <div
+      class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start min-w-0"
+    >
+      <!-- Columna Izquierda: Código QR y Pasos -->
+      <div class="lg:col-span-7 flex flex-col gap-6 min-w-0">
         <QrCard />
       </div>
 
-      <div class="lg:col-span-5 flex flex-col gap-6">
+      <!-- Columna Derecha: Vista Previa, Requisitos y FAQ -->
+      <div class="lg:col-span-5 flex flex-col gap-6 min-w-0">
         <ChatPreviewCard />
         <RequirementsCard />
         <FaqCard />

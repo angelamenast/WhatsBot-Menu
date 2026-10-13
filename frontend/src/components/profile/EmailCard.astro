@@ -182,203 +182,21 @@
 </div>
 
 <script>
-  const emailForm = document.getElementById("email-form");
-  const newEmail = document.getElementById("new-email") as HTMLInputElement;
-  const confirmEmail = document.getElementById(
-    "confirm-new-email",
-  ) as HTMLInputElement;
-  const currentEmailDisplay = document.getElementById("current-email-display");
-  const btnSubmit = document.getElementById(
-    "btn-submit-email",
-  ) as HTMLButtonElement;
+  function populateEmail() {
+    const savedData = localStorage.getItem("user_profile_data");
+    if (!savedData) return;
 
-  const newEmailError = document.getElementById("new-email-error");
-  const confirmEmailError = document.getElementById("confirm-email-error");
-
-  const otpModal = document.getElementById("otp-modal");
-  const closeOtp = document.getElementById("close-otp-modal");
-  const verifyBtn = document.getElementById("btn-verify-otp");
-  const otpInputs = document.querySelectorAll<HTMLInputElement>(".otp-input");
-
-  // Regex para formato estándar de correo
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  const showError = (
-    input: HTMLInputElement,
-    errorSpan: HTMLElement | null,
-    msg: string,
-  ) => {
-    input.classList.add(
-      "border-rose-500",
-      "focus:ring-rose-500/20",
-      "focus:border-rose-500",
-    );
-    input.classList.remove(
-      "border-zinc-200",
-      "focus:ring-orange-500/20",
-      "focus:border-orange-500",
-    );
-    if (errorSpan) {
-      errorSpan.textContent = msg;
-      errorSpan.classList.remove("hidden");
-    }
-  };
-
-  const clearError = (
-    input: HTMLInputElement,
-    errorSpan: HTMLElement | null,
-  ) => {
-    input.classList.remove(
-      "border-rose-500",
-      "focus:ring-rose-500/20",
-      "focus:border-rose-500",
-    );
-    input.classList.add(
-      "border-zinc-200",
-      "focus:ring-orange-500/20",
-      "focus:border-orange-500",
-    );
-    if (errorSpan) {
-      errorSpan.classList.add("hidden");
-    }
-  };
-
-  // Función de validación en tiempo real
-  const validateLive = () => {
-    const valNew = newEmail.value.trim().toLowerCase();
-    const valConfirm = confirmEmail.value.trim().toLowerCase();
-    const currentEmail = currentEmailDisplay?.textContent?.trim().toLowerCase();
-
-    let isNewValid = false;
-    let isConfirmValid = false;
-
-    // 1. Validar el campo "Nuevo correo"
-    if (!valNew) {
-      clearError(newEmail, newEmailError);
-    } else if (!emailRegex.test(valNew)) {
-      showError(
-        newEmail,
-        newEmailError,
-        "Ingresa un correo válido (ej. usuario@dominio.com)",
-      );
-    } else if (valNew === currentEmail) {
-      showError(
-        newEmail,
-        newEmailError,
-        "El nuevo correo no puede ser igual al actual",
-      );
-    } else {
-      clearError(newEmail, newEmailError);
-      isNewValid = true;
-    }
-
-    // 2. Validar el campo "Confirmar correo"
-    if (!valConfirm) {
-      clearError(confirmEmail, confirmEmailError);
-    } else if (valConfirm !== valNew) {
-      showError(
-        confirmEmail,
-        confirmEmailError,
-        "Los correos electrónicos no coinciden",
-      );
-    } else {
-      clearError(confirmEmail, confirmEmailError);
-      isConfirmValid = true;
-    }
-
-    // 3. Activar/Desactivar el botón automáticamente
-    if (isNewValid && isConfirmValid) {
-      btnSubmit.removeAttribute("disabled");
-    } else {
-      btnSubmit.setAttribute("disabled", "true");
-    }
-  };
-
-  // Escuchar eventos de escritura en ambos campos
-  newEmail?.addEventListener("input", validateLive);
-  confirmEmail?.addEventListener("input", validateLive);
-
-  // Al enviar cuando el botón ya está habilitado
-  emailForm?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    if (btnSubmit.hasAttribute("disabled")) return;
-
-    otpModal?.classList.remove("hidden");
-    (window as any).showToast?.(
-      `Código enviado a ${newEmail.value.trim()}`,
-      "info",
-    );
-  });
-
-  closeOtp?.addEventListener("click", () => otpModal?.classList.add("hidden"));
-
-  // Salto automático entre casillas OTP
-  otpInputs.forEach((input, index) => {
-    input.addEventListener("input", () => {
-      if (input.value && index < otpInputs.length - 1) {
-        otpInputs[index + 1].focus();
+    try {
+      const data = JSON.parse(savedData);
+      const emailInput = document.getElementById(
+        "current-email",
+      ) as HTMLInputElement;
+      if (emailInput && data.email) {
+        emailInput.value = data.email;
       }
-    });
-  });
+    } catch (e) {}
+  }
 
-  verifyBtn?.addEventListener("click", () => {
-    const code = Array.from(otpInputs)
-      .map((i) => i.value)
-      .join("");
-    if (code.length < 6) {
-      (window as any).showToast?.(
-        "Ingresa el código completo de 6 dígitos",
-        "error",
-      );
-      return;
-    }
-
-    if (currentEmailDisplay && newEmail) {
-      currentEmailDisplay.textContent = newEmail.value.trim();
-      otpModal?.classList.add("hidden");
-      (window as any).showToast?.("¡Correo actualizado correctamente!");
-
-      // Limpiar formulario y re-bloquear botón
-      (emailForm as HTMLFormElement).reset();
-      btnSubmit.setAttribute("disabled", "true");
-      otpInputs.forEach((i) => (i.value = ""));
-    }
-  });
-
-  verifyBtn?.addEventListener("click", () => {
-    const code = Array.from(otpInputs)
-      .map((i) => i.value)
-      .join("");
-    if (code.length < 6) {
-      (window as any).showToast?.(
-        "Ingresa el código completo de 6 dígitos",
-        "error",
-      );
-      return;
-    }
-
-    const updatedEmail = newEmail.value.trim();
-
-    if (currentEmailDisplay && newEmail) {
-      currentEmailDisplay.textContent = updatedEmail;
-      otpModal?.classList.add("hidden");
-      (window as any).showToast?.("¡Correo actualizado correctamente!");
-
-      // Emitir cambio global al Sidebar y localStorage
-      const currentSaved = JSON.parse(
-        localStorage.getItem("user_profile_data") || "{}",
-      );
-      const updatedData = { ...currentSaved, email: updatedEmail };
-      localStorage.setItem("user_profile_data", JSON.stringify(updatedData));
-
-      window.dispatchEvent(
-        new CustomEvent("profile-updated", { detail: updatedData }),
-      );
-
-      // Limpiar formulario
-      (emailForm as HTMLFormElement).reset();
-      btnSubmit.setAttribute("disabled", "true");
-      otpInputs.forEach((i) => (i.value = ""));
-    }
-  });
+  populateEmail();
+  window.addEventListener("profile-updated", populateEmail);
 </script>

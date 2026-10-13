@@ -3,44 +3,42 @@
 ---
 
 <div
-  class="relative overflow-hidden rounded-xl bg-gradient-to-r from-error-container via-surface-container-high to-surface-container-low p-space-lg shadow-sm"
+  class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-50 via-zinc-100 to-zinc-50 p-4 sm:p-6 border border-red-200 shadow-xs"
 >
   <div
-    class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md"
+    class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
   >
-    <div class="flex items-start gap-space-md">
+    <div class="flex items-start gap-3.5 min-w-0">
       <div
-        class="w-10 h-10 rounded-xl bg-error text-on-error flex items-center justify-center shrink-0 shadow-md"
+        class="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs"
       >
-        <span class="material-symbols-outlined text-[24px]">priority_high</span>
+        <span class="material-symbols-outlined text-[22px]">priority_high</span>
       </div>
-      <div class="flex flex-col">
-        <div class="flex items-center gap-space-xs">
-          <span class="font-headline-sm text-headline-sm text-on-surface"
-            >Atención requerida: Tu ciclo venció el 10 de Octubre</span
-          >
+      <div class="flex flex-col min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <h3 class="text-base sm:text-lg font-bold text-zinc-900 leading-snug">
+            Atención requerida: Tu ciclo venció el 10 de Octubre
+          </h3>
           <span
-            class="px-space-xs py-0.5 rounded-full bg-error text-on-error font-label-sm text-label-sm font-bold"
+            class="px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold uppercase tracking-wide"
             >Inactivo</span
           >
         </div>
-        <p
-          class="font-body-md text-body-md text-on-surface-variant mt-space-xxs max-w-3xl"
-        >
+        <p class="text-xs sm:text-sm text-zinc-600 mt-1 leading-relaxed">
           La respuesta automática por WhatsApp para <strong
             >Main Street Cafe</strong
           > se pausará en breve si no se renueva el plan. Tus conversaciones entrantes
-          se mantienen en cola durante el periodo de gracia.
+          se mantienen en cola.
         </p>
       </div>
     </div>
-    <div class="flex items-center gap-space-sm shrink-0 w-full md:w-auto">
+    <div class="flex items-center gap-2 shrink-0 w-full md:w-auto">
       <a
-        class="w-full md:w-auto flex items-center justify-center gap-space-xs px-space-lg py-space-sm rounded-lg bg-primary text-on-primary font-label-lg text-label-lg shadow-md hover:bg-secondary transition-all cursor-pointer"
+        class="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold shadow-xs transition-all cursor-pointer"
         href="/checkout/payment?plan=pro&billing=annual"
       >
         <span class="material-symbols-outlined text-[18px]">autorenew</span>
-        Renovar Plan Ahora
+        <span>Renovar Plan Ahora</span>
       </a>
     </div>
   </div>
