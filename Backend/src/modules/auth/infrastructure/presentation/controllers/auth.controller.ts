@@ -47,6 +47,7 @@ export class AuthController {
       const command = new RegisterCommand(dto.email, dto.password, dto.nombre, dto.telefono);
       return await this.registerUserUseCase.execute(command);
     } catch (error) {
+      console.error('REGISTER ERROR:', error);
       if (error instanceof CorreoYaRegistradoError) {
         throw new ConflictException(error.message);
       }
