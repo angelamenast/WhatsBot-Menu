@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
@@ -8,14 +9,24 @@ import { HandleStatusCallbackUseCase } from '../../application/use-cases/handle-
 
 describe('TwilioStatusCallbackController', () => {
   let app: INestApplication<App>;
-  let handleStatusCallbackUseCase: { execute: jest.Mock };
-
+  let handleStatusCallbackUseCase: { execute: any };
+  
   beforeEach(async () => {
-    handleStatusCallbackUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
+    const executeMock = jest.fn() as any;
+    executeMock.mockResolvedValue(undefined);
+
+    handleStatusCallbackUseCase = {
+      execute: executeMock,
+    };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [TwilioStatusCallbackController],
-      providers: [{ provide: HandleStatusCallbackUseCase, useValue: handleStatusCallbackUseCase }],
+      providers: [
+        {
+          provide: HandleStatusCallbackUseCase,
+          useValue: handleStatusCallbackUseCase,
+        },
+      ],
     })
       .overrideGuard(TwilioSignatureGuard)
       .useValue({ canActivate: () => true })

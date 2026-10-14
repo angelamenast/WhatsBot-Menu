@@ -1,4 +1,5 @@
 import { ConnectWhatsappUseCase } from './connect-whatsapp.use-case';
+import { jest } from '@jest/globals';
 import { WhatsappConnectionRepository } from '../../domain/repositories/whatsapp-connection.repository';
 import { ProvisioningPort } from '../ports/out/provisioning.port';
 import {

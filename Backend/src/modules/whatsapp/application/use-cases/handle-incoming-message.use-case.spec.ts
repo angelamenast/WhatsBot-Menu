@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { Logger } from '@nestjs/common';
 import { HandleIncomingMessageUseCase } from './handle-incoming-message.use-case';
 import { SendMessageUseCase } from './send-message.use-case';

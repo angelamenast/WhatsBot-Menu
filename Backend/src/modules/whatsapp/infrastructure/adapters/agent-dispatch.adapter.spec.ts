@@ -1,8 +1,11 @@
+import { jest } from '@jest/globals';
 import { AgentDispatchAdapter } from './agent-dispatch.adapter';
 import { ProcessCustomerMessageUseCase } from '../../../agent/application/use-cases/process-customer-message.use-case';
 
 describe('AgentDispatchAdapter', () => {
-  let processCustomerMessageUseCase: { execute: jest.Mock };
+  let processCustomerMessageUseCase: {
+    execute: ReturnType<typeof jest.fn>;
+  };
   let adapter: AgentDispatchAdapter;
 
   const command = {
@@ -20,7 +23,9 @@ describe('AgentDispatchAdapter', () => {
   });
 
   it('traduce el comando hacia agent y el resultado de vuelta al contrato de whatsapp', async () => {
-    processCustomerMessageUseCase.execute.mockResolvedValue({ responseText: 'Hola, ¿en qué te ayudo?' });
+    processCustomerMessageUseCase.execute.mockResolvedValue({
+      responseText: 'Hola, ¿en qué te ayudo?',
+    });
 
     const result = await adapter.dispatch(command);
 
@@ -34,7 +39,9 @@ describe('AgentDispatchAdapter', () => {
   });
 
   it('propaga los errores de agent sin tragarlos (el manejo es de quien despacha)', async () => {
-    processCustomerMessageUseCase.execute.mockRejectedValue(new Error('agent falló'));
+    processCustomerMessageUseCase.execute.mockRejectedValue(
+      new Error('agent falló'),
+    );
 
     await expect(adapter.dispatch(command)).rejects.toThrow('agent falló');
   });

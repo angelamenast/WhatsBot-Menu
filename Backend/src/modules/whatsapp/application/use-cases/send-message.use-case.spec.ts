@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { SendMessageUseCase } from './send-message.use-case';
 import { MessagingPort } from '../ports/out/messaging.port';
 import { MessageRepository } from '../../domain/repositories/message.repository';

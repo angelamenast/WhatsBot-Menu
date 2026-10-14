@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { Logger } from '@nestjs/common';
 import { ProcessCustomerMessageUseCase } from './process-customer-message.use-case';
 import { AgentConfigRepository } from '../../domain/repositories/agent-config.repository';
@@ -19,7 +20,7 @@ describe('ProcessCustomerMessageUseCase', () => {
   let llmPort: jest.Mocked<LlmPort>;
   let tokenUsagePort: jest.Mocked<TokenUsagePort>;
   let useCase: ProcessCustomerMessageUseCase;
-  let errorSpy: jest.SpyInstance;
+  let errorSpy: ReturnType<typeof jest.spyOn>;
 
   const command: ProcessCustomerMessageCommand = {
     businessId: 'business-1',

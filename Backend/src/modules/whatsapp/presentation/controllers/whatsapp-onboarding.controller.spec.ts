@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { ExecutionContext, INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
@@ -14,16 +15,18 @@ import { PhoneNumberAlreadyLinkedError } from '../../domain/errors/whatsapp.erro
 
 describe('WhatsappOnboardingController', () => {
   let app: INestApplication<App>;
-  let connectWhatsappUseCase: { execute: jest.Mock };
-  let businessService: { findByUsuario: jest.Mock };
+  let connectWhatsappUseCase: { execute: any };
+  let businessService: { findByUsuario: any };
 
   const authenticatedUser = { id: 'user-1' };
   const business = { id: 'business-1' };
   const phoneNumber = '+573000000000';
 
   beforeEach(async () => {
-    connectWhatsappUseCase = { execute: jest.fn() };
-    businessService = { findByUsuario: jest.fn().mockResolvedValue(business) };
+    connectWhatsappUseCase = { execute: jest.fn() as any };
+    businessService = {
+      findByUsuario: (jest.fn() as any).mockResolvedValue(business),
+    };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [WhatsappOnboardingController],
@@ -68,7 +71,9 @@ describe('WhatsappOnboardingController', () => {
       .send({ phoneNumber })
       .expect(201);
 
-    expect(businessService.findByUsuario).toHaveBeenCalledWith(authenticatedUser.id);
+    expect(businessService.findByUsuario).toHaveBeenCalledWith(
+      authenticatedUser.id,
+    );
     expect(connectWhatsappUseCase.execute).toHaveBeenCalledWith({
       businessId: business.id,
       phoneNumber,
@@ -77,9 +82,14 @@ describe('WhatsappOnboardingController', () => {
   });
 
   it('número ya vinculado a otro negocio: responde 409', async () => {
-    connectWhatsappUseCase.execute.mockRejectedValue(new PhoneNumberAlreadyLinkedError(phoneNumber));
+    connectWhatsappUseCase.execute.mockRejectedValue(
+      new PhoneNumberAlreadyLinkedError(phoneNumber),
+    );
 
-    await request(app.getHttpServer()).post('/whatsapp/connections').send({ phoneNumber }).expect(409);
+    await request(app.getHttpServer())
+      .post('/whatsapp/connections')
+      .send({ phoneNumber })
+      .expect(409);
   });
 
   it('provisioning falla: responde 200 con la conexión en estado FAILED', async () => {

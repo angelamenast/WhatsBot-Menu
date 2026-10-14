@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { HandleStatusCallbackUseCase } from './handle-status-callback.use-case';
 import { MessageRepository } from '../../domain/repositories/message.repository';
 import { Message, MessageSender } from '../../domain/entities/message.entity';
