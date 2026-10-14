@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { GetCatalogUseCase } from './get-catalog.use-case';
 import type { NegocioRepository } from '../../domain/repositories/negocio.repository'; // existing name
 import type { CategoryRepository } from '../../domain/repositories/category.repository';
@@ -21,8 +22,13 @@ describe('GetCatalogUseCase', () => {
       buscarPorUsuario: jest.fn(),
       actualizar: jest.fn(),
     };
-    categoryRepository = { listByBusiness: jest.fn() };
-    productRepository = { listByBusiness: jest.fn(), findByIds: jest.fn() };
+    categoryRepository = { listByBusiness: jest.fn(), createMany: jest.fn() };
+    productRepository = {
+      listByBusiness: jest.fn(),
+      findByIds: jest.fn(),
+      createMany: jest.fn(),
+      updateMany: jest.fn(),
+    };
 
     useCase = new GetCatalogUseCase(businessRepository, categoryRepository, productRepository);
   });

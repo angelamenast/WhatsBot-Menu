@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import {
   MAX_ROWS_PER_SHEET,
   PreviewCatalogImportUseCase,
@@ -27,11 +28,19 @@ describe('PreviewCatalogImportUseCase', () => {
     businessRepository = {
       existeNegocioActivoPorUsuario: jest.fn(),
       crear: jest.fn(),
-      buscarPorUsuario: jest.fn().mockResolvedValue(business),
+      buscarPorUsuario: jest.fn<() => Promise<Negocio | null>>().mockResolvedValue(business),
       actualizar: jest.fn(),
     };
-    categoryRepository = { listByBusiness: jest.fn().mockResolvedValue([]) };
-    productRepository = { listByBusiness: jest.fn().mockResolvedValue([]), findByIds: jest.fn() };
+    categoryRepository = {
+      listByBusiness: jest.fn<(businessId: string) => Promise<Category[]>>().mockResolvedValue([]),
+      createMany: jest.fn<(businessId: string, names: string[]) => Promise<Category[]>>(),
+    };
+    productRepository = {
+      listByBusiness: jest.fn<ProductRepository['listByBusiness']>().mockResolvedValue([]),
+      findByIds: jest.fn(),
+      createMany: jest.fn(),
+      updateMany: jest.fn(),
+    };
     parser = { parseCatalog: jest.fn() };
 
     useCase = new PreviewCatalogImportUseCase(businessRepository, categoryRepository, productRepository, parser);

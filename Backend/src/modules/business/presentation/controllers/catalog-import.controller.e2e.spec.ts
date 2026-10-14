@@ -1,9 +1,11 @@
+import { jest } from '@jest/globals';
 import { ExecutionContext, INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import ExcelJS from 'exceljs';
 import { CatalogImportController } from './catalog-import.controller';
 import { PreviewCatalogImportUseCase } from '../../application/use-cases/preview-catalog-import.use-case';
+import { ConfirmCatalogImportUseCase } from '../../application/use-cases/confirm-catalog-import.use-case';
 import { SPREADSHEET_PARSER } from '../../application/ports/out/spreadsheet-parser.port';
 import { ExcelJsSpreadsheetParserAdapter } from '../../infrastructure/adapters/exceljs-spreadsheet-parser.adapter';
 import { NEGOCIO_REPOSITORY } from '../../domain/repositories/negocio.repository';
@@ -32,6 +34,7 @@ describe('POST /business/catalog/import/preview', () => {
       controllers: [CatalogImportController],
       providers: [
         PreviewCatalogImportUseCase,
+        { provide: ConfirmCatalogImportUseCase, useValue: { execute: jest.fn() } },
         { provide: SPREADSHEET_PARSER, useClass: ExcelJsSpreadsheetParserAdapter },
         { provide: NEGOCIO_REPOSITORY, useValue: businessRepository },
         { provide: CATEGORY_REPOSITORY, useValue: { listByBusiness: jest.fn().mockResolvedValue([]) } },

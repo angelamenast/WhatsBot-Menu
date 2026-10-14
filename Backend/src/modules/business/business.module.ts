@@ -17,7 +17,8 @@ import { BusinessController } from './presentation/controllers/business.controll
 import { CatalogController } from './presentation/controllers/catalog.controller';
 import { CatalogImportController } from './presentation/controllers/catalog-import.controller';
 import { ExcelJsSpreadsheetParserAdapter } from './infrastructure/adapters/exceljs-spreadsheet-parser.adapter';
-
+import { ConfirmCatalogImportCommand } from './application/dto/confirm-catalog-import.command';
+import { ConfirmCatalogImportUseCase } from './application/use-cases/confirm-catalog-import.use-case';
 @Module({
   imports: [AuthModule],
   controllers: [BusinessController, CatalogController, CatalogImportController],
@@ -27,6 +28,7 @@ import { ExcelJsSpreadsheetParserAdapter } from './infrastructure/adapters/excel
     UpdateNegocioUseCase,
     GetCatalogUseCase,
     PreviewCatalogImportUseCase,
+    ConfirmCatalogImportUseCase,
     { provide: SPREADSHEET_PARSER, useClass: ExcelJsSpreadsheetParserAdapter },
     BusinessService,
     SupabaseNegocioRepository,

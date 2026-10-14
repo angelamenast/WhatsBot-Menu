@@ -22,4 +22,21 @@ export class SupabaseCategoryRepository implements CategoryRepository {
 
     return (data ?? []).map((row) => CategoryMapper.toDomain(row));
   }
+  async createMany(businessId: string, names: string[]): Promise<Category[]> {
+  if (names.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await this.supabaseService
+    .getClient()
+    .from('categorias_producto')
+    .insert(names.map((name) => ({ negocio_id: businessId, nombre: name })))
+    .select('id, negocio_id, nombre');
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => CategoryMapper.toDomain(row));
+}
 }

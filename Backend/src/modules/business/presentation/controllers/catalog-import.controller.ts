@@ -9,13 +9,19 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  Body,
 } from '@nestjs/common';
 
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PreviewCatalogImportUseCase } from '../../application/use-cases/preview-catalog-import.use-case';
 import { PreviewCatalogImportCommand } from '../../application/dto/preview-catalog-import.command';
 import { NegocioNoEncontradoError } from '../../domain/errors/business.errors'; // existing name
+import { ConfirmCatalogImportUseCase } from '../../application/use-cases/confirm-catalog-import.use-case';
+import { ConfirmCatalogImportCommand } from '../../application/dto/confirm-catalog-import.command';
+import { ConfirmCatalogImportRequestDto } from '../dto/confirm-catalog-import-request.dto';
+
 import {
+  CatalogImportRejectedError,
   CatalogTooLargeError,
   InvalidCatalogFileError,
 } from '../../domain/errors/catalog-import.errors';
@@ -28,7 +34,10 @@ type UploadedXlsx = { buffer: Buffer };
 @Controller('business/catalog/import')
 @UseGuards(SupabaseAuthGuard)
 export class CatalogImportController {
-  constructor(private readonly previewCatalogImportUseCase: PreviewCatalogImportUseCase) {}
+  constructor(
+    private readonly previewCatalogImportUseCase: PreviewCatalogImportUseCase,
+    private readonly confirmCatalogImportUseCase: ConfirmCatalogImportUseCase,
+  ) {}
 
   // multipart/form-data with the .xlsx in the "file" field. Nothing is saved here.
   @Post('preview')
@@ -47,6 +56,30 @@ export class CatalogImportController {
       }
       if (error instanceof InvalidCatalogFileError || error instanceof CatalogTooLargeError) {
         throw new UnprocessableEntityException(error.message);
+      }
+      throw error;
+    }
+  }
+
+  @Post('confirm')
+  @HttpCode(200)
+  async confirm(@Req() req: AuthenticatedRequest, @Body() dto: ConfirmCatalogImportRequestDto) {
+    try {
+      return await this.confirmCatalogImportUseCase.execute(
+        new ConfirmCatalogImportCommand(req.user.id, {
+          categories: dto.categories,
+          products: dto.products,
+        }),
+      );
+    } catch (error) {
+      if (error instanceof NegocioNoEncontradoError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof CatalogTooLargeError) {
+        throw new UnprocessableEntityException(error.message);
+      }
+      if (error instanceof CatalogImportRejectedError) {
+        throw new UnprocessableEntityException({ message: error.message, issues: error.issues });
       }
       throw error;
     }
