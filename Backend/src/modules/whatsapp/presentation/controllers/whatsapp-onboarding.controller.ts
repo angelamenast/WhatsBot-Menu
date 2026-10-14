@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { SupabaseAuthGuard } from '../../../auth/guards/supabase-auth.guard';
+import { SupabaseAuthGuard } from '../../../auth/infrastructure/presentation/guards/supabase-auth.guard';
 import { BusinessService } from '../../../business/business.service';
 import { ConnectWhatsappUseCase } from '../../application/use-cases/connect-whatsapp.use-case';
 import { ConnectWhatsappRequestDto } from '../dto/connect-whatsapp-request.dto';
