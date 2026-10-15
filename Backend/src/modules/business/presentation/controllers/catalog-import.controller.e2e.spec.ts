@@ -9,8 +9,11 @@ import { ConfirmCatalogImportUseCase } from '../../application/use-cases/confirm
 import { SPREADSHEET_PARSER } from '../../application/ports/out/spreadsheet-parser.port';
 import { ExcelJsSpreadsheetParserAdapter } from '../../infrastructure/adapters/exceljs-spreadsheet-parser.adapter';
 import { NEGOCIO_REPOSITORY } from '../../domain/repositories/negocio.repository';
+import type { NegocioRepository } from '../../domain/repositories/negocio.repository';
 import { CATEGORY_REPOSITORY } from '../../domain/repositories/category.repository';
+import type { CategoryRepository } from '../../domain/repositories/category.repository';
 import { PRODUCT_REPOSITORY } from '../../domain/repositories/product.repository';
+import type { ProductRepository } from '../../domain/repositories/product.repository';
 import { SupabaseAuthGuard } from '../../../auth/infrastructure/presentation/guards/supabase-auth.guard';
 import { Negocio } from '../../domain/entities/negocio.entity';
 
@@ -27,7 +30,11 @@ async function validXlsx(): Promise<Buffer> {
 
 describe('POST /business/catalog/import/preview', () => {
   let app: INestApplication;
-  const businessRepository = { buscarPorUsuario: jest.fn(), existeNegocioActivoPorUsuario: jest.fn(), crear: jest.fn() };
+  const businessRepository = {
+    buscarPorUsuario: jest.fn<NegocioRepository['buscarPorUsuario']>(),
+    existeNegocioActivoPorUsuario: jest.fn(),
+    crear: jest.fn(),
+  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -37,8 +44,14 @@ describe('POST /business/catalog/import/preview', () => {
         { provide: ConfirmCatalogImportUseCase, useValue: { execute: jest.fn() } },
         { provide: SPREADSHEET_PARSER, useClass: ExcelJsSpreadsheetParserAdapter },
         { provide: NEGOCIO_REPOSITORY, useValue: businessRepository },
-        { provide: CATEGORY_REPOSITORY, useValue: { listByBusiness: jest.fn().mockResolvedValue([]) } },
-        { provide: PRODUCT_REPOSITORY, useValue: { listByBusiness: jest.fn().mockResolvedValue([]) } },
+        {
+          provide: CATEGORY_REPOSITORY,
+          useValue: { listByBusiness: jest.fn<CategoryRepository['listByBusiness']>().mockResolvedValue([]) },
+        },
+        {
+          provide: PRODUCT_REPOSITORY,
+          useValue: { listByBusiness: jest.fn<ProductRepository['listByBusiness']>().mockResolvedValue([]) },
+        },
       ],
     })
       .overrideGuard(SupabaseAuthGuard)
