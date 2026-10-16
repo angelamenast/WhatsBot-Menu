@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { INestApplication, Logger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
@@ -9,14 +10,22 @@ import { WhatsappConnectionNotFoundError } from '../../domain/errors/whatsapp.er
 
 describe('TwilioWebhookController', () => {
   let app: INestApplication<App>;
-  let handleIncomingMessageUseCase: { execute: jest.Mock };
+  let handleIncomingMessageUseCase: { execute: any };
 
   beforeEach(async () => {
-    handleIncomingMessageUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
+    const executeMock = jest.fn() as any;
+    executeMock.mockResolvedValue(undefined);
+
+    handleIncomingMessageUseCase = { execute: executeMock };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [TwilioWebhookController],
-      providers: [{ provide: HandleIncomingMessageUseCase, useValue: handleIncomingMessageUseCase }],
+      providers: [
+        {
+          provide: HandleIncomingMessageUseCase,
+          useValue: handleIncomingMessageUseCase,
+        },
+      ],
     })
       .overrideGuard(TwilioSignatureGuard)
       .useValue({ canActivate: () => true })
@@ -64,7 +73,9 @@ describe('TwilioWebhookController', () => {
       new WhatsappConnectionNotFoundError(payload.To),
     );
 
-    const warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    const warnSpy = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
 
     await request(app.getHttpServer())
       .post('/whatsapp/webhook')
