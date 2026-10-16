@@ -28,6 +28,7 @@ import { SendMessageUseCase } from './application/use-cases/send-message.use-cas
 import { ConnectWhatsappUseCase } from './application/use-cases/connect-whatsapp.use-case';
 import { HandleStatusCallbackUseCase } from './application/use-cases/handle-status-callback.use-case';
 
+import { OrderStatusChangedListener } from './presentation/listeners/order-status-changed.listener';
 import { TwilioWebhookController } from './presentation/controllers/twilio-webhook.controller';
 import { TwilioStatusCallbackController } from './presentation/controllers/twilio-status-callback.controller';
 import { WhatsappOnboardingController } from './presentation/controllers/whatsapp-onboarding.controller';
@@ -122,6 +123,8 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
     SendMessageUseCase,
     ConnectWhatsappUseCase,
     HandleStatusCallbackUseCase,
+
+    OrderStatusChangedListener,
   ],
   exports: [MESSAGING_PORT, PROVISIONING_PORT, PLAN_STATUS_PORT, AGENT_DISPATCH_PORT],
 })
