@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { SupabaseOrderRepository } from './supabase-order.repository';
 import { SupabaseService } from '../../../../shared/supabase/supabase.service';
 import { Order, OrderStatus } from '../../domain/entities/order.entity';
@@ -34,9 +35,12 @@ function queryBuilder(result: Result) {
   return { builder, calls };
 }
 
+// Los mocks de @jest/globals (jest en modo ESM) son estrictos: sin esto mockResolvedValue exige `never`.
+type AnyFn = (...args: any[]) => any;
+
 describe('SupabaseOrderRepository', () => {
-  let from: jest.Mock;
-  let rpc: jest.Mock;
+  let from: jest.Mock<AnyFn>;
+  let rpc: jest.Mock<AnyFn>;
   let repository: SupabaseOrderRepository;
 
   const anOrder = () =>
@@ -54,8 +58,8 @@ describe('SupabaseOrderRepository', () => {
     });
 
   beforeEach(() => {
-    from = jest.fn();
-    rpc = jest.fn();
+    from = jest.fn<AnyFn>();
+    rpc = jest.fn<AnyFn>();
     const supabaseService = {
       getClient: () => ({ from, rpc }),
     } as unknown as SupabaseService;

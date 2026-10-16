@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import 'reflect-metadata';
 import {
   ExecutionContext,
@@ -7,8 +8,8 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { OrdersController } from './orders.controller';
-import { SupabaseAuthGuard } from '../../../auth/guards/supabase-auth.guard';
+import type { OrdersController as OrdersControllerClass } from './orders.controller';
+import { SupabaseAuthGuard } from '../../../auth/infrastructure/presentation/guards/supabase-auth.guard';
 import { BusinessService } from '../../../business/business.service';
 import { ListOrdersByBusinessUseCase } from '../../application/use-cases/list-orders-by-business.use-case';
 import { GetOrderUseCase } from '../../application/use-cases/get-order.use-case';
@@ -23,12 +24,27 @@ import {
   OrderStateConflictError,
 } from '../../domain/errors/order.errors';
 
+// Los mocks de @jest/globals (jest en modo ESM) son estrictos: sin esto mockResolvedValue exige `never`.
+type AnyFn = (...args: any[]) => any;
+
 describe('OrdersController', () => {
+  // Carga dinámica: @nestjs/throttler es CommonJS y, con Jest en modo ESM, falla con
+  // "Cannot require() ES Module in a cycle" si se importa estáticamente antes de que
+  // @nestjs/common esté evaluado. En runtime (nest build) no ocurre.
+  let OrdersController: typeof OrdersControllerClass;
+
+  beforeAll(async () => {
+    // Ruta en variable: con module nodenext, tsc exige extensión en import() literales
+    // y Jest no resuelve .js a .ts.
+    const controllerPath = './orders.controller';
+    ({ OrdersController } = await import(controllerPath));
+  });
+
   let app: INestApplication<App>;
-  let listOrdersUseCase: { execute: jest.Mock };
-  let getOrderUseCase: { execute: jest.Mock };
-  let confirmOrderUseCase: { execute: jest.Mock };
-  let cancelOrderUseCase: { execute: jest.Mock };
+  let listOrdersUseCase: { execute: jest.Mock<AnyFn> };
+  let getOrderUseCase: { execute: jest.Mock<AnyFn> };
+  let confirmOrderUseCase: { execute: jest.Mock<AnyFn> };
+  let cancelOrderUseCase: { execute: jest.Mock<AnyFn> };
 
   const orderId = '3f1c8a52-7d0e-4c1b-9a64-2b5e8f0d1c77';
   const business = { id: 'business-1' };
@@ -56,11 +72,11 @@ describe('OrdersController', () => {
 
   beforeEach(async () => {
     listOrdersUseCase = {
-      execute: jest.fn().mockResolvedValue({ items: [], total: 0 }),
+      execute: jest.fn<AnyFn>().mockResolvedValue({ items: [], total: 0 }),
     };
-    getOrderUseCase = { execute: jest.fn() };
-    confirmOrderUseCase = { execute: jest.fn() };
-    cancelOrderUseCase = { execute: jest.fn() };
+    getOrderUseCase = { execute: jest.fn<AnyFn>() };
+    confirmOrderUseCase = { execute: jest.fn<AnyFn>() };
+    cancelOrderUseCase = { execute: jest.fn<AnyFn>() };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [OrdersController],
@@ -71,7 +87,7 @@ describe('OrdersController', () => {
         { provide: CancelOrderUseCase, useValue: cancelOrderUseCase },
         {
           provide: BusinessService,
-          useValue: { findByUsuario: jest.fn().mockResolvedValue(business) },
+          useValue: { findByUsuario: jest.fn<AnyFn>().mockResolvedValue(business) },
         },
       ],
     })

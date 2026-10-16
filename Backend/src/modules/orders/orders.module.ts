@@ -7,6 +7,8 @@ import { ORDER_REPOSITORY } from './domain/repositories/order.repository';
 import { SupabaseOrderRepository } from './infrastructure/persistence/supabase-order.repository';
 import { CATALOG_LOOKUP_REPOSITORY } from './domain/repositories/catalog-lookup.repository';
 import { SupabaseCatalogLookupRepository } from './infrastructure/persistence/supabase-catalog-lookup.repository';
+import { ORDER_EVENTS_PORT } from './application/ports/out/order-events.port';
+import { EventEmitterOrderEventsAdapter } from './infrastructure/events/event-emitter-order-events.adapter';
 
 import { CreateOrderUseCase } from './application/use-cases/create-order.use-case';
 import { GetOrderUseCase } from './application/use-cases/get-order.use-case';
@@ -25,6 +27,8 @@ import { OrdersController } from './presentation/controllers/orders.controller';
       provide: CATALOG_LOOKUP_REPOSITORY,
       useClass: SupabaseCatalogLookupRepository,
     },
+    // EventEmitter2 viene de EventEmitterModule.forRoot() (global) en AppModule.
+    { provide: ORDER_EVENTS_PORT, useClass: EventEmitterOrderEventsAdapter },
 
     CreateOrderUseCase,
     GetOrderUseCase,

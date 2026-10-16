@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { ListOrdersByBusinessUseCase } from './list-orders-by-business.use-case';
 import {
   OrderPage,
@@ -17,7 +18,9 @@ describe('ListOrdersByBusinessUseCase', () => {
     orderRepository = {
       findById: jest.fn(),
       findViewById: jest.fn(),
-      findViewsByBusiness: jest.fn().mockResolvedValue(emptyPage),
+      findViewsByBusiness: jest
+        .fn<OrderRepository['findViewsByBusiness']>()
+        .mockResolvedValue(emptyPage),
       insert: jest.fn(),
       updateStatus: jest.fn(),
     };

@@ -1,5 +1,8 @@
+import { jest } from '@jest/globals';
+import { Logger } from '@nestjs/common';
 import { ConfirmOrderUseCase } from './confirm-order.use-case';
 import { OrderRepository } from '../../domain/repositories/order.repository';
+import { OrderEventsPort } from '../ports/out/order-events.port';
 import { Order, OrderStatus } from '../../domain/entities/order.entity';
 import { OrderItem } from '../../domain/entities/order-item.entity';
 import {
@@ -11,6 +14,7 @@ import { UpdateOrderStatusCommand } from '../dto/update-order-status.command';
 
 describe('ConfirmOrderUseCase', () => {
   let orderRepository: jest.Mocked<OrderRepository>;
+  let orderEvents: jest.Mocked<OrderEventsPort>;
   let useCase: ConfirmOrderUseCase;
 
   const command: UpdateOrderStatusCommand = {
@@ -46,7 +50,9 @@ describe('ConfirmOrderUseCase', () => {
       updateStatus: jest.fn(),
     };
 
-    useCase = new ConfirmOrderUseCase(orderRepository);
+    orderEvents = { publishStatusChanged: jest.fn() };
+
+    useCase = new ConfirmOrderUseCase(orderRepository, orderEvents);
   });
 
   it('pedido PENDING del propio negocio: lo confirma con compare-and-set desde PENDING', async () => {
@@ -113,5 +119,75 @@ describe('ConfirmOrderUseCase', () => {
     );
 
     expect(orderRepository.updateStatus).not.toHaveBeenCalled();
+  });
+
+  describe('notificación del cambio de estado', () => {
+    const expectedEvent = (order: Order) => ({
+      orderId: 'order-1',
+      businessId: 'business-1',
+      conversationId: 'conversation-1',
+      status: 'CONFIRMED',
+      total: 15000,
+      occurredAt: order.updatedAt,
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('publica el evento una sola vez, con el payload correcto, después de actualizar', async () => {
+      orderRepository.findById.mockResolvedValue(anOrder());
+      orderRepository.updateStatus.mockResolvedValue(true);
+
+      const result = await useCase.execute(command);
+
+      expect(orderEvents.publishStatusChanged).toHaveBeenCalledTimes(1);
+      expect(orderEvents.publishStatusChanged).toHaveBeenCalledWith(
+        expectedEvent(result),
+      );
+      // el evento sale DESPUÉS de persistir
+      expect(
+        orderRepository.updateStatus.mock.invocationCallOrder[0],
+      ).toBeLessThan(orderEvents.publishStatusChanged.mock.invocationCallOrder[0]);
+    });
+
+    it('con conflicto de concurrencia (updateStatus false → 409) NO publica', async () => {
+      orderRepository.findById.mockResolvedValue(anOrder());
+      orderRepository.updateStatus.mockResolvedValue(false);
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        OrderStateConflictError,
+      );
+
+      expect(orderEvents.publishStatusChanged).not.toHaveBeenCalled();
+    });
+
+    it('si el pedido no existe NO publica', async () => {
+      orderRepository.findById.mockResolvedValue(null);
+
+      await expect(useCase.execute(command)).rejects.toThrow(OrderNotFoundError);
+
+      expect(orderEvents.publishStatusChanged).not.toHaveBeenCalled();
+    });
+
+    it('si el puerto de eventos lanza, el caso de uso igual devuelve el pedido y registra un warning solo con ids', async () => {
+      const warn = jest
+        .spyOn(Logger.prototype, 'warn')
+        .mockImplementation(() => undefined);
+      orderRepository.findById.mockResolvedValue(anOrder());
+      orderRepository.updateStatus.mockResolvedValue(true);
+      orderEvents.publishStatusChanged.mockImplementation(() => {
+        throw new Error('bus caído');
+      });
+
+      const result = await useCase.execute(command);
+
+      expect(result.status).toBe(OrderStatus.CONFIRMED);
+      expect(warn).toHaveBeenCalledTimes(1);
+      const message = String(warn.mock.calls[0][0]);
+      expect(message).toContain('order-1');
+      expect(message).toContain('business-1');
+      expect(message).toContain('bus caído');
+    });
   });
 });

@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
-import { SupabaseAuthGuard } from '../../../auth/guards/supabase-auth.guard';
+import { SupabaseAuthGuard } from '../../../auth/infrastructure/presentation/guards/supabase-auth.guard';
 import { BusinessService } from '../../../business/business.service';
 import { ListOrdersByBusinessUseCase } from '../../application/use-cases/list-orders-by-business.use-case';
 import { GetOrderUseCase } from '../../application/use-cases/get-order.use-case';

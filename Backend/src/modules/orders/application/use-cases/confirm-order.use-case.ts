@@ -1,6 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { OrderRepository } from '../../domain/repositories/order.repository';
 import { ORDER_REPOSITORY } from '../../domain/repositories/order.repository';
+import type { OrderEventsPort } from '../ports/out/order-events.port';
+import { ORDER_EVENTS_PORT } from '../ports/out/order-events.port';
 import { Order } from '../../domain/entities/order.entity';
 import {
   OrderNotFoundError,
@@ -17,8 +19,11 @@ import { UpdateOrderStatusCommand } from '../dto/update-order-status.command';
  */
 @Injectable()
 export class ConfirmOrderUseCase {
+  private readonly logger = new Logger(ConfirmOrderUseCase.name);
+
   constructor(
     @Inject(ORDER_REPOSITORY) private readonly orderRepository: OrderRepository,
+    @Inject(ORDER_EVENTS_PORT) private readonly orderEvents: OrderEventsPort,
   ) {}
 
   async execute(command: UpdateOrderStatusCommand): Promise<Order> {
@@ -48,6 +53,32 @@ export class ConfirmOrderUseCase {
       throw new OrderStateConflictError(order.id);
     }
 
+    this.notifyStatusChanged(order);
+
     return order;
+  }
+
+  /**
+   * El estado ya quedó persistido: avisar al resto del sistema es un efecto
+   * secundario. Si falla, solo se registra (con ids, sin datos del cliente) y
+   * nunca se relanza ni se revierte el cambio.
+   */
+  private notifyStatusChanged(order: Order): void {
+    try {
+      this.orderEvents.publishStatusChanged({
+        orderId: order.id,
+        businessId: order.businessId,
+        conversationId: order.conversationId,
+        status: 'CONFIRMED',
+        total: order.total,
+        occurredAt: order.updatedAt,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `No se pudo publicar el evento de pedido ${order.id} CONFIRMED (negocio ${order.businessId}): ${
+          error instanceof Error ? error.message : 'error desconocido'
+        }`,
+      );
+    }
   }
 }
