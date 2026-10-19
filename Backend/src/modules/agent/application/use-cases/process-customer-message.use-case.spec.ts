@@ -10,6 +10,7 @@ import {
 } from '../../domain/repositories/conversation-history.repository';
 import { LlmPort } from '../ports/out/llm.port';
 import { TokenUsagePort } from '../ports/out/token-usage.port';
+import { UsageQuotaPort } from '../ports/out/usage-quota.port';
 import { AgentRegionalStyle, AgentTone } from '../../domain/enums/agent-style';
 import { AgentConfig } from '../../domain/entities/agent-config.entity';
 import { BusinessNotFoundError, IncomingMessageNotPersistedError } from '../../domain/errors/agent.errors';
@@ -23,6 +24,7 @@ describe('ProcessCustomerMessageUseCase', () => {
   let conversationHistoryRepository: jest.Mocked<ConversationHistoryRepository>;
   let llmPort: jest.Mocked<LlmPort>;
   let tokenUsagePort: jest.Mocked<TokenUsagePort>;
+  let usageQuotaPort: jest.Mocked<UsageQuotaPort>;
   let useCase: ProcessCustomerMessageUseCase;
   let errorSpy: ReturnType<typeof jest.spyOn>;
 
@@ -76,6 +78,7 @@ describe('ProcessCustomerMessageUseCase', () => {
     };
     llmPort = { generateReply: jest.fn() };
     tokenUsagePort = { record: jest.fn() };
+    usageQuotaPort = { hasQuota: jest.fn() };
 
     agentConfigRepository.findByBusinessId.mockResolvedValue(aConfig());
     businessAttentionRepository.getStatus.mockResolvedValue({
@@ -86,6 +89,7 @@ describe('ProcessCustomerMessageUseCase', () => {
     conversationHistoryRepository.findRecentByConversationId.mockResolvedValue(history);
     llmPort.generateReply.mockResolvedValue({ text: 'Tenemos hamburguesas.', tokensInput: 30, tokensOutput: 12 });
     tokenUsagePort.record.mockResolvedValue(undefined);
+    usageQuotaPort.hasQuota.mockResolvedValue(true);
 
     errorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
@@ -96,6 +100,7 @@ describe('ProcessCustomerMessageUseCase', () => {
       conversationHistoryRepository,
       llmPort,
       tokenUsagePort,
+      usageQuotaPort,
     );
   });
 
@@ -127,6 +132,7 @@ describe('ProcessCustomerMessageUseCase', () => {
     expect(tokenUsagePort.record).toHaveBeenCalledWith({
       businessId: command.businessId,
       conversationId: command.conversationId,
+      messageId: command.messageId,
       tokensInput: 30,
       tokensOutput: 12,
     });
@@ -163,6 +169,43 @@ describe('ProcessCustomerMessageUseCase', () => {
     expect(tokenUsagePort.record).not.toHaveBeenCalled();
   });
 
+
+  describe('cuota de tokens (RNF-08)', () => {
+    it('cuota agotada: devuelve null con un aviso solo con ids y no invoca LLM, catálogo, historial ni tokens', async () => {
+      usageQuotaPort.hasQuota.mockResolvedValue(false);
+      const warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+
+      await expect(useCase.execute(command)).resolves.toBeNull();
+
+      expect(usageQuotaPort.hasQuota).toHaveBeenCalledWith(command.businessId);
+      expect(llmPort.generateReply).not.toHaveBeenCalled();
+      expect(tokenUsagePort.record).not.toHaveBeenCalled();
+      expect(catalogRepository.findByBusinessId).not.toHaveBeenCalled();
+      expect(conversationHistoryRepository.findRecentByConversationId).not.toHaveBeenCalled();
+      const logged = String(warnSpy.mock.calls[0][0]);
+      expect(logged).toContain(command.businessId);
+      expect(logged).not.toContain(command.message);
+      expect(logged).not.toContain(command.customerNumber);
+      warnSpy.mockRestore();
+    });
+
+    it('con atención desactivada no se consulta la cuota (se responde el mensaje de no disponibilidad)', async () => {
+      businessAttentionRepository.getStatus.mockResolvedValue({ autoAttentionActive: false, businessActive: true });
+
+      await useCase.execute(command);
+
+      expect(usageQuotaPort.hasQuota).not.toHaveBeenCalled();
+    });
+
+    it('con cuota: el flujo sigue y se registra el consumo con el id del mensaje entrante', async () => {
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(5);
+
+      await useCase.execute(command);
+
+      expect(llmPort.generateReply).toHaveBeenCalledTimes(1);
+      expect(tokenUsagePort.record).toHaveBeenCalledWith(expect.objectContaining({ messageId: command.messageId }));
+    });
+  });
   describe('guardas de atención', () => {
     it('negocio no activo: devuelve null y no toca LLM, historial, catálogo ni tokens', async () => {
       businessAttentionRepository.getStatus.mockResolvedValue({

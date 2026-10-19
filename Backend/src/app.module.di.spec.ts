@@ -4,6 +4,9 @@ import { SupabaseService } from './shared/supabase/supabase.service';
 import { CATALOG_REPOSITORY } from './modules/agent/domain/repositories/catalog.repository';
 import { SupabaseCatalogRepository } from './modules/agent/infrastructure/persistence/supabase-catalog.repository';
 import { FakeCatalogRepository } from './modules/agent/infrastructure/persistence/fake-catalog.repository';
+import { USAGE_QUOTA_PORT } from './modules/agent/application/ports/out/usage-quota.port';
+import { FakeUsageQuotaProvider } from './modules/agent/infrastructure/adapters/fake-usage-quota.adapter';
+import { SupabaseUsageQuotaAdapter } from './modules/agent/infrastructure/adapters/supabase-usage-quota.adapter';
 import { ORDER_PORT } from './modules/agent/application/ports/out/order.port';
 import { OrdersOrderAdapter } from './modules/agent/infrastructure/adapters/orders-order.adapter';
 import { FakeOrderProvider } from './modules/agent/infrastructure/adapters/fake-order.adapter';
@@ -30,6 +33,7 @@ describe('AppModule (humo de DI)', () => {
     'AGENT_DISPATCH_PROVIDER',
     'LLM_PROVIDER',
     'CATALOG_PROVIDER',
+    'USAGE_QUOTA_PROVIDER',
     'EMAIL_PROVIDER',
   ] as const;
 
@@ -168,6 +172,21 @@ describe('AppModule (humo de DI)', () => {
     process.env.CATALOG_PROVIDER = 'otro';
 
     await expect(compileApp()).rejects.toThrow(/CATALOG_PROVIDER inválido/);
+  });
+
+  it('USAGE_QUOTA_PORT: fake por defecto y supabase si se pide; un valor inválido falla', async () => {
+    delete process.env.USAGE_QUOTA_PROVIDER;
+    let moduleRef = await compileApp();
+    expect(moduleRef.get(USAGE_QUOTA_PORT, { strict: false })).toBeInstanceOf(FakeUsageQuotaProvider);
+    await moduleRef.close();
+
+    process.env.USAGE_QUOTA_PROVIDER = 'supabase';
+    moduleRef = await compileApp();
+    expect(moduleRef.get(USAGE_QUOTA_PORT, { strict: false })).toBeInstanceOf(SupabaseUsageQuotaAdapter);
+    await moduleRef.close();
+
+    process.env.USAGE_QUOTA_PROVIDER = 'otro';
+    await expect(compileApp()).rejects.toThrow(/USAGE_QUOTA_PROVIDER inválido/);
   });
 
   it('la opción retirada ORDER_PROVIDER=supabase ahora es inválida y falla al compilar', async () => {

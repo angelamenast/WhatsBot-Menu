@@ -12,6 +12,8 @@ import type { LlmPort } from '../ports/out/llm.port';
 import { LLM_PORT } from '../ports/out/llm.port';
 import type { TokenUsagePort } from '../ports/out/token-usage.port';
 import { TOKEN_USAGE_PORT } from '../ports/out/token-usage.port';
+import type { UsageQuotaPort } from '../ports/out/usage-quota.port';
+import { USAGE_QUOTA_PORT } from '../ports/out/usage-quota.port';
 
 import { AgentConfig } from '../../domain/entities/agent-config.entity';
 import { IncomingMessageNotPersistedError } from '../../domain/errors/agent.errors';
@@ -36,6 +38,7 @@ export class ProcessCustomerMessageUseCase {
     private readonly conversationHistoryRepository: ConversationHistoryRepository,
     @Inject(LLM_PORT) private readonly llmPort: LlmPort,
     @Inject(TOKEN_USAGE_PORT) private readonly tokenUsagePort: TokenUsagePort,
+    @Inject(USAGE_QUOTA_PORT) private readonly usageQuotaPort: UsageQuotaPort,
   ) {}
 
   /**
@@ -71,6 +74,13 @@ export class ProcessCustomerMessageUseCase {
       return { responseText: config.unavailableMessage ?? DEFAULT_UNAVAILABLE_MESSAGE };
     }
 
+    // RNF-08: sin cuota de tokens no se invoca al LLM ni se responde.
+    if (!(await this.usageQuotaPort.hasQuota(command.businessId))) {
+      this.logger.warn(
+        `Cuota de tokens agotada: el agente no responde (negocio ${command.businessId}, conversación ${command.conversationId})`,
+      );
+      return null;
+    }
 
     const totalMessages = await this.conversationHistoryRepository.countByConversationId(
       command.conversationId,
@@ -122,6 +132,7 @@ export class ProcessCustomerMessageUseCase {
         await this.tokenUsagePort.record({
           businessId: command.businessId,
           conversationId: command.conversationId,
+          messageId: command.messageId,
           tokensInput: usage.tokensInput,
           tokensOutput: usage.tokensOutput,
         });

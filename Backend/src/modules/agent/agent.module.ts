@@ -22,6 +22,10 @@ import { FakeLlmProvider } from './infrastructure/adapters/fake-llm.adapter';
 import { TOKEN_USAGE_PORT } from './application/ports/out/token-usage.port';
 import { SupabaseTokenUsageAdapter } from './infrastructure/adapters/supabase-token-usage.adapter';
 
+import { USAGE_QUOTA_PORT } from './application/ports/out/usage-quota.port';
+import { FakeUsageQuotaProvider } from './infrastructure/adapters/fake-usage-quota.adapter';
+import { SupabaseUsageQuotaAdapter } from './infrastructure/adapters/supabase-usage-quota.adapter';
+
 import { ORDER_PORT } from './application/ports/out/order.port';
 import { FakeOrderProvider } from './infrastructure/adapters/fake-order.adapter';
 import { OrdersOrderAdapter } from './infrastructure/adapters/orders-order.adapter';
@@ -79,6 +83,28 @@ import { AgentConfigController } from './presentation/controllers/agent-config.c
     },
 
     { provide: TOKEN_USAGE_PORT, useClass: SupabaseTokenUsageAdapter },
+
+    FakeUsageQuotaProvider,
+    SupabaseUsageQuotaAdapter,
+    {
+      provide: USAGE_QUOTA_PORT,
+      inject: [ConfigService, FakeUsageQuotaProvider, SupabaseUsageQuotaAdapter],
+      useFactory: (
+        configService: ConfigService,
+        fakeUsageQuotaProvider: FakeUsageQuotaProvider,
+        supabaseUsageQuotaAdapter: SupabaseUsageQuotaAdapter,
+      ) => {
+        const provider = configService.get<string>('USAGE_QUOTA_PROVIDER') ?? 'fake';
+        switch (provider) {
+          case 'fake':
+            return fakeUsageQuotaProvider;
+          case 'supabase':
+            return supabaseUsageQuotaAdapter;
+          default:
+            throw new Error(`USAGE_QUOTA_PROVIDER inválido: "${provider}". Usa "fake" o "supabase".`);
+        }
+      },
+    },
 
     FakeOrderProvider,
     OrdersOrderAdapter,
