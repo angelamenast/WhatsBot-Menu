@@ -1,9 +1,12 @@
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { TwilioSignatureGuard } from '../guards/twilio-signature.guard';
 import { TwilioStatusCallbackDto } from '../dto/twilio-status-callback.dto';
 import { HandleStatusCallbackUseCase } from '../../application/use-cases/handle-status-callback.use-case';
 import type { TwilioMessageStatus } from '../../application/dto/handle-status-callback.command';
 
+// Mismo motivo que el webhook: Twilio llama desde IPs compartidas.
+@SkipThrottle()
 @Controller('whatsapp/status-callback')
 @UseGuards(TwilioSignatureGuard)
 export class TwilioStatusCallbackController {
