@@ -1,9 +1,13 @@
+import { AgentRegionalStyle, AgentTone } from '../../../domain/enums/agent-style';
 import { CatalogItem } from '../../../domain/repositories/catalog.repository';
 import { HistoryMessage } from '../../../domain/repositories/conversation-history.repository';
 
 export interface GenerateReplyParams {
   personality: string | null;
-  tone: string | null;
+  /** Tono efectivo (el configurado o el por defecto). */
+  tone: AgentTone;
+  /** Estilo regional efectivo (el configurado o el por defecto). */
+  regionalStyle: AgentRegionalStyle;
   catalog: CatalogItem[];
   history: HistoryMessage[];
   customerMessage: string;

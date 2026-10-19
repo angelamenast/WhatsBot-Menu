@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import { Logger } from '@nestjs/common';
 import { ProcessCustomerMessageUseCase } from './process-customer-message.use-case';
+import { BusinessAttentionRepository } from '../../domain/repositories/business-attention.repository';
 import { AgentConfigRepository } from '../../domain/repositories/agent-config.repository';
 import { CatalogItem, CatalogRepository } from '../../domain/repositories/catalog.repository';
 import {
@@ -9,12 +10,15 @@ import {
 } from '../../domain/repositories/conversation-history.repository';
 import { LlmPort } from '../ports/out/llm.port';
 import { TokenUsagePort } from '../ports/out/token-usage.port';
+import { AgentRegionalStyle, AgentTone } from '../../domain/enums/agent-style';
 import { AgentConfig } from '../../domain/entities/agent-config.entity';
-import { IncomingMessageNotPersistedError } from '../../domain/errors/agent.errors';
+import { BusinessNotFoundError, IncomingMessageNotPersistedError } from '../../domain/errors/agent.errors';
 import { ProcessCustomerMessageCommand } from '../dto/process-customer-message.command';
+import { DEFAULT_UNAVAILABLE_MESSAGE, FALLBACK_RESPONSE_TEXT } from '../constants/agent-messages';
 
 describe('ProcessCustomerMessageUseCase', () => {
   let agentConfigRepository: jest.Mocked<AgentConfigRepository>;
+  let businessAttentionRepository: jest.Mocked<BusinessAttentionRepository>;
   let catalogRepository: jest.Mocked<CatalogRepository>;
   let conversationHistoryRepository: jest.Mocked<ConversationHistoryRepository>;
   let llmPort: jest.Mocked<LlmPort>;
@@ -53,8 +57,10 @@ describe('ProcessCustomerMessageUseCase', () => {
       id: 'config-1',
       businessId: command.businessId,
       personality: 'amable',
-      tone: 'informal',
+      tone: AgentTone.CERCANO,
+      regionalStyle: AgentRegionalStyle.PAISA,
       welcomeMessage,
+      unavailableMessage: 'Estamos cerrados por hoy.',
       businessHours: null,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -62,6 +68,7 @@ describe('ProcessCustomerMessageUseCase', () => {
 
   beforeEach(() => {
     agentConfigRepository = { findByBusinessId: jest.fn(), save: jest.fn() };
+    businessAttentionRepository = { getStatus: jest.fn() };
     catalogRepository = { findByBusinessId: jest.fn() };
     conversationHistoryRepository = {
       countByConversationId: jest.fn(),
@@ -71,6 +78,10 @@ describe('ProcessCustomerMessageUseCase', () => {
     tokenUsagePort = { record: jest.fn() };
 
     agentConfigRepository.findByBusinessId.mockResolvedValue(aConfig());
+    businessAttentionRepository.getStatus.mockResolvedValue({
+      autoAttentionActive: true,
+      businessActive: true,
+    });
     catalogRepository.findByBusinessId.mockResolvedValue(catalog);
     conversationHistoryRepository.findRecentByConversationId.mockResolvedValue(history);
     llmPort.generateReply.mockResolvedValue({ text: 'Tenemos hamburguesas.', tokensInput: 30, tokensOutput: 12 });
@@ -80,6 +91,7 @@ describe('ProcessCustomerMessageUseCase', () => {
 
     useCase = new ProcessCustomerMessageUseCase(
       agentConfigRepository,
+      businessAttentionRepository,
       catalogRepository,
       conversationHistoryRepository,
       llmPort,
@@ -96,7 +108,7 @@ describe('ProcessCustomerMessageUseCase', () => {
 
     const result = await useCase.execute(command);
 
-    expect(result.responseText).toBe(`${welcomeMessage}\n\nTenemos hamburguesas.`);
+    expect(result?.responseText).toBe(`${welcomeMessage}\n\nTenemos hamburguesas.`);
   });
 
   it('camino feliz: llama al LLM con config/catálogo/historial, registra tokens y no antepone bienvenida', async () => {
@@ -106,7 +118,8 @@ describe('ProcessCustomerMessageUseCase', () => {
 
     expect(llmPort.generateReply).toHaveBeenCalledWith({
       personality: 'amable',
-      tone: 'informal',
+      tone: AgentTone.CERCANO,
+      regionalStyle: AgentRegionalStyle.PAISA,
       catalog,
       history,
       customerMessage: command.message,
@@ -117,7 +130,7 @@ describe('ProcessCustomerMessageUseCase', () => {
       tokensInput: 30,
       tokensOutput: 12,
     });
-    expect(result.responseText).toBe('Tenemos hamburguesas.');
+    expect(result?.responseText).toBe('Tenemos hamburguesas.');
   });
 
   it('el LLM falla: devuelve el texto de respaldo, no lanza y no registra consumo', async () => {
@@ -126,7 +139,7 @@ describe('ProcessCustomerMessageUseCase', () => {
 
     const result = await useCase.execute(command);
 
-    expect(result.responseText).toContain('inconveniente');
+    expect(result?.responseText).toContain('inconveniente');
     expect(tokenUsagePort.record).not.toHaveBeenCalled();
   });
 
@@ -136,8 +149,8 @@ describe('ProcessCustomerMessageUseCase', () => {
 
     const result = await useCase.execute(command);
 
-    expect(result.responseText).toBe('Tenemos hamburguesas.');
-    expect(result.responseText).not.toContain('inconveniente');
+    expect(result?.responseText).toBe('Tenemos hamburguesas.');
+    expect(result?.responseText).not.toContain('inconveniente');
     expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('consumo de tokens'));
   });
 
@@ -148,5 +161,65 @@ describe('ProcessCustomerMessageUseCase', () => {
 
     expect(llmPort.generateReply).not.toHaveBeenCalled();
     expect(tokenUsagePort.record).not.toHaveBeenCalled();
+  });
+
+  describe('guardas de atención', () => {
+    it('negocio no activo: devuelve null y no toca LLM, historial, catálogo ni tokens', async () => {
+      businessAttentionRepository.getStatus.mockResolvedValue({
+        autoAttentionActive: true,
+        businessActive: false,
+      });
+
+      await expect(useCase.execute(command)).resolves.toBeNull();
+
+      expect(llmPort.generateReply).not.toHaveBeenCalled();
+      expect(tokenUsagePort.record).not.toHaveBeenCalled();
+      expect(catalogRepository.findByBusinessId).not.toHaveBeenCalled();
+      expect(conversationHistoryRepository.countByConversationId).not.toHaveBeenCalled();
+    });
+
+    it('negocio no activo tiene prioridad sobre la atención automática desactivada', async () => {
+      businessAttentionRepository.getStatus.mockResolvedValue({
+        autoAttentionActive: false,
+        businessActive: false,
+      });
+
+      await expect(useCase.execute(command)).resolves.toBeNull();
+    });
+
+    it('atención automática desactivada: responde el mensaje de no disponibilidad, sin LLM, tokens ni bienvenida', async () => {
+      businessAttentionRepository.getStatus.mockResolvedValue({
+        autoAttentionActive: false,
+        businessActive: true,
+      });
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(1);
+
+      const result = await useCase.execute(command);
+
+      expect(result).toEqual({ responseText: 'Estamos cerrados por hoy.' });
+      expect(llmPort.generateReply).not.toHaveBeenCalled();
+      expect(tokenUsagePort.record).not.toHaveBeenCalled();
+      expect(catalogRepository.findByBusinessId).not.toHaveBeenCalled();
+    });
+
+    it('atención desactivada sin mensaje propio: usa el texto por defecto', async () => {
+      businessAttentionRepository.getStatus.mockResolvedValue({
+        autoAttentionActive: false,
+        businessActive: true,
+      });
+      agentConfigRepository.findByBusinessId.mockResolvedValue(null);
+
+      const result = await useCase.execute(command);
+
+      expect(result).toEqual({ responseText: DEFAULT_UNAVAILABLE_MESSAGE });
+    });
+
+    it('el negocio no existe: el error tipado se propaga y no hay respuesta', async () => {
+      businessAttentionRepository.getStatus.mockRejectedValue(new BusinessNotFoundError('business-1'));
+
+      await expect(useCase.execute(command)).rejects.toThrow(BusinessNotFoundError);
+
+      expect(llmPort.generateReply).not.toHaveBeenCalled();
+    });
   });
 });

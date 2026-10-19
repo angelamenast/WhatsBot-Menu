@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { Logger } from '@nestjs/common';
+import { AgentRegionalStyle, AgentTone } from '../../domain/enums/agent-style';
 import { FakeLlmProvider } from './fake-llm.adapter';
 
 const LEVELS = ['log', 'warn', 'error', 'debug', 'verbose'] as const;
@@ -25,7 +26,8 @@ describe('FakeLlmProvider', () => {
 
     const result = await new FakeLlmProvider().generateReply({
       personality: null,
-      tone: null,
+      tone: AgentTone.AMABLE,
+      regionalStyle: AgentRegionalStyle.NEUTRO,
       catalog: [],
       history: [],
       customerMessage: 'Quiero una hamburguesa, mi número es 3001112233',

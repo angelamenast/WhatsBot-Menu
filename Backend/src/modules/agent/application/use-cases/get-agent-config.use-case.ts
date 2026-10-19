@@ -12,8 +12,8 @@ export class GetAgentConfigUseCase {
   async execute(businessId: string): Promise<AgentConfig> {
     const existing = await this.agentConfigRepository.findByBusinessId(businessId);
 
-    // No persiste nada: si el negocio nunca configuró su agente, se devuelve una
-    // config vacía en memoria para que el dashboard tenga algo que mostrar/editar.
-    return existing ?? AgentConfig.initialize(businessId);
+    // No persiste nada: si el negocio nunca configuró su agente se devuelve la config por
+    // defecto, la MISMA que usa el bot, para que el dashboard no muestre vacío mientras el bot saluda.
+    return existing ?? AgentConfig.default(businessId);
   }
 }

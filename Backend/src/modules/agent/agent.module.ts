@@ -7,6 +7,8 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 import { AGENT_CONFIG_REPOSITORY } from './domain/repositories/agent-config.repository';
 import { SupabaseAgentConfigRepository } from './infrastructure/persistence/supabase-agent-config.repository';
+import { BUSINESS_ATTENTION_REPOSITORY } from './domain/repositories/business-attention.repository';
+import { SupabaseBusinessAttentionRepository } from './infrastructure/persistence/supabase-business-attention.repository';
 import { CATALOG_REPOSITORY } from './domain/repositories/catalog.repository';
 import { SupabaseCatalogRepository } from './infrastructure/persistence/supabase-catalog.repository';
 import { FakeCatalogRepository } from './infrastructure/persistence/fake-catalog.repository';
@@ -34,6 +36,7 @@ import { AgentConfigController } from './presentation/controllers/agent-config.c
   controllers: [AgentConfigController],
   providers: [
     { provide: AGENT_CONFIG_REPOSITORY, useClass: SupabaseAgentConfigRepository },
+    { provide: BUSINESS_ATTENTION_REPOSITORY, useClass: SupabaseBusinessAttentionRepository },
     // El agente lee su propio catálogo (catalogo_productos); `fake` solo si se pide explícitamente.
     FakeCatalogRepository,
     SupabaseCatalogRepository,

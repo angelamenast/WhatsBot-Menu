@@ -4,6 +4,8 @@ import type { AgentConfigRepository } from '../../domain/repositories/agent-conf
 import { AGENT_CONFIG_REPOSITORY } from '../../domain/repositories/agent-config.repository';
 import type { CatalogRepository } from '../../domain/repositories/catalog.repository';
 import { CATALOG_REPOSITORY } from '../../domain/repositories/catalog.repository';
+import type { BusinessAttentionRepository } from '../../domain/repositories/business-attention.repository';
+import { BUSINESS_ATTENTION_REPOSITORY } from '../../domain/repositories/business-attention.repository';
 import type { ConversationHistoryRepository } from '../../domain/repositories/conversation-history.repository';
 import { CONVERSATION_HISTORY_REPOSITORY } from '../../domain/repositories/conversation-history.repository';
 import type { LlmPort } from '../ports/out/llm.port';
@@ -15,11 +17,9 @@ import { AgentConfig } from '../../domain/entities/agent-config.entity';
 import { IncomingMessageNotPersistedError } from '../../domain/errors/agent.errors';
 import type { ProcessCustomerMessageCommand } from '../dto/process-customer-message.command';
 import type { ProcessCustomerMessageResult } from '../dto/process-customer-message.result';
+import { DEFAULT_UNAVAILABLE_MESSAGE, FALLBACK_RESPONSE_TEXT } from '../constants/agent-messages';
 
 const HISTORY_MESSAGES_LIMIT = 10;
-
-const FALLBACK_RESPONSE_TEXT =
-  'Estamos teniendo un inconveniente para responderte en este momento. Intenta de nuevo en unos minutos.';
 
 @Injectable()
 export class ProcessCustomerMessageUseCase {
@@ -28,6 +28,8 @@ export class ProcessCustomerMessageUseCase {
   constructor(
     @Inject(AGENT_CONFIG_REPOSITORY)
     private readonly agentConfigRepository: AgentConfigRepository,
+    @Inject(BUSINESS_ATTENTION_REPOSITORY)
+    private readonly businessAttentionRepository: BusinessAttentionRepository,
     @Inject(CATALOG_REPOSITORY)
     private readonly catalogRepository: CatalogRepository,
     @Inject(CONVERSATION_HISTORY_REPOSITORY)
@@ -47,11 +49,28 @@ export class ProcessCustomerMessageUseCase {
    *    esa fila ES el mensaje actual (se pasa aparte como `customerMessage`).
    * Si se invoca antes de persistir, la bienvenida sale mal y el historial se corrompe.
    * Por eso, `count === 0` se trata como violación de la precondición y lanza.
+   *
+   * Devuelve null cuando NO se debe responder al cliente (negocio no activo o cuota de tokens agotada).
+   * Orden de guardas (el plan vencido lo resuelve whatsapp antes de llegar aquí):
+   * negocio no activo → null; atención automática desactivada → mensaje de no
+   * disponibilidad (sin LLM, sin cuota, sin tokens, sin bienvenida); cuota agotada → null;
+   * luego el flujo normal.
    */
-  async execute(command: ProcessCustomerMessageCommand): Promise<ProcessCustomerMessageResult> {
-    const config =
-      (await this.agentConfigRepository.findByBusinessId(command.businessId)) ??
-      AgentConfig.default(command.businessId);
+  async execute(command: ProcessCustomerMessageCommand): Promise<ProcessCustomerMessageResult | null> {
+    const [storedConfig, attention] = await Promise.all([
+      this.agentConfigRepository.findByBusinessId(command.businessId),
+      this.businessAttentionRepository.getStatus(command.businessId),
+    ]);
+    const config = storedConfig ?? AgentConfig.default(command.businessId);
+
+    if (!attention.businessActive) {
+      return null;
+    }
+
+    if (!attention.autoAttentionActive) {
+      return { responseText: config.unavailableMessage ?? DEFAULT_UNAVAILABLE_MESSAGE };
+    }
+
 
     const totalMessages = await this.conversationHistoryRepository.countByConversationId(
       command.conversationId,
@@ -77,7 +96,8 @@ export class ProcessCustomerMessageUseCase {
     try {
       const generated = await this.llmPort.generateReply({
         personality: config.personality,
-        tone: config.tone,
+        tone: config.effectiveTone,
+        regionalStyle: config.effectiveRegionalStyle,
         catalog,
         history,
         customerMessage: command.message,
