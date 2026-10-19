@@ -9,11 +9,11 @@ export class FakeProvisioningProvider implements ProvisioningPort {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async provision(phoneNumber: string): Promise<ProvisioningResult> {
+  async provision(_phoneNumber: string): Promise<ProvisioningResult> {
     const forceFail = this.configService.get<string>('FAKE_PROVISIONING_FORCE_FAIL') === 'true';
 
     if (forceFail) {
-      this.logger.warn(`[FakeProvisioningProvider] Aprovisionamiento simulado FALLIDO para ${phoneNumber}`);
+      this.logger.warn('[FakeProvisioningProvider] Aprovisionamiento simulado FALLIDO');
       return { status: 'failed' };
     }
 
@@ -21,7 +21,7 @@ export class FakeProvisioningProvider implements ProvisioningPort {
     const senderSid = randomUUID();
 
     this.logger.log(
-      `[FakeProvisioningProvider] Aprovisionamiento simulado para ${phoneNumber} (subaccountSid=${subaccountSid}, senderSid=${senderSid})`,
+      `[FakeProvisioningProvider] Aprovisionamiento simulado (subaccountSid=${subaccountSid}, senderSid=${senderSid})`,
     );
     return { status: 'connected', subaccountSid, senderSid };
   }

@@ -1,5 +1,6 @@
 import { ConnectWhatsappUseCase } from './connect-whatsapp.use-case';
 import { jest } from '@jest/globals';
+import { Logger } from '@nestjs/common';
 import { WhatsappConnectionRepository } from '../../domain/repositories/whatsapp-connection.repository';
 import { ProvisioningPort } from '../ports/out/provisioning.port';
 import {
@@ -128,5 +129,22 @@ describe('ConnectWhatsappUseCase', () => {
     });
 
     expect(whatsappConnectionRepository.save).toHaveBeenCalledTimes(1);
+  });
+
+  it('el log del fallo de aprovisionamiento identifica el negocio y NO contiene el número', async () => {
+    const errorSpy = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    whatsappConnectionRepository.findByPhoneNumber.mockResolvedValue(null);
+    whatsappConnectionRepository.findByBusinessId.mockResolvedValue(null);
+    provisioningPort.provision.mockRejectedValue(new Error('Twilio no disponible'));
+
+    await useCase.execute(command);
+
+    const logged = errorSpy.mock.calls.map((args) => args.join(' ')).join('\n');
+    expect(logged).toContain(command.businessId);
+    expect(logged).not.toContain(command.phoneNumber);
+
+    errorSpy.mockRestore();
   });
 });

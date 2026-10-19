@@ -38,7 +38,7 @@ export class SendMessageUseCase {
       deliveryStatus = result.status;
     } catch (error) {
       this.logger.error(
-        `Fallo al enviar mensaje a ${to} (conversación ${command.conversationId}): ${
+        `Fallo al enviar mensaje (conversación ${command.conversationId}): ${
           error instanceof Error ? error.message : String(error)
         }`,
       );

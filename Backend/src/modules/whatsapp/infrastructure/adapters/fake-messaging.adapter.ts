@@ -9,18 +9,16 @@ export class FakeMessagingProvider implements MessagingPort {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async sendMessage(to: string, body: string): Promise<SendMessageResult> {
+  async sendMessage(_to: string, _body: string): Promise<SendMessageResult> {
     const forceFail = this.configService.get<string>('FAKE_MESSAGING_FORCE_FAIL') === 'true';
 
     if (forceFail) {
-      this.logger.warn(`[FakeMessagingProvider] Envío simulado FALLIDO a ${to}: "${body}"`);
+      this.logger.warn('[FakeMessagingProvider] Envío simulado FALLIDO');
       return { providerMessageId: null, status: 'failed' };
     }
 
     const providerMessageId = randomUUID();
-    this.logger.log(
-      `[FakeMessagingProvider] Envío simulado a ${to} (providerMessageId=${providerMessageId}): "${body}"`,
-    );
+    this.logger.log(`[FakeMessagingProvider] Envío simulado (providerMessageId=${providerMessageId})`);
     return { providerMessageId, status: 'sent' };
   }
 }
