@@ -95,4 +95,26 @@ describe('PlanActivoGuard', () => {
   it('responde 401 si se usa sin SupabaseAuthGuard antes', async () => {
     await expect(guard.canActivate(contexto('PATCH', null))).rejects.toThrow(UnauthorizedException);
   });
+
+  // Tabla de verdad del guard para una escritura (POST): solo VENCIDO bloquea.
+  // Cualquier cambio aquí cambia lo que el dashboard permite con cada plan.
+  it.each([
+    ['ACTIVO', () => suscripcion('activa', 10), true],
+    ['POR_VENCER', () => suscripcion('activa', 2), true],
+    ['VENCIDO (marcada como vencida)', () => suscripcion('vencida', -1), false],
+    ['VENCIDO (activa con fecha_fin pasada)', () => suscripcion('activa', -1), false],
+    ['SIN_PLAN (nunca compró)', () => null, true],
+    ['SIN_PLAN (pago pendiente)', () => suscripcion('pendiente', 10), true],
+    ['SIN_PLAN (cancelada)', () => suscripcion('cancelada', 10), true],
+  ])('tabla de escritura: %s → permitido=%s', async (_escenario, vigente, permitido) => {
+    repository.buscarVigentePorNegocio.mockResolvedValue(vigente());
+
+    const resultado = guard.canActivate(contexto('POST'));
+
+    if (permitido) {
+      await expect(resultado).resolves.toBe(true);
+    } else {
+      await expect(resultado).rejects.toThrow(ForbiddenException);
+    }
+  });
 });
