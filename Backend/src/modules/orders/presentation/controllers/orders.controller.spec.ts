@@ -10,6 +10,8 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import type { OrdersController as OrdersControllerClass } from './orders.controller';
 import { SupabaseAuthGuard } from '../../../auth/infrastructure/presentation/guards/supabase-auth.guard';
+import { PlanActivoGuard } from '../../../subscriptions/infrastructure/presentation/guards/plan-activo.guard';
+import { ObtenerEstadoSuscripcionUseCase } from '../../../subscriptions/application/use-cases/obtener-estado-suscripcion.use-case';
 import { BusinessService } from '../../../business/business.service';
 import { ListOrdersByBusinessUseCase } from '../../application/use-cases/list-orders-by-business.use-case';
 import { GetOrderUseCase } from '../../application/use-cases/get-order.use-case';
@@ -45,6 +47,7 @@ describe('OrdersController', () => {
   let getOrderUseCase: { execute: jest.Mock<AnyFn> };
   let confirmOrderUseCase: { execute: jest.Mock<AnyFn> };
   let cancelOrderUseCase: { execute: jest.Mock<AnyFn> };
+  let estadoSuscripcion: { execute: jest.Mock<AnyFn> };
 
   const orderId = '3f1c8a52-7d0e-4c1b-9a64-2b5e8f0d1c77';
   const business = { id: 'business-1' };
@@ -77,6 +80,10 @@ describe('OrdersController', () => {
     getOrderUseCase = { execute: jest.fn<AnyFn>() };
     confirmOrderUseCase = { execute: jest.fn<AnyFn>() };
     cancelOrderUseCase = { execute: jest.fn<AnyFn>() };
+    // PlanActivoGuard real; solo se simula el estado de la suscripción que consulta.
+    estadoSuscripcion = {
+      execute: jest.fn<AnyFn>().mockResolvedValue({ puedeEditar: true }),
+    };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [OrdersController],
@@ -85,6 +92,7 @@ describe('OrdersController', () => {
         { provide: GetOrderUseCase, useValue: getOrderUseCase },
         { provide: ConfirmOrderUseCase, useValue: confirmOrderUseCase },
         { provide: CancelOrderUseCase, useValue: cancelOrderUseCase },
+        { provide: ObtenerEstadoSuscripcionUseCase, useValue: estadoSuscripcion },
         {
           provide: BusinessService,
           useValue: { findByUsuario: jest.fn<AnyFn>().mockResolvedValue(business) },
@@ -308,6 +316,67 @@ describe('OrdersController', () => {
       await request(app.getHttpServer())
         .patch(`/orders/${orderId}/cancel`)
         .expect(409);
+    });
+  });
+
+  describe('plan vencido: el dashboard es de solo lectura (HU-8.5)', () => {
+    const guardsOf = (target: object): unknown[] =>
+      Reflect.getMetadata('__guards__', target) ?? [];
+
+    it('la clase lleva SupabaseAuthGuard y confirm/cancel llevan PlanActivoGuard a nivel de método', () => {
+      expect(guardsOf(OrdersController)).toContain(SupabaseAuthGuard);
+      expect(guardsOf(OrdersController)).not.toContain(PlanActivoGuard);
+      expect(guardsOf(OrdersController.prototype.confirm)).toContain(PlanActivoGuard);
+      expect(guardsOf(OrdersController.prototype.cancel)).toContain(PlanActivoGuard);
+    });
+
+    it('ningún GET lleva PlanActivoGuard', () => {
+      expect(guardsOf(OrdersController.prototype.list)).not.toContain(PlanActivoGuard);
+      expect(guardsOf(OrdersController.prototype.getOne)).not.toContain(PlanActivoGuard);
+    });
+
+    it.each([
+      ['confirm', () => confirmOrderUseCase],
+      ['cancel', () => cancelOrderUseCase],
+    ])('PATCH %s con plan VENCIDO → 403 PLAN_VENCIDO y el caso de uso NO se invoca', async (action, useCase) => {
+      estadoSuscripcion.execute.mockResolvedValue({ puedeEditar: false });
+
+      const response = await request(app.getHttpServer())
+        .patch(`/orders/${orderId}/${action}`)
+        .expect(403);
+
+      expect(response.body).toEqual({
+      statusCode: 403,
+      error: 'Forbidden',
+      message: 'Tu plan venció. Renueva para editar.',
+      codigo: 'PLAN_VENCIDO',
+    });
+      expect(useCase().execute).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['confirm', () => confirmOrderUseCase],
+      ['cancel', () => cancelOrderUseCase],
+    ])('PATCH %s con plan que permite editar (ACTIVO, POR_VENCER o SIN_PLAN) → pasa y se invoca', async (action, useCase) => {
+      estadoSuscripcion.execute.mockResolvedValue({ puedeEditar: true });
+      useCase().execute.mockResolvedValue(anOrder());
+
+      await request(app.getHttpServer())
+        .patch(`/orders/${orderId}/${action}`)
+        .expect(200);
+
+      expect(useCase().execute).toHaveBeenCalledTimes(1);
+      expect(estadoSuscripcion.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('GET /orders y GET /orders/:id con plan VENCIDO siguen funcionando sin consultar la suscripción', async () => {
+      estadoSuscripcion.execute.mockResolvedValue({ puedeEditar: false });
+      getOrderUseCase.execute.mockResolvedValue(aView());
+
+      await request(app.getHttpServer()).get('/orders').expect(200);
+      await request(app.getHttpServer()).get(`/orders/${orderId}`).expect(200);
+
+      expect(estadoSuscripcion.execute).not.toHaveBeenCalled();
     });
   });
 

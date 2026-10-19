@@ -16,6 +16,7 @@ import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { SupabaseAuthGuard } from '../../../auth/infrastructure/presentation/guards/supabase-auth.guard';
 import { BusinessService } from '../../../business/business.service';
+import { PlanActivoGuard } from '../../../subscriptions/infrastructure/presentation/guards/plan-activo.guard';
 import { ListOrdersByBusinessUseCase } from '../../application/use-cases/list-orders-by-business.use-case';
 import { GetOrderUseCase } from '../../application/use-cases/get-order.use-case';
 import { CancelOrderUseCase } from '../../application/use-cases/cancel-order.use-case';
@@ -94,7 +95,10 @@ export class OrdersController {
     }
   }
 
+  // Con el plan vencido el dashboard es de solo lectura (HU-8.5): PlanActivoGuard va
+  // después del guard de autenticación de la clase y solo en las escrituras.
   @Patch(':id/confirm')
+  @UseGuards(PlanActivoGuard)
   async confirm(
     @Req() request: Request & { user: { id: string } },
     @Param('id', ParseUUIDPipe) id: string,
@@ -123,6 +127,7 @@ export class OrdersController {
   }
 
   @Patch(':id/cancel')
+  @UseGuards(PlanActivoGuard)
   async cancel(
     @Req() request: Request & { user: { id: string } },
     @Param('id', ParseUUIDPipe) id: string,

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { BusinessModule } from '../business/business.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 import { ORDER_REPOSITORY } from './domain/repositories/order.repository';
 import { SupabaseOrderRepository } from './infrastructure/persistence/supabase-order.repository';
@@ -19,7 +20,7 @@ import { ConfirmOrderUseCase } from './application/use-cases/confirm-order.use-c
 import { OrdersController } from './presentation/controllers/orders.controller';
 
 @Module({
-  imports: [ConfigModule, AuthModule, BusinessModule],
+  imports: [ConfigModule, AuthModule, BusinessModule, SubscriptionsModule],
   controllers: [OrdersController],
   providers: [
     { provide: ORDER_REPOSITORY, useClass: SupabaseOrderRepository },
