@@ -169,6 +169,44 @@ describe('ProcessCustomerMessageUseCase', () => {
     expect(tokenUsagePort.record).not.toHaveBeenCalled();
   });
 
+  describe('historial y contingencia', () => {
+    it('pide el historial excluyendo el mensaje entrante por id y con el límite de 10', async () => {
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(5);
+
+      await useCase.execute(command);
+
+      expect(conversationHistoryRepository.findRecentByConversationId).toHaveBeenCalledWith(
+        command.conversationId,
+        10,
+        command.messageId,
+      );
+    });
+
+    it('primera interacción con el LLM caído: envía SOLO el texto de contingencia, sin bienvenida', async () => {
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(1);
+      llmPort.generateReply.mockRejectedValue(new Error('LLM caído'));
+
+      const result = await useCase.execute(command);
+
+      expect(result?.responseText).toBe(FALLBACK_RESPONSE_TEXT);
+      expect(result?.responseText).not.toContain(welcomeMessage);
+    });
+
+    it('sin configuración guardada: el LLM recibe el tono AMABLE y el estilo NEUTRO por defecto', async () => {
+      agentConfigRepository.findByBusinessId.mockResolvedValue(null);
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(5);
+
+      await useCase.execute(command);
+
+      expect(llmPort.generateReply).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tone: AgentTone.AMABLE,
+          regionalStyle: AgentRegionalStyle.NEUTRO,
+          personality: null,
+        }),
+      );
+    });
+  });
 
   describe('cuota de tokens (RNF-08)', () => {
     it('cuota agotada: devuelve null con un aviso solo con ids y no invoca LLM, catálogo, historial ni tokens', async () => {
@@ -206,6 +244,7 @@ describe('ProcessCustomerMessageUseCase', () => {
       expect(tokenUsagePort.record).toHaveBeenCalledWith(expect.objectContaining({ messageId: command.messageId }));
     });
   });
+
   describe('guardas de atención', () => {
     it('negocio no activo: devuelve null y no toca LLM, historial, catálogo ni tokens', async () => {
       businessAttentionRepository.getStatus.mockResolvedValue({

@@ -45,13 +45,12 @@ export class ProcessCustomerMessageUseCase {
    * PRECONDICIÓN (no negociable): el mensaje entrante actual del cliente debe estar YA
    * PERSISTIDO en `mensajes` antes de invocar este caso de uso.
    *
-   * Este caso de uso lo asume en dos lugares y no hay otra señal que lo garantice:
+   * Este caso de uso lo asume en un lugar y no hay otra señal que lo garantice:
    *  - `isFirstMessage` (RF-10, bienvenida) se calcula como `count === 1`: el "1" es el
    *    mensaje actual ya persistido.
-   *  - `findRecentByConversationId` descarta la fila más reciente con `slice(1)` porque
-   *    esa fila ES el mensaje actual (se pasa aparte como `customerMessage`).
-   * Si se invoca antes de persistir, la bienvenida sale mal y el historial se corrompe.
-   * Por eso, `count === 0` se trata como violación de la precondición y lanza.
+   * El historial excluye el mensaje actual por su id (`command.messageId`), no por posición.
+   * Si se invoca antes de persistir, la bienvenida sale mal. Por eso, `count === 0` se trata
+   * como violación de la precondición y lanza.
    *
    * Devuelve null cuando NO se debe responder al cliente (negocio no activo o cuota de tokens agotada).
    * Orden de guardas (el plan vencido lo resuelve whatsapp antes de llegar aquí):
@@ -97,6 +96,7 @@ export class ProcessCustomerMessageUseCase {
       this.conversationHistoryRepository.findRecentByConversationId(
         command.conversationId,
         HISTORY_MESSAGES_LIMIT,
+        command.messageId,
       ),
     ]);
 
@@ -145,7 +145,9 @@ export class ProcessCustomerMessageUseCase {
       }
     }
 
-    if (isFirstMessage && config.welcomeMessage) {
+    // La bienvenida solo acompaña a una respuesta del LLM: con el texto de contingencia se envía
+    // únicamente el aviso de contingencia (usage es null cuando el LLM falló).
+    if (usage && isFirstMessage && config.welcomeMessage) {
       responseText = `${config.welcomeMessage}\n\n${responseText}`;
     }
 
