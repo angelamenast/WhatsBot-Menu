@@ -4,6 +4,7 @@ import { AuthModule } from '../auth/auth.module';
 import { BusinessModule } from '../business/business.module';
 import { AgentModule } from '../agent/agent.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { SubscriptionPlanStatusAdapter } from '../subscriptions/infrastructure/adapters/subscription-plan-status.adapter';
 
 import { MESSAGING_PORT } from './application/ports/out/messaging.port';
 import { FakeMessagingProvider } from './infrastructure/adapters/fake-messaging.adapter';
@@ -77,17 +78,21 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
     FakePlanStatusProvider,
     {
       provide: PLAN_STATUS_PORT,
-      inject: [ConfigService, FakePlanStatusProvider],
-      useFactory: (configService: ConfigService, fakePlanStatusProvider: FakePlanStatusProvider) => {
+      inject: [ConfigService, FakePlanStatusProvider, SubscriptionPlanStatusAdapter],
+      useFactory: (
+        configService: ConfigService,
+        fakePlanStatusProvider: FakePlanStatusProvider,
+        subscriptionPlanStatusAdapter: SubscriptionPlanStatusAdapter,
+      ) => {
         const provider = configService.get<string>('PLAN_STATUS_PROVIDER') ?? 'fake';
 
         switch (provider) {
           case 'fake':
             return fakePlanStatusProvider;
+          case 'subscriptions':
+            return subscriptionPlanStatusAdapter;
           default:
-            throw new Error(
-              `PLAN_STATUS_PROVIDER inválido: "${provider}". Por ahora solo está implementado "fake".`,
-            );
+            throw new Error(`PLAN_STATUS_PROVIDER inválido: "${provider}". Usa "fake" o "subscriptions".`);
         }
       },
     },

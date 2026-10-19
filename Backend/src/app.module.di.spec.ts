@@ -6,6 +6,9 @@ import { OrdersOrderAdapter } from './modules/agent/infrastructure/adapters/orde
 import { FakeOrderProvider } from './modules/agent/infrastructure/adapters/fake-order.adapter';
 import { ORDER_EVENTS_PORT } from './modules/orders/application/ports/out/order-events.port';
 import { EventEmitterOrderEventsAdapter } from './modules/orders/infrastructure/events/event-emitter-order-events.adapter';
+import { PLAN_STATUS_PORT } from './modules/whatsapp/application/ports/out/plan-status.port';
+import { FakePlanStatusProvider } from './modules/whatsapp/infrastructure/adapters/fake-plan-status.adapter';
+import { SubscriptionPlanStatusAdapter } from './modules/subscriptions/infrastructure/adapters/subscription-plan-status.adapter';
 import { PlanActivoGuard } from './modules/subscriptions/infrastructure/presentation/guards/plan-activo.guard';
 import { OrderStatusChangedListener } from './modules/whatsapp/presentation/listeners/order-status-changed.listener';
 
@@ -107,6 +110,33 @@ describe('AppModule (humo de DI)', () => {
     );
 
     await moduleRef.close();
+  });
+
+  it('con PLAN_STATUS_PROVIDER=subscriptions, PLAN_STATUS_PORT resuelve al adapter real de subscriptions', async () => {
+    process.env.PLAN_STATUS_PROVIDER = 'subscriptions';
+    const moduleRef = await compileApp();
+
+    expect(moduleRef.get(PLAN_STATUS_PORT, { strict: false })).toBeInstanceOf(
+      SubscriptionPlanStatusAdapter,
+    );
+
+    await moduleRef.close();
+  });
+
+  it('por defecto (fake), PLAN_STATUS_PORT resuelve a FakePlanStatusProvider', async () => {
+    const moduleRef = await compileApp();
+
+    expect(moduleRef.get(PLAN_STATUS_PORT, { strict: false })).toBeInstanceOf(
+      FakePlanStatusProvider,
+    );
+
+    await moduleRef.close();
+  });
+
+  it('un PLAN_STATUS_PROVIDER desconocido falla al compilar', async () => {
+    process.env.PLAN_STATUS_PROVIDER = 'otro';
+
+    await expect(compileApp()).rejects.toThrow(/PLAN_STATUS_PROVIDER inválido/);
   });
 
   it('la opción retirada ORDER_PROVIDER=supabase ahora es inválida y falla al compilar', async () => {
