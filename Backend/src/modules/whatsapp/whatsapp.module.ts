@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { BusinessModule } from '../business/business.module';
 import { AgentModule } from '../agent/agent.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 import { MESSAGING_PORT } from './application/ports/out/messaging.port';
 import { FakeMessagingProvider } from './infrastructure/adapters/fake-messaging.adapter';
@@ -34,7 +35,7 @@ import { TwilioStatusCallbackController } from './presentation/controllers/twili
 import { WhatsappOnboardingController } from './presentation/controllers/whatsapp-onboarding.controller';
 
 @Module({
-  imports: [ConfigModule, AuthModule, BusinessModule, AgentModule],
+  imports: [ConfigModule, AuthModule, BusinessModule, AgentModule, SubscriptionsModule],
   controllers: [TwilioWebhookController, TwilioStatusCallbackController, WhatsappOnboardingController],
   providers: [
     FakeMessagingProvider,
