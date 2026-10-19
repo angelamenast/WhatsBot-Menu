@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { BusinessModule } from '../business/business.module';
+import { OrdersModule } from '../orders/orders.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 import { AGENT_CONFIG_REPOSITORY } from './domain/repositories/agent-config.repository';
 import { SupabaseAgentConfigRepository } from './infrastructure/persistence/supabase-agent-config.repository';
@@ -20,7 +22,7 @@ import { SupabaseTokenUsageAdapter } from './infrastructure/adapters/supabase-to
 
 import { ORDER_PORT } from './application/ports/out/order.port';
 import { FakeOrderProvider } from './infrastructure/adapters/fake-order.adapter';
-import { SupabaseOrderAdapter } from './infrastructure/adapters/supabase-order.adapter';
+import { OrdersOrderAdapter } from './infrastructure/adapters/orders-order.adapter';
 
 import { ProcessCustomerMessageUseCase } from './application/use-cases/process-customer-message.use-case';
 import { GetAgentConfigUseCase } from './application/use-cases/get-agent-config.use-case';
@@ -28,7 +30,7 @@ import { UpdateAgentConfigUseCase } from './application/use-cases/update-agent-c
 import { AgentConfigController } from './presentation/controllers/agent-config.controller';
 
 @Module({
-  imports: [ConfigModule, AuthModule, BusinessModule],
+  imports: [ConfigModule, AuthModule, BusinessModule, OrdersModule, SubscriptionsModule],
   controllers: [AgentConfigController],
   providers: [
     { provide: AGENT_CONFIG_REPOSITORY, useClass: SupabaseAgentConfigRepository },
@@ -76,23 +78,23 @@ import { AgentConfigController } from './presentation/controllers/agent-config.c
     { provide: TOKEN_USAGE_PORT, useClass: SupabaseTokenUsageAdapter },
 
     FakeOrderProvider,
-    SupabaseOrderAdapter,
+    OrdersOrderAdapter,
     {
       provide: ORDER_PORT,
-      inject: [ConfigService, FakeOrderProvider, SupabaseOrderAdapter],
+      inject: [ConfigService, FakeOrderProvider, OrdersOrderAdapter],
       useFactory: (
         configService: ConfigService,
         fakeOrderProvider: FakeOrderProvider,
-        supabaseOrderAdapter: SupabaseOrderAdapter,
+        ordersOrderAdapter: OrdersOrderAdapter,
       ) => {
         const provider = configService.get<string>('ORDER_PROVIDER') ?? 'fake';
         switch (provider) {
           case 'fake':
             return fakeOrderProvider;
-          case 'supabase':
-            return supabaseOrderAdapter;
+          case 'orders':
+            return ordersOrderAdapter;
           default:
-            throw new Error(`ORDER_PROVIDER inválido: "${provider}". Usa "fake" o "supabase".`);
+            throw new Error(`ORDER_PROVIDER inválido: "${provider}". Usa "fake" u "orders".`);
         }
       },
     },

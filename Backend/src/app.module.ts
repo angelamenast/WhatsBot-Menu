@@ -10,12 +10,15 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { SupabaseModule } from './shared/supabase/supabase.module';
 import { HealthController } from './health/health.controller';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_GUARD } from '@nestjs/core';
 import { AgentModule } from './modules/agent/agent.module';
+import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,  // ventana de 60 segundos
@@ -29,6 +32,7 @@ import { AgentModule } from './modules/agent/agent.module';
     PaymentsModule,
     SupabaseModule,
     AgentModule,
+    OrdersModule,
   ],
   controllers: [AppController, HealthController],     
   providers: [AppService, 

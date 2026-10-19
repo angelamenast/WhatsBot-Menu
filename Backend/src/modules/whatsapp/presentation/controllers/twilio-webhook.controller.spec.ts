@@ -83,7 +83,11 @@ describe('TwilioWebhookController', () => {
       .send(payload)
       .expect(200);
 
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining(payload.To));
+    const logged = String(warnSpy.mock.calls[0][0]);
+    expect(logged).toContain(payload.MessageSid);
+    expect(logged).not.toContain(payload.To);
+    expect(logged).not.toContain(payload.From);
+    expect(logged).not.toContain(payload.Body);
 
     warnSpy.mockRestore();
   });

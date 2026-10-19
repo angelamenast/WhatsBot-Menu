@@ -12,6 +12,7 @@ import {
 import type { Request, Response } from 'express';
 import { SupabaseAuthGuard } from '../../../auth/infrastructure/presentation/guards/supabase-auth.guard';
 import { BusinessService } from '../../../business/business.service';
+import { PlanActivoGuard } from '../../../subscriptions/infrastructure/presentation/guards/plan-activo.guard';
 import { ConnectWhatsappUseCase } from '../../application/use-cases/connect-whatsapp.use-case';
 import { ConnectWhatsappRequestDto } from '../dto/connect-whatsapp-request.dto';
 import { PhoneNumberAlreadyLinkedError } from '../../domain/errors/whatsapp.errors';
@@ -25,7 +26,10 @@ export class WhatsappOnboardingController {
     private readonly businessService: BusinessService,
   ) {}
 
+  // Con el plan vencido el dashboard es de solo lectura (HU-8.5). SIN_PLAN sí pasa el
+  // guard, así que el onboarding (registro → negocio → plan → conexión) no se bloquea.
   @Post()
+  @UseGuards(PlanActivoGuard)
   async connect(
     @Req() request: Request & { user: { id: string } },
     @Body() dto: ConnectWhatsappRequestDto,

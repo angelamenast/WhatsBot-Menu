@@ -10,6 +10,7 @@ import {
 import type { Request } from 'express';
 import { SupabaseAuthGuard } from '../../../auth/infrastructure/presentation/guards/supabase-auth.guard';
 import { BusinessService } from '../../../business/business.service';
+import { PlanActivoGuard } from '../../../subscriptions/infrastructure/presentation/guards/plan-activo.guard';
 import { GetAgentConfigUseCase } from '../../application/use-cases/get-agent-config.use-case';
 import { UpdateAgentConfigUseCase } from '../../application/use-cases/update-agent-config.use-case';
 import { UpdateAgentConfigRequestDto } from '../dto/update-agent-config-request.dto';
@@ -56,7 +57,9 @@ export class AgentConfigController {
     return toResponse(config);
   }
 
+  // Con el plan vencido el dashboard es de solo lectura (HU-8.5).
   @Patch()
+  @UseGuards(PlanActivoGuard)
   async update(
     @Req() request: Request & { user: { id: string } },
     @Body() dto: UpdateAgentConfigRequestDto,

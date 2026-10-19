@@ -13,6 +13,7 @@ describe('GetNegocioByUsuarioUseCase', () => {
       existeNegocioActivoPorUsuario: jest.fn(),
       crear: jest.fn(),
       buscarPorUsuario: jest.fn(),
+      actualizar: jest.fn(),
     };
     useCase = new GetNegocioByUsuarioUseCase(negocioRepository);
   });

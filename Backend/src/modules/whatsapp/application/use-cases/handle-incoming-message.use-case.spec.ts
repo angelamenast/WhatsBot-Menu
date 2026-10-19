@@ -23,8 +23,8 @@ describe('HandleIncomingMessageUseCase', () => {
   let messageRepository: jest.Mocked<MessageRepository>;
   let planStatusPort: jest.Mocked<PlanStatusPort>;
   let agentDispatchPort: jest.Mocked<AgentDispatchPort>;
-  let sendMessageUseCase: { execute: jest.Mock };
-  let errorSpy: jest.SpyInstance;
+  let sendMessageUseCase: { execute: jest.Mock<(...args: any[]) => any> };
+  let errorSpy: ReturnType<typeof jest.spyOn>;
   let useCase: HandleIncomingMessageUseCase;
 
   const command: HandleIncomingMessageCommand = {
@@ -80,7 +80,9 @@ describe('HandleIncomingMessageUseCase', () => {
     agentDispatchPort = {
       dispatch: jest.fn(),
     };
-    sendMessageUseCase = { execute: jest.fn().mockResolvedValue(undefined) };
+    sendMessageUseCase = {
+      execute: jest.fn<(...args: any[]) => any>().mockResolvedValue(undefined),
+    };
 
     agentDispatchPort.dispatch.mockResolvedValue({ responseText: 'Respuesta del agente' });
     errorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);

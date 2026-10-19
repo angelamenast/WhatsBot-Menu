@@ -53,7 +53,7 @@ export class ConnectWhatsappUseCase {
       }
     } catch (error) {
       this.logger.error(
-        `Fallo al aprovisionar el número ${command.phoneNumber} para el negocio ${command.businessId}: ${
+        `Fallo al aprovisionar la conexión de WhatsApp del negocio ${command.businessId}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );

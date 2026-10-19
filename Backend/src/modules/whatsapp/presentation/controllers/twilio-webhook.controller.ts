@@ -24,7 +24,7 @@ export class TwilioWebhookController {
     } catch (error) {
       if (error instanceof WhatsappConnectionNotFoundError) {
         this.logger.warn(
-          `Webhook recibido para un número no registrado (${dto.To}): ${error.message}`,
+          `Webhook recibido para un número no registrado (providerMessageId=${dto.MessageSid})`,
         );
         return;
       }

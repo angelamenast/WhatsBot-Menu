@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { BusinessModule } from '../business/business.module';
 import { AgentModule } from '../agent/agent.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 import { MESSAGING_PORT } from './application/ports/out/messaging.port';
 import { FakeMessagingProvider } from './infrastructure/adapters/fake-messaging.adapter';
@@ -28,12 +29,13 @@ import { SendMessageUseCase } from './application/use-cases/send-message.use-cas
 import { ConnectWhatsappUseCase } from './application/use-cases/connect-whatsapp.use-case';
 import { HandleStatusCallbackUseCase } from './application/use-cases/handle-status-callback.use-case';
 
+import { OrderStatusChangedListener } from './presentation/listeners/order-status-changed.listener';
 import { TwilioWebhookController } from './presentation/controllers/twilio-webhook.controller';
 import { TwilioStatusCallbackController } from './presentation/controllers/twilio-status-callback.controller';
 import { WhatsappOnboardingController } from './presentation/controllers/whatsapp-onboarding.controller';
 
 @Module({
-  imports: [ConfigModule, AuthModule, BusinessModule, AgentModule],
+  imports: [ConfigModule, AuthModule, BusinessModule, AgentModule, SubscriptionsModule],
   controllers: [TwilioWebhookController, TwilioStatusCallbackController, WhatsappOnboardingController],
   providers: [
     FakeMessagingProvider,
@@ -122,6 +124,8 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
     SendMessageUseCase,
     ConnectWhatsappUseCase,
     HandleStatusCallbackUseCase,
+
+    OrderStatusChangedListener,
   ],
   exports: [MESSAGING_PORT, PROVISIONING_PORT, PLAN_STATUS_PORT, AGENT_DISPATCH_PORT],
 })

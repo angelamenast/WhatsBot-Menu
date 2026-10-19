@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { Logger } from '@nestjs/common';
 import { SendMessageUseCase } from './send-message.use-case';
 import { MessagingPort } from '../ports/out/messaging.port';
 import { MessageRepository } from '../../domain/repositories/message.repository';
@@ -94,6 +95,24 @@ describe('SendMessageUseCase', () => {
     expect(savedMessage.content).toBe(command.body);
     expect(savedMessage.providerMessageId).toBeNull();
     expect(savedMessage.deliveryStatus).toBe('failed');
+  });
+
+  it('el log del fallo de envío identifica la conversación y NO contiene el número ni el cuerpo', async () => {
+    const errorSpy = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    conversationRepository.findById.mockResolvedValue(aConversation());
+    messagingPort.sendMessage.mockRejectedValue(new Error('Twilio timeout'));
+
+    await useCase.execute(command);
+
+    const logged = errorSpy.mock.calls.map((args) => args.join(' ')).join('\n');
+    expect(logged).toContain(command.conversationId);
+    expect(logged).toContain('Twilio timeout');
+    expect(logged).not.toContain('+573001111111');
+    expect(logged).not.toContain(command.body);
+
+    errorSpy.mockRestore();
   });
 
   it('conversationId inexistente: lanza ConversationNotFoundError y no envía ni persiste nada', async () => {

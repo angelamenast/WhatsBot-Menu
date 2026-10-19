@@ -83,13 +83,24 @@ Los endpoints de edición del dashboard responden `403` con `codigo: "PLAN_VENCI
 { "statusCode": 403, "error": "Forbidden", "message": "Tu plan venció. Renueva para editar.", "codigo": "PLAN_VENCIDO" }
 ```
 
-| Endpoint | Protegido | Estado |
-|---|---|---|
-| `PATCH /api/agent/config` | Sí | Pendiente de aplicar por el dueño del módulo `agent`. |
-| `POST /api/whatsapp/connections` | Sí | Pendiente de aplicar por el dueño del módulo `whatsapp`. |
-| `/api/auth/*`, `/api/business`, `/api/payments/*`, `/api/subscriptions/*` | No | Deben seguir disponibles para iniciar sesión, completar el onboarding y renovar. |
+El guard (`PlanActivoGuard`) se aplica **por método**, nunca de forma global, y siempre después del guard de autenticación de la clase. Solo bloquea las escrituras; los `GET`, `HEAD` y `OPTIONS` no lo consultan.
 
-Con `SIN_PLAN` no se bloquea nada, para no interrumpir el onboarding (registro → negocio → plan).
+| Endpoint | Método | Protegido | Notas |
+|---|---|---|---|
+| `/api/orders/{id}/confirm` | PATCH | **Sí** | |
+| `/api/orders/{id}/cancel` | PATCH | **Sí** | |
+| `/api/agent/config` | PATCH | **Sí** | |
+| `/api/whatsapp/connections` | POST | **Sí** | Con `SIN_PLAN` pasa, así que el onboarding no se bloquea. |
+| `/api/business/mine` | PATCH | No | **Pendiente**: aplicarlo crea un ciclo entre `BusinessModule` y `SubscriptionsModule` (ver abajo). |
+| `/api/business` | POST | No | Es el onboarding: se crea antes de que exista un plan. |
+| `/api/orders`, `/api/orders/{id}` | GET | No | Lecturas: siguen funcionando con el plan vencido. |
+| `/api/agent/config`, `/api/business/mine` | GET | No | Lecturas. |
+| `/api/auth/*`, `/api/payments/*` (incluye `POST /api/payments/webhook` de Wompi), `/api/subscriptions/*` | todos | No | Deben seguir disponibles para iniciar sesión, pagar y renovar. |
+| `/api/health/*`, `/api/whatsapp/webhook`, `/api/whatsapp/status-callback` | todos | No | Los llama Twilio (se autentican con su firma), no el dashboard. |
+
+Con `SIN_PLAN` no se bloquea nada, para no interrumpir el onboarding (registro → negocio → plan). Esto incluye al usuario sin negocio, sin suscripción, con el pago pendiente o con la suscripción cancelada.
+
+> **Pendiente en `business`:** `SubscriptionsModule` importa `BusinessModule` (necesita `NEGOCIO_REPOSITORY` para resolver el negocio del usuario), así que `BusinessModule` no puede importar `SubscriptionsModule` sin crear un ciclo. Hasta resolverlo (por ejemplo, mover el guard a un módulo que no dependa de `BusinessModule`), `PATCH /api/business/mine` sigue editable con el plan vencido.
 
 ---
 
