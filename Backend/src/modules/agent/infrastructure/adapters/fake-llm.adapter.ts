@@ -7,7 +7,7 @@ export class FakeLlmProvider implements LlmPort {
 
   async generateReply(params: GenerateReplyParams): Promise<GenerateReplyResult> {
     this.logger.log(
-      `[FakeLlmProvider] Mensaje: "${params.customerMessage}" | catálogo: ${params.catalog.length} items | historial: ${params.history.length} mensajes`,
+      `[FakeLlmProvider] catálogo: ${params.catalog.length} items | historial: ${params.history.length} mensajes`,
     );
 
     const text = `(respuesta simulada) Recibí tu mensaje: "${params.customerMessage}". Tenemos ${params.catalog.length} productos disponibles.`;
