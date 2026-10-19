@@ -10,7 +10,7 @@ export class FakeLlmProvider implements LlmPort {
       `[FakeLlmProvider] catálogo: ${params.catalog.length} items | historial: ${params.history.length} mensajes`,
     );
 
-    const text = `(respuesta simulada) Recibí tu mensaje: "${params.customerMessage}". Tenemos ${params.catalog.length} productos disponibles.`;
+    const text = `(respuesta simulada) Recibí tu mensaje: "${params.customerMessage}". Tenemos ${params.catalog.filter((item) => item.available).length} productos disponibles.`;
 
     return {
       text,

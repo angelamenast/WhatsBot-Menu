@@ -62,7 +62,7 @@ describe('ProcessCustomerMessageUseCase', () => {
 
   beforeEach(() => {
     agentConfigRepository = { findByBusinessId: jest.fn(), save: jest.fn() };
-    catalogRepository = { findAvailableByBusinessId: jest.fn() };
+    catalogRepository = { findByBusinessId: jest.fn() };
     conversationHistoryRepository = {
       countByConversationId: jest.fn(),
       findRecentByConversationId: jest.fn(),
@@ -71,7 +71,7 @@ describe('ProcessCustomerMessageUseCase', () => {
     tokenUsagePort = { record: jest.fn() };
 
     agentConfigRepository.findByBusinessId.mockResolvedValue(aConfig());
-    catalogRepository.findAvailableByBusinessId.mockResolvedValue(catalog);
+    catalogRepository.findByBusinessId.mockResolvedValue(catalog);
     conversationHistoryRepository.findRecentByConversationId.mockResolvedValue(history);
     llmPort.generateReply.mockResolvedValue({ text: 'Tenemos hamburguesas.', tokensInput: 30, tokensOutput: 12 });
     tokenUsagePort.record.mockResolvedValue(undefined);

@@ -34,7 +34,7 @@ import { AgentConfigController } from './presentation/controllers/agent-config.c
   controllers: [AgentConfigController],
   providers: [
     { provide: AGENT_CONFIG_REPOSITORY, useClass: SupabaseAgentConfigRepository },
-    // El catálogo es dominio de Business: se mantiene fake hasta que ese módulo exista.
+    // El agente lee su propio catálogo (catalogo_productos); `fake` solo si se pide explícitamente.
     FakeCatalogRepository,
     SupabaseCatalogRepository,
     {
@@ -45,7 +45,7 @@ import { AgentConfigController } from './presentation/controllers/agent-config.c
         fakeCatalogRepository: FakeCatalogRepository,
         supabaseCatalogRepository: SupabaseCatalogRepository,
       ) => {
-        const provider = configService.get<string>('CATALOG_PROVIDER') ?? 'fake';
+        const provider = configService.get<string>('CATALOG_PROVIDER') ?? 'supabase';
         switch (provider) {
           case 'fake':
             return fakeCatalogRepository;

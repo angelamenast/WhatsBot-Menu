@@ -64,7 +64,7 @@ export class ProcessCustomerMessageUseCase {
     const isFirstMessage = totalMessages === 1;
 
     const [catalog, history] = await Promise.all([
-      this.catalogRepository.findAvailableByBusinessId(command.businessId),
+      this.catalogRepository.findByBusinessId(command.businessId),
       this.conversationHistoryRepository.findRecentByConversationId(
         command.conversationId,
         HISTORY_MESSAGES_LIMIT,

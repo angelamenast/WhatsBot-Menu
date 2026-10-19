@@ -1,6 +1,9 @@
 import 'reflect-metadata';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SupabaseService } from './shared/supabase/supabase.service';
+import { CATALOG_REPOSITORY } from './modules/agent/domain/repositories/catalog.repository';
+import { SupabaseCatalogRepository } from './modules/agent/infrastructure/persistence/supabase-catalog.repository';
+import { FakeCatalogRepository } from './modules/agent/infrastructure/persistence/fake-catalog.repository';
 import { ORDER_PORT } from './modules/agent/application/ports/out/order.port';
 import { OrdersOrderAdapter } from './modules/agent/infrastructure/adapters/orders-order.adapter';
 import { FakeOrderProvider } from './modules/agent/infrastructure/adapters/fake-order.adapter';
@@ -137,6 +140,34 @@ describe('AppModule (humo de DI)', () => {
     process.env.PLAN_STATUS_PROVIDER = 'otro';
 
     await expect(compileApp()).rejects.toThrow(/PLAN_STATUS_PROVIDER inválido/);
+  });
+
+  it('sin CATALOG_PROVIDER, CATALOG_REPOSITORY resuelve al catálogo real de Supabase (default)', async () => {
+    delete process.env.CATALOG_PROVIDER;
+    const moduleRef = await compileApp();
+
+    expect(moduleRef.get(CATALOG_REPOSITORY, { strict: false })).toBeInstanceOf(
+      SupabaseCatalogRepository,
+    );
+
+    await moduleRef.close();
+  });
+
+  it('con CATALOG_PROVIDER=fake (explícito), CATALOG_REPOSITORY resuelve al fake', async () => {
+    process.env.CATALOG_PROVIDER = 'fake';
+    const moduleRef = await compileApp();
+
+    expect(moduleRef.get(CATALOG_REPOSITORY, { strict: false })).toBeInstanceOf(
+      FakeCatalogRepository,
+    );
+
+    await moduleRef.close();
+  });
+
+  it('un CATALOG_PROVIDER inválido falla al compilar', async () => {
+    process.env.CATALOG_PROVIDER = 'otro';
+
+    await expect(compileApp()).rejects.toThrow(/CATALOG_PROVIDER inválido/);
   });
 
   it('la opción retirada ORDER_PROVIDER=supabase ahora es inválida y falla al compilar', async () => {
