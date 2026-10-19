@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { BusinessModule } from '../business/business.module';
 import { OrdersModule } from '../orders/orders.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 import { AGENT_CONFIG_REPOSITORY } from './domain/repositories/agent-config.repository';
 import { SupabaseAgentConfigRepository } from './infrastructure/persistence/supabase-agent-config.repository';
@@ -29,7 +30,7 @@ import { UpdateAgentConfigUseCase } from './application/use-cases/update-agent-c
 import { AgentConfigController } from './presentation/controllers/agent-config.controller';
 
 @Module({
-  imports: [ConfigModule, AuthModule, BusinessModule, OrdersModule],
+  imports: [ConfigModule, AuthModule, BusinessModule, OrdersModule, SubscriptionsModule],
   controllers: [AgentConfigController],
   providers: [
     { provide: AGENT_CONFIG_REPOSITORY, useClass: SupabaseAgentConfigRepository },
