@@ -6,6 +6,7 @@ import { OrdersOrderAdapter } from './modules/agent/infrastructure/adapters/orde
 import { FakeOrderProvider } from './modules/agent/infrastructure/adapters/fake-order.adapter';
 import { ORDER_EVENTS_PORT } from './modules/orders/application/ports/out/order-events.port';
 import { EventEmitterOrderEventsAdapter } from './modules/orders/infrastructure/events/event-emitter-order-events.adapter';
+import { PlanActivoGuard } from './modules/subscriptions/infrastructure/presentation/guards/plan-activo.guard';
 import { OrderStatusChangedListener } from './modules/whatsapp/presentation/listeners/order-status-changed.listener';
 
 /**
@@ -94,6 +95,16 @@ describe('AppModule (humo de DI)', () => {
     expect(
       moduleRef.get(OrderStatusChangedListener, { strict: false }),
     ).toBeInstanceOf(OrderStatusChangedListener);
+
+    await moduleRef.close();
+  });
+
+  it('PlanActivoGuard queda disponible: lo usan los controllers de orders, agent y whatsapp (compilar AppModule instancia esos guards)', async () => {
+    const moduleRef = await compileApp();
+
+    expect(moduleRef.get(PlanActivoGuard, { strict: false })).toBeInstanceOf(
+      PlanActivoGuard,
+    );
 
     await moduleRef.close();
   });
