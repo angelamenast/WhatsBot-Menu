@@ -84,7 +84,7 @@ describe('HandleIncomingMessageUseCase', () => {
       execute: jest.fn<(...args: any[]) => any>().mockResolvedValue(undefined),
     };
 
-    agentDispatchPort.dispatch.mockResolvedValue({ responseText: 'Respuesta del agente' });
+    agentDispatchPort.dispatch.mockResolvedValue('Respuesta del agente');
     errorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
     useCase = new HandleIncomingMessageUseCase(
@@ -135,6 +135,7 @@ describe('HandleIncomingMessageUseCase', () => {
     expect(agentDispatchPort.dispatch).toHaveBeenCalledWith({
       businessId: 'business-1',
       conversationId: savedConversation.id,
+      messageId: savedMessage.id,
       customerNumber: command.fromCustomerNumber,
       message: command.body,
     });
@@ -198,6 +199,21 @@ describe('HandleIncomingMessageUseCase', () => {
     expect(planStatusPort.isActive).toHaveBeenCalledWith('business-1');
     expect(agentDispatchPort.dispatch).not.toHaveBeenCalled();
     expect(sendMessageUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('el agente decide no responder (null): el mensaje queda persistido y no se envía nada', async () => {
+    processedMessageRepository.existsByProviderMessageId.mockResolvedValue(false);
+    whatsappConnectionRepository.findByPhoneNumber.mockResolvedValue(aConnection());
+    conversationRepository.findActiveByBusinessAndCustomer.mockResolvedValue(anActiveConversation());
+    planStatusPort.isActive.mockResolvedValue(true);
+    agentDispatchPort.dispatch.mockResolvedValue(null);
+
+    await expect(useCase.execute(command)).resolves.toBeUndefined();
+
+    expect(messageRepository.save).toHaveBeenCalledTimes(1);
+    expect(agentDispatchPort.dispatch).toHaveBeenCalledTimes(1);
+    expect(sendMessageUseCase.execute).not.toHaveBeenCalled();
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 
   it('dispatch exitoso + envío falla: loguea, no propaga y el mensaje queda persistido', async () => {

@@ -25,6 +25,7 @@ describe('ProcessCustomerMessageUseCase', () => {
   const command: ProcessCustomerMessageCommand = {
     businessId: 'business-1',
     conversationId: 'conversation-1',
+    messageId: 'message-1',
     customerNumber: '+573001111111',
     message: '¿Qué tienen de comer?',
   };

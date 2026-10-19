@@ -84,22 +84,27 @@ export class HandleIncomingMessageUseCase {
     // Desde aquí el mensaje ya está persistido: un fallo del agente o del envío se loguea
     // y no se propaga (el mensaje queda sin respuesta, igual que con plan vencido), para
     // que el webhook responda 200 y Twilio no reintente algo que la deduplicación cortaría.
-    let responseText: string;
+    let responseText: string | null;
 
     try {
-      const result = await this.agentDispatchPort.dispatch({
+      responseText = await this.agentDispatchPort.dispatch({
         businessId: connection.businessId,
         conversationId: conversation.id,
+        messageId: message.id,
         customerNumber: command.fromCustomerNumber,
         message: command.body,
       });
-      responseText = result.responseText;
     } catch (error) {
       this.logger.error(
         `Fallo al despachar al agente (conversación ${conversation.id}): ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
+      return;
+    }
+
+    // null = el agente decidió no responder (p. ej. negocio inactivo o cuota agotada): no se envía nada.
+    if (responseText === null) {
       return;
     }
 
