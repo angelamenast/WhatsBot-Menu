@@ -7,6 +7,7 @@ import {
 import { BusinessNotFoundError } from '../../domain/errors/agent.errors';
 
 interface NegocioAtencionRow {
+  nombre_negocio: string;
   atencion_automatica_activa: boolean;
   estado: string;
   deleted_at: string | null;
@@ -21,7 +22,7 @@ export class SupabaseBusinessAttentionRepository implements BusinessAttentionRep
 
     const { data, error } = await client
       .from('negocios')
-      .select('atencion_automatica_activa, estado, deleted_at')
+      .select('nombre_negocio, atencion_automatica_activa, estado, deleted_at')
       .eq('id', businessId)
       .maybeSingle<NegocioAtencionRow>();
 
@@ -34,6 +35,7 @@ export class SupabaseBusinessAttentionRepository implements BusinessAttentionRep
     }
 
     return {
+      businessName: data.nombre_negocio,
       autoAttentionActive: data.atencion_automatica_activa,
       businessActive: data.estado === 'activo' && data.deleted_at === null,
     };

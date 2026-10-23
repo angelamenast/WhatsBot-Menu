@@ -24,18 +24,19 @@ describe('SupabaseBusinessAttentionRepository', () => {
 
   it('hace UNA query a negocios filtrando por id y mapea los flags', async () => {
     maybeSingle.mockResolvedValue({
-      data: { atencion_automatica_activa: true, estado: 'activo', deleted_at: null },
+      data: { nombre_negocio: 'Mi Restaurante', atencion_automatica_activa: true, estado: 'activo', deleted_at: null },
       error: null,
     });
 
     await expect(repository.getStatus('business-1')).resolves.toEqual({
+      businessName: 'Mi Restaurante',
       autoAttentionActive: true,
       businessActive: true,
     });
 
     expect(from).toHaveBeenCalledTimes(1);
     expect(from).toHaveBeenCalledWith('negocios');
-    expect(select).toHaveBeenCalledWith('atencion_automatica_activa, estado, deleted_at');
+    expect(select).toHaveBeenCalledWith('nombre_negocio, atencion_automatica_activa, estado, deleted_at');
     expect(eq).toHaveBeenCalledWith('id', 'business-1');
   });
 
@@ -45,7 +46,7 @@ describe('SupabaseBusinessAttentionRepository', () => {
     ['activo', '2026-10-01T00:00:00Z'],
   ])('estado "%s" con deleted_at %s: el negocio no está activo', async (estado, deletedAt) => {
     maybeSingle.mockResolvedValue({
-      data: { atencion_automatica_activa: true, estado, deleted_at: deletedAt },
+      data: { nombre_negocio: 'Mi Restaurante', atencion_automatica_activa: true, estado, deleted_at: deletedAt },
       error: null,
     });
 

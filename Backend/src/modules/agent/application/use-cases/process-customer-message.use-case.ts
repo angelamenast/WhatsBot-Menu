@@ -105,6 +105,9 @@ export class ProcessCustomerMessageUseCase {
 
     try {
       const generated = await this.llmPort.generateReply({
+        businessName: attention.businessName,
+        businessHours: config.businessHours,
+        isFirstMessage,
         personality: config.personality,
         tone: config.effectiveTone,
         regionalStyle: config.effectiveRegionalStyle,

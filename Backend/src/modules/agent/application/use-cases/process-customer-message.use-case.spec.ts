@@ -36,6 +36,8 @@ describe('ProcessCustomerMessageUseCase', () => {
     message: '¿Qué tienen de comer?',
   };
 
+  const BUSINESS_NAME = 'Mi Restaurante';
+
   const welcomeMessage = '¡Bienvenido a Mi Restaurante!';
 
   const catalog: CatalogItem[] = [
@@ -82,12 +84,13 @@ describe('ProcessCustomerMessageUseCase', () => {
 
     agentConfigRepository.findByBusinessId.mockResolvedValue(aConfig());
     businessAttentionRepository.getStatus.mockResolvedValue({
+      businessName: BUSINESS_NAME,
       autoAttentionActive: true,
       businessActive: true,
     });
     catalogRepository.findByBusinessId.mockResolvedValue(catalog);
     conversationHistoryRepository.findRecentByConversationId.mockResolvedValue(history);
-    llmPort.generateReply.mockResolvedValue({ text: 'Tenemos hamburguesas.', tokensInput: 30, tokensOutput: 12 });
+    llmPort.generateReply.mockResolvedValue({ text: 'Tenemos hamburguesas.', proposedOrder: null, tokensInput: 30, tokensOutput: 12 });
     tokenUsagePort.record.mockResolvedValue(undefined);
     usageQuotaPort.hasQuota.mockResolvedValue(true);
 
@@ -122,6 +125,9 @@ describe('ProcessCustomerMessageUseCase', () => {
     const result = await useCase.execute(command);
 
     expect(llmPort.generateReply).toHaveBeenCalledWith({
+      businessName: BUSINESS_NAME,
+      businessHours: null,
+      isFirstMessage: false,
       personality: 'amable',
       tone: AgentTone.CERCANO,
       regionalStyle: AgentRegionalStyle.PAISA,
@@ -228,7 +234,7 @@ describe('ProcessCustomerMessageUseCase', () => {
     });
 
     it('con atención desactivada no se consulta la cuota (se responde el mensaje de no disponibilidad)', async () => {
-      businessAttentionRepository.getStatus.mockResolvedValue({ autoAttentionActive: false, businessActive: true });
+      businessAttentionRepository.getStatus.mockResolvedValue({ businessName: BUSINESS_NAME, autoAttentionActive: false, businessActive: true });
 
       await useCase.execute(command);
 
@@ -248,6 +254,7 @@ describe('ProcessCustomerMessageUseCase', () => {
   describe('guardas de atención', () => {
     it('negocio no activo: devuelve null y no toca LLM, historial, catálogo ni tokens', async () => {
       businessAttentionRepository.getStatus.mockResolvedValue({
+        businessName: BUSINESS_NAME,
         autoAttentionActive: true,
         businessActive: false,
       });
@@ -262,6 +269,7 @@ describe('ProcessCustomerMessageUseCase', () => {
 
     it('negocio no activo tiene prioridad sobre la atención automática desactivada', async () => {
       businessAttentionRepository.getStatus.mockResolvedValue({
+        businessName: BUSINESS_NAME,
         autoAttentionActive: false,
         businessActive: false,
       });
@@ -271,6 +279,7 @@ describe('ProcessCustomerMessageUseCase', () => {
 
     it('atención automática desactivada: responde el mensaje de no disponibilidad, sin LLM, tokens ni bienvenida', async () => {
       businessAttentionRepository.getStatus.mockResolvedValue({
+        businessName: BUSINESS_NAME,
         autoAttentionActive: false,
         businessActive: true,
       });
@@ -286,6 +295,7 @@ describe('ProcessCustomerMessageUseCase', () => {
 
     it('atención desactivada sin mensaje propio: usa el texto por defecto', async () => {
       businessAttentionRepository.getStatus.mockResolvedValue({
+        businessName: BUSINESS_NAME,
         autoAttentionActive: false,
         businessActive: true,
       });
@@ -302,6 +312,34 @@ describe('ProcessCustomerMessageUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(BusinessNotFoundError);
 
       expect(llmPort.generateReply).not.toHaveBeenCalled();
+    });
+  });
+
+
+  describe('contrato nuevo con el LLM', () => {
+    it('pasa businessName, businessHours e isFirstMessage', async () => {
+      const hours = { lunes: '8-18' };
+      agentConfigRepository.findByBusinessId.mockResolvedValue(
+        AgentConfig.create({
+          id: 'config-1',
+          businessId: command.businessId,
+          personality: null,
+          tone: null,
+          regionalStyle: null,
+          welcomeMessage: null,
+          unavailableMessage: null,
+          businessHours: hours,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      );
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(1);
+
+      await useCase.execute(command);
+
+      expect(llmPort.generateReply).toHaveBeenCalledWith(
+        expect.objectContaining({ businessName: BUSINESS_NAME, businessHours: hours, isFirstMessage: true }),
+      );
     });
   });
 });
