@@ -30,7 +30,18 @@ export interface OrderRepository {
     businessId: string,
     filter: OrderListFilter,
   ): Promise<OrderPage>;
-  /** Persiste un pedido nuevo (cabecera + items) de forma atómica. */
+  /**
+   * El pedido NO cancelado de la conversación (pendiente o confirmado), o null. Filtra por
+   * negocio en la propia consulta. A lo sumo hay uno (índice uq_pedidos_conversacion_abierto).
+   */
+  findOpenByConversation(
+    conversationId: string,
+    businessId: string,
+  ): Promise<Order | null>;
+  /**
+   * Persiste un pedido nuevo (cabecera + items) de forma atómica. Lanza
+   * ConversationAlreadyHasOrderError si la conversación ya tiene un pedido abierto.
+   */
   insert(order: Order): Promise<void>;
   /**
    * Cambia el estado solo si la fila sigue en `expectedStatus` (compare-and-set).

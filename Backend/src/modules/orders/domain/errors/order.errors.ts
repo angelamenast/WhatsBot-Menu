@@ -84,3 +84,10 @@ export class OrderCustomerPhoneMissingError extends Error {
     this.name = 'OrderCustomerPhoneMissingError';
   }
 }
+
+export class ConversationAlreadyHasOrderError extends Error {
+  constructor(readonly orderId: string) {
+    super(`La conversación ya tiene un pedido abierto (${orderId})`);
+    this.name = 'ConversationAlreadyHasOrderError';
+  }
+}
