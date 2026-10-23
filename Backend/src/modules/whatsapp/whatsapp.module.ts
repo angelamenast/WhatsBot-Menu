@@ -27,6 +27,7 @@ import { SupabaseMessageRepository } from './infrastructure/persistence/supabase
 
 import { HandleIncomingMessageUseCase } from './application/use-cases/handle-incoming-message.use-case';
 import { SendMessageUseCase } from './application/use-cases/send-message.use-case';
+import { CloseConversationUseCase } from './application/use-cases/close-conversation.use-case';
 import { ConnectWhatsappUseCase } from './application/use-cases/connect-whatsapp.use-case';
 import { HandleStatusCallbackUseCase } from './application/use-cases/handle-status-callback.use-case';
 
@@ -127,6 +128,7 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
 
     HandleIncomingMessageUseCase,
     SendMessageUseCase,
+    CloseConversationUseCase,
     ConnectWhatsappUseCase,
     HandleStatusCallbackUseCase,
 

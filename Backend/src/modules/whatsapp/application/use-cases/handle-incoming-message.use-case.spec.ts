@@ -13,7 +13,11 @@ import {
   WhatsappConnectionStatus,
 } from '../../domain/entities/whatsapp-connection.entity';
 import { Conversation, ConversationStatus } from '../../domain/entities/conversation.entity';
-import { WhatsappConnectionNotFoundError } from '../../domain/errors/whatsapp.errors';
+import {
+  ActiveConversationAlreadyExistsError,
+  WhatsappConnectionNotFoundError,
+} from '../../domain/errors/whatsapp.errors';
+import { CONVERSATION_INACTIVITY_MS } from '../constants/conversation-lifecycle';
 import { HandleIncomingMessageCommand } from '../dto/handle-incoming-message.command';
 
 describe('HandleIncomingMessageUseCase', () => {
@@ -73,7 +77,9 @@ describe('HandleIncomingMessageUseCase', () => {
     messageRepository = {
       save: jest.fn(),
       findByProviderMessageId: jest.fn(),
+      findLastMessageDate: jest.fn(),
     };
+    messageRepository.findLastMessageDate.mockResolvedValue(null);
     planStatusPort = {
       isActive: jest.fn(),
     };
@@ -242,5 +248,135 @@ describe('HandleIncomingMessageUseCase', () => {
     expect(messageRepository.save).toHaveBeenCalledTimes(1);
     expect(sendMessageUseCase.execute).not.toHaveBeenCalled();
     expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('despachar al agente'));
+  });
+
+  describe('ciclo de vida de la conversación', () => {
+    const now = new Date('2026-10-22T12:00:00.000Z');
+    const ago = (ms: number) => new Date(now.getTime() - ms);
+    const HOUR = 60 * 60 * 1000;
+
+    const anActiveConversationCreatedAt = (createdAt: Date) =>
+      Conversation.create({
+        id: 'conversation-old',
+        businessId: 'business-1',
+        customerNumber: command.fromCustomerNumber,
+        status: ConversationStatus.ACTIVE,
+        createdAt,
+        updatedAt: createdAt,
+      });
+
+    beforeEach(() => {
+      processedMessageRepository.existsByProviderMessageId.mockResolvedValue(false);
+      whatsappConnectionRepository.findByPhoneNumber.mockResolvedValue(aConnection());
+      planStatusPort.isActive.mockResolvedValue(true);
+    });
+
+    it('la constante de inactividad es de 4 horas', () => {
+      expect(CONVERSATION_INACTIVITY_MS).toBe(4 * HOUR);
+    });
+
+    it('conversación vigente (menos de 4 h desde el último mensaje): se reutiliza, con una sola lectura y sin escrituras extra', async () => {
+      const existing = anActiveConversationCreatedAt(ago(10 * HOUR));
+      conversationRepository.findActiveByBusinessAndCustomer.mockResolvedValue(existing);
+      messageRepository.findLastMessageDate.mockResolvedValue(new Date(now.getTime() - (4 * HOUR - 1)));
+
+      await useCase.execute(command, now);
+
+      expect(messageRepository.findLastMessageDate).toHaveBeenCalledTimes(1);
+      expect(messageRepository.findLastMessageDate).toHaveBeenCalledWith('conversation-old');
+      expect(conversationRepository.save).not.toHaveBeenCalled();
+      expect(messageRepository.save.mock.calls[0][0].conversationId).toBe('conversation-old');
+    });
+
+    it.each([
+      ['justo en el límite de 4 h', 4 * HOUR],
+      ['pasado el límite', 4 * HOUR + 1],
+      ['muy pasado', 30 * HOUR],
+    ])('%s: cierra la conversación y el mensaje abre una nueva', async (_label, elapsed) => {
+      const existing = anActiveConversationCreatedAt(ago(40 * HOUR));
+      conversationRepository.findActiveByBusinessAndCustomer.mockResolvedValue(existing);
+      messageRepository.findLastMessageDate.mockResolvedValue(ago(elapsed));
+
+      await useCase.execute(command, now);
+
+      expect(conversationRepository.save).toHaveBeenCalledTimes(2);
+      const closed = conversationRepository.save.mock.calls[0][0];
+      const opened = conversationRepository.save.mock.calls[1][0];
+      expect(closed.id).toBe('conversation-old');
+      expect(closed.status).toBe(ConversationStatus.CLOSED);
+      expect(opened.id).not.toBe('conversation-old');
+      expect(opened.status).toBe(ConversationStatus.ACTIVE);
+      expect(messageRepository.save.mock.calls[0][0].conversationId).toBe(opened.id);
+      expect(agentDispatchPort.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ conversationId: opened.id }),
+      );
+    });
+
+    it('sin mensajes usa la fecha de creación de la conversación (vigente)', async () => {
+      conversationRepository.findActiveByBusinessAndCustomer.mockResolvedValue(
+        anActiveConversationCreatedAt(ago(1 * HOUR)),
+      );
+      messageRepository.findLastMessageDate.mockResolvedValue(null);
+
+      await useCase.execute(command, now);
+
+      expect(conversationRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('sin mensajes usa la fecha de creación de la conversación (vencida)', async () => {
+      conversationRepository.findActiveByBusinessAndCustomer.mockResolvedValue(
+        anActiveConversationCreatedAt(ago(5 * HOUR)),
+      );
+      messageRepository.findLastMessageDate.mockResolvedValue(null);
+
+      await useCase.execute(command, now);
+
+      expect(conversationRepository.save).toHaveBeenCalledTimes(2);
+      expect(conversationRepository.save.mock.calls[0][0].status).toBe(ConversationStatus.CLOSED);
+    });
+
+    it('sin conversación activa: crea una nueva y no lee mensajes', async () => {
+      conversationRepository.findActiveByBusinessAndCustomer.mockResolvedValue(null);
+
+      await useCase.execute(command, now);
+
+      expect(messageRepository.findLastMessageDate).not.toHaveBeenCalled();
+      expect(conversationRepository.save).toHaveBeenCalledTimes(1);
+    });
+
+    it('carrera al crear (otra conversación activa ganó): relee la activa y sigue con ella', async () => {
+      const winner = anActiveConversationCreatedAt(ago(1000));
+      conversationRepository.findActiveByBusinessAndCustomer
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(winner);
+      conversationRepository.save.mockRejectedValueOnce(new ActiveConversationAlreadyExistsError());
+
+      await useCase.execute(command, now);
+
+      expect(conversationRepository.findActiveByBusinessAndCustomer).toHaveBeenCalledTimes(2);
+      expect(messageRepository.save.mock.calls[0][0].conversationId).toBe('conversation-old');
+      expect(agentDispatchPort.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ conversationId: 'conversation-old' }),
+      );
+    });
+
+    it('carrera al crear pero la relectura no encuentra nada: propaga el error y no guarda el mensaje', async () => {
+      conversationRepository.findActiveByBusinessAndCustomer.mockResolvedValue(null);
+      conversationRepository.save.mockRejectedValueOnce(new ActiveConversationAlreadyExistsError());
+
+      await expect(useCase.execute(command, now)).rejects.toThrow(ActiveConversationAlreadyExistsError);
+
+      expect(messageRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('cualquier otro error al crear (p. ej. otro 23505) se propaga sin releer', async () => {
+      conversationRepository.findActiveByBusinessAndCustomer.mockResolvedValue(null);
+      conversationRepository.save.mockRejectedValueOnce(new Error('otra violación'));
+
+      await expect(useCase.execute(command, now)).rejects.toThrow('otra violación');
+
+      expect(conversationRepository.findActiveByBusinessAndCustomer).toHaveBeenCalledTimes(1);
+      expect(messageRepository.save).not.toHaveBeenCalled();
+    });
   });
 });

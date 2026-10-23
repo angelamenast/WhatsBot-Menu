@@ -34,4 +34,22 @@ export class SupabaseMessageRepository implements MessageRepository {
 
     return data ? MessageMapper.toDomain(data) : null;
   }
+
+  async findLastMessageDate(conversationId: string): Promise<Date | null> {
+    const client = this.supabaseService.getClient();
+
+    const { data, error } = await client
+      .from('mensajes')
+      .select('created_at')
+      .eq('conversacion_id', conversationId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle<{ created_at: string }>();
+
+    if (error) {
+      throw error;
+    }
+
+    return data ? new Date(data.created_at) : null;
+  }
 }

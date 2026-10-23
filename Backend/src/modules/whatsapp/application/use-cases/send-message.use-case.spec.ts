@@ -37,6 +37,7 @@ describe('SendMessageUseCase', () => {
     messageRepository = {
       save: jest.fn(),
       findByProviderMessageId: jest.fn(),
+      findLastMessageDate: jest.fn(),
     };
     conversationRepository = {
       findById: jest.fn(),
