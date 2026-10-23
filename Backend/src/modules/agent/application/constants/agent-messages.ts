@@ -1,6 +1,5 @@
-/** Respuesta cuando el dueño no configuró un mensaje de no disponibilidad propio. */
-export const DEFAULT_UNAVAILABLE_MESSAGE =
-  'Por ahora no podemos atenderte por este medio. Por favor intenta más tarde.';
+// El texto vive en el dominio (lo usa AgentConfig.default); se reexporta para el caso de uso.
+export { DEFAULT_UNAVAILABLE_MESSAGE } from '../../domain/constants/agent-defaults';
 
 /** Respuesta cuando el LLM falla: el cliente siempre debe recibir algo. */
 export const FALLBACK_RESPONSE_TEXT =

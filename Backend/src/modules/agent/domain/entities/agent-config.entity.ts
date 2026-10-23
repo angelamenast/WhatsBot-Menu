@@ -1,3 +1,4 @@
+import { DEFAULT_UNAVAILABLE_MESSAGE, DEFAULT_WELCOME_MESSAGE } from '../constants/agent-defaults';
 import {
   AgentRegionalStyle,
   AgentTone,
@@ -37,8 +38,8 @@ export class AgentConfig {
       personality: null,
       tone: null,
       regionalStyle: null,
-      welcomeMessage: '¡Hola! Bienvenido, ¿en qué puedo ayudarte hoy?',
-      unavailableMessage: null,
+      welcomeMessage: DEFAULT_WELCOME_MESSAGE,
+      unavailableMessage: DEFAULT_UNAVAILABLE_MESSAGE,
       businessHours: null,
       createdAt: now,
       updatedAt: now,

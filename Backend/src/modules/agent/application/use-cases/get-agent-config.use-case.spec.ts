@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import { GetAgentConfigUseCase } from './get-agent-config.use-case';
 import { AgentConfigRepository } from '../../domain/repositories/agent-config.repository';
 import { AgentConfig } from '../../domain/entities/agent-config.entity';
+import { DEFAULT_UNAVAILABLE_MESSAGE } from '../constants/agent-messages';
 
 describe('GetAgentConfigUseCase', () => {
   let repository: jest.Mocked<AgentConfigRepository>;
@@ -25,6 +26,8 @@ describe('GetAgentConfigUseCase', () => {
     expect(config.welcomeMessage).toBe(botDefault.welcomeMessage);
     expect(config.welcomeMessage).not.toBeNull();
     expect(config.unavailableMessage).toBe(botDefault.unavailableMessage);
+    // El dashboard muestra el MISMO texto de no disponibilidad que usa el bot, no un campo vacío.
+    expect(config.unavailableMessage).toBe(DEFAULT_UNAVAILABLE_MESSAGE);
     expect(config.businessHours).toBe(botDefault.businessHours);
     expect(repository.save).not.toHaveBeenCalled();
   });
