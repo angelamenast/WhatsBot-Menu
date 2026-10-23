@@ -3,6 +3,7 @@ export interface CreateOrderItem {
   quantity: number;
 }
 
+/** Nunca lleva precios ni totales: el backend los lee del catálogo al crear el pedido. */
 export interface CreateOrderCommand {
   businessId: string;
   conversationId: string;
@@ -20,22 +21,46 @@ export interface RejectedOrderItem {
   reason: RejectedOrderItemReason;
 }
 
-export interface CreateOrderResult {
-  /** null cuando ningún ítem fue válido: no se creó ningún pedido. */
-  orderId: string | null;
-  total: number | null;
+/** Ítem que SÍ entró al pedido, con el nombre y el precio reales del catálogo en ese momento. */
+export interface AcceptedOrderItem {
+  productId: string | null;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface OrderCreated {
+  kind: 'CREATED';
+  orderId: string;
+  total: number;
+  items: AcceptedOrderItem[];
   rejectedItems: RejectedOrderItem[];
 }
+
+/** Ningún ítem fue válido: no se creó ningún pedido. */
+export interface OrderNotCreatedNoValidItems {
+  kind: 'NO_VALID_ITEMS';
+  rejectedItems: RejectedOrderItem[];
+}
+
+/** La conversación ya tiene un pedido abierto (no cancelado): `orderId` es el de ese pedido. */
+export interface OrderConversationAlreadyHasOrder {
+  kind: 'CONVERSATION_ALREADY_HAS_ORDER';
+  orderId: string;
+}
+
+export type CreateOrderResult =
+  | OrderCreated
+  | OrderNotCreatedNoValidItems
+  | OrderConversationAlreadyHasOrder;
 
 /**
  * Puerto hacia la creación de pedidos. Lo implementa `OrdersOrderAdapter`, que
  * delega en el módulo `orders` (único punto donde agent conoce a orders), o
  * `FakeOrderProvider` en desarrollo (ORDER_PROVIDER=fake|orders).
  *
- * OJO: hoy NADIE invoca este puerto. `ProcessCustomerMessageUseCase` todavía no
- * crea pedidos: para eso el LLM necesita tool-calling (poder pedir "crear
- * pedido" con ítems estructurados), que es una etapa posterior. El puerto y su
- * adapter quedan cableados y probados para ese momento.
+ * Los errores que no son de negocio (infraestructura, conversación de otro negocio, etc.) se
+ * propagan: decidir qué hacer con ellos es de quien invoque el puerto.
  */
 export interface OrderPort {
   createOrder(command: CreateOrderCommand): Promise<CreateOrderResult>;

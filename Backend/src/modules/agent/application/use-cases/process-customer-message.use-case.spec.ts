@@ -11,11 +11,13 @@ import {
 import { LlmPort } from '../ports/out/llm.port';
 import { TokenUsagePort } from '../ports/out/token-usage.port';
 import { UsageQuotaPort } from '../ports/out/usage-quota.port';
+import { OrderPort } from '../ports/out/order.port';
 import { AgentRegionalStyle, AgentTone } from '../../domain/enums/agent-style';
 import { AgentConfig } from '../../domain/entities/agent-config.entity';
 import { BusinessNotFoundError, IncomingMessageNotPersistedError } from '../../domain/errors/agent.errors';
 import { ProcessCustomerMessageCommand } from '../dto/process-customer-message.command';
 import { DEFAULT_UNAVAILABLE_MESSAGE, FALLBACK_RESPONSE_TEXT } from '../constants/agent-messages';
+import { ORDER_REGISTRATION_FAILED_TEXT } from '../constants/order-reply.messages';
 
 describe('ProcessCustomerMessageUseCase', () => {
   let agentConfigRepository: jest.Mocked<AgentConfigRepository>;
@@ -25,6 +27,7 @@ describe('ProcessCustomerMessageUseCase', () => {
   let llmPort: jest.Mocked<LlmPort>;
   let tokenUsagePort: jest.Mocked<TokenUsagePort>;
   let usageQuotaPort: jest.Mocked<UsageQuotaPort>;
+  let orderPort: jest.Mocked<OrderPort>;
   let useCase: ProcessCustomerMessageUseCase;
   let errorSpy: ReturnType<typeof jest.spyOn>;
 
@@ -81,6 +84,7 @@ describe('ProcessCustomerMessageUseCase', () => {
     llmPort = { generateReply: jest.fn() };
     tokenUsagePort = { record: jest.fn() };
     usageQuotaPort = { hasQuota: jest.fn() };
+    orderPort = { createOrder: jest.fn() };
 
     agentConfigRepository.findByBusinessId.mockResolvedValue(aConfig());
     businessAttentionRepository.getStatus.mockResolvedValue({
@@ -104,6 +108,7 @@ describe('ProcessCustomerMessageUseCase', () => {
       llmPort,
       tokenUsagePort,
       usageQuotaPort,
+      orderPort,
     );
   });
 
@@ -315,6 +320,226 @@ describe('ProcessCustomerMessageUseCase', () => {
     });
   });
 
+  describe('pedido propuesto por el modelo', () => {
+    const BURGER_ID = '11111111-1111-4111-8111-111111111111';
+    const SODA_ID = '22222222-2222-4222-8222-222222222222';
+    const UNKNOWN_ID = '99999999-9999-4999-8999-999999999999';
+    const LLM_TEXT = 'TEXTO LIBRE DEL MODELO sobre el pedido';
+    const ORDER_ID = '3f1c8a52-7d0e-4c1b-9a64-2b5e8f0d1c77';
+
+    const burger: CatalogItem = { id: BURGER_ID, name: 'Hamburguesa clásica', description: null, price: 15000, available: true, categoryName: null };
+    const soda: CatalogItem = { id: SODA_ID, name: 'Gaseosa agotada', description: null, price: 4000, available: false, categoryName: null };
+
+    let loggerSpies: Array<jest.SpiedFunction<any>>;
+    const allLogged = () =>
+      loggerSpies
+        .flatMap((spy) => spy.mock.calls)
+        .map((args) => args.map(String).join(' '))
+        .join('\n');
+
+    const llmProposes = (items: { productId: string; quantity: number }[] | null) =>
+      llmPort.generateReply.mockResolvedValue({
+        text: LLM_TEXT,
+        proposedOrder: items === null ? null : { items },
+        tokensInput: 30,
+        tokensOutput: 12,
+      });
+
+    beforeEach(() => {
+      loggerSpies = (['log', 'warn', 'error', 'debug', 'verbose'] as const).map((level) =>
+        jest.spyOn(Logger.prototype, level).mockImplementation(() => undefined),
+      );
+      catalogRepository.findByBusinessId.mockResolvedValue([burger, soda]);
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(5);
+    });
+
+    afterEach(() => {
+      // El describe externo restaura solo errorSpy; estos espías se limpian aquí.
+      loggerSpies.forEach((spy) => spy.mockRestore());
+      errorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    });
+
+    it('CREATED sin rechazos: el texto lo construye el backend con datos reales y el del modelo se descarta', async () => {
+      llmProposes([{ productId: BURGER_ID, quantity: 2 }]);
+      orderPort.createOrder.mockResolvedValue({
+        kind: 'CREATED',
+        orderId: ORDER_ID,
+        total: 30000,
+        items: [{ productId: BURGER_ID, name: 'Hamburguesa clásica', quantity: 2, unitPrice: 15000 }],
+        rejectedItems: [],
+      });
+
+      const result = await useCase.execute(command);
+      const text = result?.responseText ?? '';
+
+      expect(text).toContain('#3f1c8a52');
+      expect(text.replace(/\u00a0/g, ' ')).toContain('$ 30.000');
+      expect(text).toContain('Hamburguesa clásica × 2');
+      expect(text).toContain('El negocio lo revisará');
+      expect(text).toContain('por este chat');
+      expect(text).not.toContain('No pude agregar');
+      expect(text).not.toContain(LLM_TEXT);
+    });
+
+    it('hacia orders solo viajan businessId, conversationId e ítems (id y cantidad): nunca precios ni totales', async () => {
+      llmProposes([{ productId: BURGER_ID, quantity: 2 }]);
+      orderPort.createOrder.mockResolvedValue({ kind: 'NO_VALID_ITEMS', rejectedItems: [] });
+
+      await useCase.execute(command);
+
+      expect(orderPort.createOrder).toHaveBeenCalledTimes(1);
+      const sent = orderPort.createOrder.mock.calls[0][0];
+      expect(sent).toEqual({
+        businessId: command.businessId,
+        conversationId: command.conversationId,
+        items: [{ productId: BURGER_ID, quantity: 2 }],
+      });
+      expect(JSON.stringify(sent)).not.toMatch(/price|total|unitPrice|15000/i);
+    });
+
+    it('CREATED con rechazados: nombra los del catálogo y los desconocidos genéricamente, sin repetir ids', async () => {
+      llmProposes([
+        { productId: BURGER_ID, quantity: 1 },
+        { productId: SODA_ID, quantity: 1 },
+        { productId: UNKNOWN_ID, quantity: 1 },
+        { productId: 'id-inventado-por-el-modelo', quantity: 0 },
+      ]);
+      orderPort.createOrder.mockResolvedValue({
+        kind: 'CREATED',
+        orderId: ORDER_ID,
+        total: 15000,
+        items: [{ productId: BURGER_ID, name: 'Hamburguesa clásica', quantity: 1, unitPrice: 15000 }],
+        rejectedItems: [
+          { productId: SODA_ID.toUpperCase(), reason: 'UNAVAILABLE' },
+          { productId: UNKNOWN_ID, reason: 'NOT_FOUND' },
+          { productId: 'id-inventado-por-el-modelo', reason: 'INVALID_QUANTITY' },
+        ],
+      });
+
+      const text = (await useCase.execute(command))?.responseText ?? '';
+
+      expect(text).toContain('No pude agregar');
+      expect(text).toContain('Gaseosa agotada: no está disponible por ahora');
+      expect(text).toContain('Un producto que no está en el catálogo');
+      expect(text).toContain('Un producto que no está en el catálogo: la cantidad no es válida');
+      expect(text).not.toContain(UNKNOWN_ID);
+      expect(text).not.toContain('id-inventado-por-el-modelo');
+      expect(text).not.toContain(LLM_TEXT);
+    });
+
+    it('NO_VALID_ITEMS: explica que no se registró, lista los rechazados y pregunta por otros productos', async () => {
+      llmProposes([{ productId: SODA_ID, quantity: 1 }]);
+      orderPort.createOrder.mockResolvedValue({
+        kind: 'NO_VALID_ITEMS',
+        rejectedItems: [{ productId: SODA_ID, reason: 'UNAVAILABLE' }],
+      });
+
+      const text = (await useCase.execute(command))?.responseText ?? '';
+
+      expect(text).toContain('No pude registrar tu pedido');
+      expect(text).toContain('Gaseosa agotada: no está disponible por ahora');
+      expect(text).toContain('¿Quieres elegir otros productos?');
+      expect(text).not.toContain(LLM_TEXT);
+    });
+
+    it('CONVERSATION_ALREADY_HAS_ORDER: informa el pedido existente en revisión', async () => {
+      llmProposes([{ productId: BURGER_ID, quantity: 1 }]);
+      orderPort.createOrder.mockResolvedValue({ kind: 'CONVERSATION_ALREADY_HAS_ORDER', orderId: ORDER_ID });
+
+      const text = (await useCase.execute(command))?.responseText ?? '';
+
+      expect(text).toContain('Ya tienes el pedido #3f1c8a52 en revisión por el negocio');
+      expect(text).not.toContain(LLM_TEXT);
+    });
+
+    it('el puerto lanza: responde el texto fijo de fallo técnico, no relanza, registra los tokens y loguea solo ids', async () => {
+      llmProposes([{ productId: BURGER_ID, quantity: 1 }]);
+      orderPort.createOrder.mockRejectedValue(
+        Object.assign(new Error('violates foreign key product ' + BURGER_ID + ' Hamburguesa clásica'), { name: 'DbError' }),
+      );
+
+      const result = await useCase.execute(command);
+
+      expect(result?.responseText).toBe(ORDER_REGISTRATION_FAILED_TEXT);
+      expect(tokenUsagePort.record).toHaveBeenCalledTimes(1);
+      const logged = allLogged();
+      expect(logged).toContain(command.businessId);
+      expect(logged).toContain(command.conversationId);
+      expect(logged).not.toContain(BURGER_ID);
+      expect(logged).not.toContain('Hamburguesa clásica');
+    });
+
+    it('proposedOrder con arreglo vacío se trata como null: no llama al puerto y responde el texto del modelo', async () => {
+      llmProposes([]);
+
+      const result = await useCase.execute(command);
+
+      expect(orderPort.createOrder).not.toHaveBeenCalled();
+      expect(result?.responseText).toBe(LLM_TEXT);
+    });
+
+    it('proposedOrder null: el flujo no cambia', async () => {
+      llmProposes(null);
+
+      const result = await useCase.execute(command);
+
+      expect(orderPort.createOrder).not.toHaveBeenCalled();
+      expect(result?.responseText).toBe(LLM_TEXT);
+    });
+
+    it('el registro de tokens del turno se hace igual que siempre', async () => {
+      llmProposes([{ productId: BURGER_ID, quantity: 1 }]);
+      orderPort.createOrder.mockResolvedValue({ kind: 'NO_VALID_ITEMS', rejectedItems: [] });
+
+      await useCase.execute(command);
+
+      expect(tokenUsagePort.record).toHaveBeenCalledWith({
+        businessId: command.businessId,
+        conversationId: command.conversationId,
+        messageId: command.messageId,
+        tokensInput: 30,
+        tokensOutput: 12,
+      });
+    });
+
+    it('la bienvenida se antepone al texto del pedido solo si es el primer mensaje', async () => {
+      llmProposes([{ productId: BURGER_ID, quantity: 1 }]);
+      orderPort.createOrder.mockResolvedValue({ kind: 'CONVERSATION_ALREADY_HAS_ORDER', orderId: ORDER_ID });
+
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(1);
+      const first = (await useCase.execute(command))?.responseText ?? '';
+      expect(first.startsWith(welcomeMessage + '\n\n')).toBe(true);
+      expect(first).toContain('Ya tienes el pedido');
+
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(5);
+      const later = (await useCase.execute(command))?.responseText ?? '';
+      expect(later).not.toContain(welcomeMessage);
+    });
+
+    it('ningún log contiene nombres de producto, ids de producto, teléfono ni el mensaje del cliente', async () => {
+      llmProposes([{ productId: BURGER_ID, quantity: 1 }]);
+      orderPort.createOrder
+        .mockResolvedValueOnce({
+          kind: 'CREATED',
+          orderId: ORDER_ID,
+          total: 15000,
+          items: [{ productId: BURGER_ID, name: 'Hamburguesa clásica', quantity: 1, unitPrice: 15000 }],
+          rejectedItems: [{ productId: SODA_ID, reason: 'UNAVAILABLE' }],
+        })
+        .mockRejectedValueOnce(new Error('falló ' + BURGER_ID));
+
+      await useCase.execute(command);
+      await useCase.execute(command);
+
+      const logged = allLogged();
+      expect(logged).not.toContain('Hamburguesa');
+      expect(logged).not.toContain('Gaseosa');
+      expect(logged).not.toContain(BURGER_ID);
+      expect(logged).not.toContain(SODA_ID);
+      expect(logged).not.toContain(command.customerNumber);
+      expect(logged).not.toContain(command.message);
+    });
+  });
 
   describe('contrato nuevo con el LLM', () => {
     it('pasa businessName, businessHours e isFirstMessage', async () => {

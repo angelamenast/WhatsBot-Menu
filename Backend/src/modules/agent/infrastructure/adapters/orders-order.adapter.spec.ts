@@ -4,6 +4,7 @@ import { CreateOrderUseCase } from '../../../orders/application/use-cases/create
 import { Order } from '../../../orders/domain/entities/order.entity';
 import { OrderItem } from '../../../orders/domain/entities/order-item.entity';
 import {
+  ConversationAlreadyHasOrderError,
   ConversationNotInBusinessError,
   EmptyOrderError,
 } from '../../../orders/domain/errors/order.errors';
@@ -57,7 +58,7 @@ describe('OrdersOrderAdapter', () => {
     });
   });
 
-  it('orden creada: devuelve orderId y total, con rechazados mapeados', async () => {
+  it('orden creada: CREATED con ítems desde el snapshot del pedido, total y rechazados mapeados', async () => {
     const order = anOrder();
     createOrderUseCase.execute.mockResolvedValue({
       order,
@@ -67,13 +68,15 @@ describe('OrdersOrderAdapter', () => {
     const result = await adapter.createOrder(command);
 
     expect(result).toEqual({
+      kind: 'CREATED',
       orderId: order.id,
       total: 30000,
+      items: [{ productId, name: 'Hamburguesa clásica', quantity: 2, unitPrice: 15000 }],
       rejectedItems: [{ productId: 'otro', reason: 'UNAVAILABLE' }],
     });
   });
 
-  it('orden nula con rechazos: orderId y total en null y los rechazos intactos', async () => {
+  it('orden nula con rechazos: NO_VALID_ITEMS con los rechazos intactos', async () => {
     createOrderUseCase.execute.mockResolvedValue({
       order: null,
       rejectedItems: [
@@ -85,8 +88,7 @@ describe('OrdersOrderAdapter', () => {
     const result = await adapter.createOrder(command);
 
     expect(result).toEqual({
-      orderId: null,
-      total: null,
+      kind: 'NO_VALID_ITEMS',
       rejectedItems: [
         { productId, reason: 'NOT_FOUND' },
         { productId: 'x', reason: 'INVALID_QUANTITY' },
@@ -94,7 +96,7 @@ describe('OrdersOrderAdapter', () => {
     });
   });
 
-  it('un pedido de total 0 devuelve total 0 (no null)', async () => {
+  it('un pedido de total 0 sigue siendo CREATED con total 0', async () => {
     createOrderUseCase.execute.mockResolvedValue({
       order: anOrder(0),
       rejectedItems: [],
@@ -102,8 +104,16 @@ describe('OrdersOrderAdapter', () => {
 
     const result = await adapter.createOrder(command);
 
-    expect(result.total).toBe(0);
-    expect(result.orderId).not.toBeNull();
+    expect(result).toMatchObject({ kind: 'CREATED', total: 0 });
+  });
+
+  it('traduce SOLO ConversationAlreadyHasOrderError a CONVERSATION_ALREADY_HAS_ORDER, con el id del pedido existente', async () => {
+    createOrderUseCase.execute.mockRejectedValue(new ConversationAlreadyHasOrderError('existing-order-id'));
+
+    await expect(adapter.createOrder(command)).resolves.toEqual({
+      kind: 'CONVERSATION_ALREADY_HAS_ORDER',
+      orderId: 'existing-order-id',
+    });
   });
 
   it.each([

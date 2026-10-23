@@ -8,8 +8,10 @@ import type { BusinessAttentionRepository } from '../../domain/repositories/busi
 import { BUSINESS_ATTENTION_REPOSITORY } from '../../domain/repositories/business-attention.repository';
 import type { ConversationHistoryRepository } from '../../domain/repositories/conversation-history.repository';
 import { CONVERSATION_HISTORY_REPOSITORY } from '../../domain/repositories/conversation-history.repository';
-import type { LlmPort } from '../ports/out/llm.port';
+import type { LlmPort, ProposedOrder } from '../ports/out/llm.port';
 import { LLM_PORT } from '../ports/out/llm.port';
+import type { OrderPort } from '../ports/out/order.port';
+import { ORDER_PORT } from '../ports/out/order.port';
 import type { TokenUsagePort } from '../ports/out/token-usage.port';
 import { TOKEN_USAGE_PORT } from '../ports/out/token-usage.port';
 import type { UsageQuotaPort } from '../ports/out/usage-quota.port';
@@ -20,6 +22,14 @@ import { IncomingMessageNotPersistedError } from '../../domain/errors/agent.erro
 import type { ProcessCustomerMessageCommand } from '../dto/process-customer-message.command';
 import type { ProcessCustomerMessageResult } from '../dto/process-customer-message.result';
 import { DEFAULT_UNAVAILABLE_MESSAGE, FALLBACK_RESPONSE_TEXT } from '../constants/agent-messages';
+import {
+  conversationAlreadyHasOrderReply,
+  ORDER_REGISTRATION_FAILED_TEXT,
+  orderCreatedReply,
+  orderNotCreatedReply,
+  RejectedProductLine,
+} from '../constants/order-reply.messages';
+import type { CatalogItem } from '../../domain/repositories/catalog.repository';
 
 const HISTORY_MESSAGES_LIMIT = 10;
 
@@ -39,6 +49,7 @@ export class ProcessCustomerMessageUseCase {
     @Inject(LLM_PORT) private readonly llmPort: LlmPort,
     @Inject(TOKEN_USAGE_PORT) private readonly tokenUsagePort: TokenUsagePort,
     @Inject(USAGE_QUOTA_PORT) private readonly usageQuotaPort: UsageQuotaPort,
+    @Inject(ORDER_PORT) private readonly orderPort: OrderPort,
   ) {}
 
   /**
@@ -103,6 +114,8 @@ export class ProcessCustomerMessageUseCase {
     let responseText: string;
     let usage: { tokensInput: number; tokensOutput: number } | null = null;
 
+    let proposedOrder: ProposedOrder | null = null;
+
     try {
       const generated = await this.llmPort.generateReply({
         businessName: attention.businessName,
@@ -117,6 +130,7 @@ export class ProcessCustomerMessageUseCase {
       });
 
       responseText = generated.text;
+      proposedOrder = generated.proposedOrder;
       usage = { tokensInput: generated.tokensInput, tokensOutput: generated.tokensOutput };
     } catch (error) {
       this.logger.error(
@@ -126,6 +140,12 @@ export class ProcessCustomerMessageUseCase {
       );
       // No propagamos: el cliente siempre debe recibir algo, aunque sea un mensaje de contingencia.
       responseText = FALLBACK_RESPONSE_TEXT;
+    }
+
+    // El LLM decide CUÁNDO proponer un pedido; el backend decide SI se crea y qué se le dice al
+    // cliente. Un arreglo vacío equivale a no proponer nada.
+    if (proposedOrder && proposedOrder.items.length > 0) {
+      responseText = await this.registerProposedOrder(command, proposedOrder, catalog);
     }
 
     // Bloque independiente del anterior: registrar consumo NUNCA debe descartar una
@@ -155,5 +175,65 @@ export class ProcessCustomerMessageUseCase {
     }
 
     return { responseText };
+  }
+
+  /**
+   * Crea el pedido que propuso el modelo y devuelve el texto para el cliente, construido SOLO
+   * con datos reales del pedido (el texto del modelo en este turno se descarta). Solo viajan
+   * ids y cantidades hacia orders: precios y totales los lee orders del catálogo.
+   */
+  private async registerProposedOrder(
+    command: ProcessCustomerMessageCommand,
+    proposedOrder: ProposedOrder,
+    catalog: CatalogItem[],
+  ): Promise<string> {
+    try {
+      const result = await this.orderPort.createOrder({
+        businessId: command.businessId,
+        conversationId: command.conversationId,
+        items: proposedOrder.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
+      });
+
+      switch (result.kind) {
+        case 'CREATED':
+          return orderCreatedReply({
+            orderId: result.orderId,
+            total: result.total,
+            items: result.items,
+            rejected: this.nameRejected(result.rejectedItems, catalog),
+          });
+        case 'NO_VALID_ITEMS':
+          return orderNotCreatedReply({ rejected: this.nameRejected(result.rejectedItems, catalog) });
+        case 'CONVERSATION_ALREADY_HAS_ORDER':
+          return conversationAlreadyHasOrderReply({ orderId: result.orderId });
+      }
+    } catch (error) {
+      // Solo ids y el tipo de error: el mensaje de la BD podría traer ids o datos de productos.
+      this.logger.error(
+        `Fallo al registrar el pedido propuesto por el agente (negocio ${command.businessId}, conversación ${command.conversationId}): ${
+          error instanceof Error ? error.name : 'error desconocido'
+        }`,
+      );
+      return ORDER_REGISTRATION_FAILED_TEXT;
+    }
+  }
+
+  /**
+   * Nombra cada producto rechazado con el catálogo cargado en este turno. Un id que no está ahí
+   * se nombra genéricamente: jamás se repite el id ni lo que escribió el modelo.
+   */
+  private nameRejected(
+    rejectedItems: { productId: string; reason: RejectedProductLine['reason'] }[],
+    catalog: CatalogItem[],
+  ): RejectedProductLine[] {
+    const namesById = new Map(catalog.map((item) => [item.id.toLowerCase(), item.name]));
+
+    return rejectedItems.map((rejected) => ({
+      name: namesById.get(rejected.productId.toLowerCase()) ?? null,
+      reason: rejected.reason,
+    }));
   }
 }
