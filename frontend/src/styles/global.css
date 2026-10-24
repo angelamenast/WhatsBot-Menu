@@ -72,3 +72,23 @@
 .material-symbols-outlined.fill {
   font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
+
+/* La plantilla del panel nunca aparece antes de tener datos de la cuenta. */
+[data-page-loader] { display: none; }
+html[data-app-state="loading"] [data-page-content],
+html[data-app-state="error"] [data-page-content],
+html[data-identity-state="loading"] [data-page-user] { visibility: hidden; pointer-events: none; }
+html[data-app-state="loading"] [data-page-loader],
+html[data-app-state="error"] [data-page-loader] {
+  position: fixed; top: 112px; left: 50%; transform: translateX(-50%);
+  z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 14px;
+  width: min(380px, calc(100vw - 32px)); padding: 26px; border-radius: 20px;
+  background: var(--color-surface-container-lowest, white); border: 1px solid #fed7aa;
+  box-shadow: 0 10px 30px #7c2d120d; color: var(--color-on-surface, #1f1b17);
+  text-align: center; font-size: 14px;
+}
+[data-page-spinner] { width: 28px; height: 28px; border: 3px solid #ffedd5; border-top-color: var(--color-primary, #f97316); border-radius: 50%; animation: page-data-spin .8s linear infinite; }
+html[data-app-state="error"] [data-page-spinner] { display: none; }
+[data-page-retry] { border: 0; border-radius: 12px; padding: 10px 18px; background: var(--color-primary, #f97316); color: white; font-weight: 600; cursor: pointer; }
+@keyframes page-data-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { [data-page-spinner] { animation: none; } }

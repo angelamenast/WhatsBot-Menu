@@ -48,8 +48,8 @@
             </svg>
           </div>
           <div class="flex flex-col min-w-0">
-            <span class="text-xs font-semibold text-zinc-900 truncate"
-              >alex.ramirez@gmail.com</span
+            <span data-profile-email class="text-xs font-semibold text-zinc-900 truncate"
+              >Validando cuenta…</span
             >
             <span class="text-[11px] text-zinc-500 truncate"
               >Método principal de acceso</span
@@ -57,7 +57,7 @@
           </div>
         </div>
         <span
-          class="px-2.5 py-1 rounded-lg bg-zinc-200/60 text-zinc-600 text-xs font-medium shrink-0"
+          data-google-status class="px-2.5 py-1 rounded-lg bg-zinc-200/60 text-zinc-600 text-xs font-medium shrink-0"
         >
           Vinculado
         </span>
@@ -74,8 +74,8 @@
             <span class="material-symbols-outlined text-[22px]">chat</span>
           </div>
           <div class="flex flex-col min-w-0">
-            <span class="text-xs font-semibold text-zinc-900 truncate"
-              >+34 600 000 000</span
+            <span data-whatsapp-phone class="text-xs font-semibold text-zinc-900 truncate"
+              >Cargando conexión…</span
             >
             <span class="text-[11px] text-zinc-500 truncate"
               >WhatsApp Business API</span
@@ -138,35 +138,3 @@
     </div>
   </section>
 </div>
-
-<script>
-  const toggle2FA = document.getElementById("toggle-2fa") as HTMLInputElement;
-  const status2FA = document.getElementById("2fa-status-text");
-  const btnManageWa = document.getElementById("btn-manage-wa");
-
-  toggle2FA?.addEventListener("change", () => {
-    if (toggle2FA.checked) {
-      if (status2FA) {
-        status2FA.textContent = "Activo mediante WhatsApp";
-        status2FA.className = "text-[11px] text-emerald-600 font-medium";
-      }
-      (window as any).showToast?.("Verificación en dos pasos activada");
-    } else {
-      if (status2FA) {
-        status2FA.textContent = "Desactivado";
-        status2FA.className = "text-[11px] text-zinc-400 font-medium";
-      }
-      (window as any).showToast?.(
-        "Autenticación de dos factores desactivada",
-        "info",
-      );
-    }
-  });
-
-  btnManageWa?.addEventListener("click", () => {
-    (window as any).showToast?.(
-      "Redirigiendo a la configuración de WhatsApp API...",
-      "info",
-    );
-  });
-</script>

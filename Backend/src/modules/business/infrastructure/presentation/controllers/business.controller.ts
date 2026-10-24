@@ -25,7 +25,7 @@ export class BusinessController {
     try {
       const command = new CreateNegocioCommand(req.user.id,
         dto.nombre_negocio,
-        dto.numero_whatsapp,
+        dto.numero_whatsapp?.trim() || null,
         dto.descripcion,
       );
       return await this.createNegocioUseCase.execute(command);

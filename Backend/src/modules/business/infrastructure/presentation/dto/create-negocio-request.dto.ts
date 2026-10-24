@@ -5,9 +5,9 @@ export class CreateNegocioRequestDto {
   @IsString()
   nombre_negocio: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  numero_whatsapp: string;
+  numero_whatsapp?: string;
 
   @IsOptional()
   @IsString()

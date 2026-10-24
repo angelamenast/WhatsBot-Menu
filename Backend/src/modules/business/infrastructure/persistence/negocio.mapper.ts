@@ -4,7 +4,7 @@ interface NegocioRow {
   id: string;
   usuario_id: string;
   nombre_negocio: string;
-  numero_whatsapp: string;
+  numero_whatsapp: string | null;
   estado: 'activo' | 'inactivo' | 'suspendido';
   descripcion: string | null;
 }
@@ -24,7 +24,7 @@ export class NegocioMapper {
   static toInsert(data: {
     usuarioId: string;
     nombreNegocio: string;
-    numeroWhatsapp: string;
+    numeroWhatsapp: string | null;
     descripcion: string | null;
   }) {
     return {

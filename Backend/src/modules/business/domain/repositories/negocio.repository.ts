@@ -3,7 +3,7 @@ import { Negocio } from '../entities/negocio.entity';
 export interface CrearNegocioData {
   usuarioId: string;
   nombreNegocio: string;
-  numeroWhatsapp: string;
+  numeroWhatsapp: string | null;
   descripcion: string | null;
 }
 

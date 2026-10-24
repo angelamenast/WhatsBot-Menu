@@ -3,12 +3,12 @@
 ---
 
 <section
-  class="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-sm flex flex-col gap-6"
+  class="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-xs flex flex-col gap-6"
 >
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div
-        class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center"
+        class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100"
       >
         <span class="material-symbols-outlined text-[22px]">badge</span>
       </div>
@@ -27,14 +27,14 @@
     >
   </div>
 
+  <!-- Foto de Perfil -->
   <div
     class="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl bg-zinc-50 border border-zinc-100"
   >
     <div class="relative shrink-0">
-      <!-- Elemento de imagen para previsualización -->
       <div
         id="avatar-preview-container"
-        class="w-16 h-16 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl font-bold shadow-md overflow-hidden"
+        class="w-16 h-16 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl font-bold shadow-xs overflow-hidden"
       >
         <span id="avatar-initials">AR</span>
         <img
@@ -44,7 +44,7 @@
         />
       </div>
       <span
-        class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm text-[12px]"
+        class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs text-[12px] font-bold"
       >
         ✓
       </span>
@@ -56,7 +56,6 @@
       >
       <p class="text-xs text-zinc-500">JPG, WebP o PNG. Máximo 2MB.</p>
       <div class="flex items-center justify-center sm:justify-start gap-2 mt-1">
-        <!-- Input File Oculto -->
         <input
           type="file"
           id="avatar-upload"
@@ -65,7 +64,7 @@
         />
         <button
           id="btn-change-avatar"
-          class="px-3 py-1.5 rounded-lg bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 text-xs font-medium transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+          class="px-3 py-1.5 rounded-lg bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 text-xs font-medium transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
           type="button"
         >
           <span class="material-symbols-outlined text-[16px]">upload</span>
@@ -82,10 +81,12 @@
     </div>
   </div>
 
+  <!-- Formulario Principal -->
   <form class="flex flex-col gap-4" id="profile-form">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Nombre Completo -->
       <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-zinc-700" for="admin-name"
+        <label class="text-xs font-semibold text-zinc-700" for="admin-name"
           >Nombre completo</label
         >
         <div class="relative">
@@ -97,13 +98,15 @@
             class="w-full bg-white text-zinc-900 rounded-xl pl-9 pr-3 py-2 text-sm border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
             id="admin-name"
             type="text"
-            value="Alex Ramírez"
+            placeholder="Ej. Alex Ramírez"
             required
           />
         </div>
       </div>
+
+      <!-- Rol en la Empresa -->
       <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-medium text-zinc-700" for="admin-role"
+        <label class="text-xs font-semibold text-zinc-700" for="admin-role"
           >Rol en la empresa</label
         >
         <div class="relative">
@@ -122,37 +125,55 @@
       </div>
     </div>
 
-    <div class="flex flex-col gap-1.5">
-      <div class="flex items-center justify-between">
-        <label class="text-xs font-medium text-zinc-700" for="business-name"
-          >Nombre del Negocio vinculado</label
-        >
-        <span class="text-[11px] text-zinc-400">ID: CAFE-7749</span>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Nombre del Negocio -->
+      <div class="flex flex-col gap-1.5">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-zinc-700" for="business-name"
+            >Nombre del Negocio</label
+          >
+          <span class="text-[11px] text-zinc-400 font-mono">ID: CAFE-7749</span>
+        </div>
+        <div class="relative">
+          <span
+            class="material-symbols-outlined absolute left-3 top-2.5 text-zinc-400 text-[18px]"
+            >storefront</span
+          >
+          <input
+            class="w-full bg-white text-zinc-900 rounded-xl pl-9 pr-3 py-2 text-sm border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+            id="business-name"
+            type="text"
+            placeholder="Ej. Main Street Cafe"
+            required
+          />
+        </div>
       </div>
-      <div class="relative">
-        <span
-          class="material-symbols-outlined absolute left-3 top-2.5 text-zinc-400 text-[18px]"
-          >storefront</span
+
+      <!-- Campo de WhatsApp Business Integrado (Sin Prompt Feo) -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-semibold text-zinc-700" for="business-phone"
+          >WhatsApp Business del Negocio</label
         >
-        <input
-          class="w-full bg-white text-zinc-900 rounded-xl pl-9 pr-28 py-2 text-sm border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
-          id="business-name"
-          type="text"
-          value="Main Street Cafe"
-          required
-        />
-        <span
-          class="absolute right-2 top-2 px-2 py-0.5 rounded-md bg-orange-100 text-orange-800 font-medium text-[11px]"
-        >
-          Negocio Principal
-        </span>
+        <div class="relative">
+          <span
+            class="material-symbols-outlined absolute left-3 top-2.5 text-emerald-600 text-[18px]"
+            >chat</span
+          >
+          <input
+            class="w-full bg-white text-zinc-900 rounded-xl pl-9 pr-3 py-2 text-sm border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+            id="business-phone"
+            type="tel"
+            placeholder="+57 300 123 4567"
+          />
+        </div>
       </div>
     </div>
 
+    <!-- Botón Guardar -->
     <div class="flex items-center justify-end pt-2">
       <button
         id="btn-save-profile"
-        class="px-5 py-2.5 rounded-xl bg-orange-500 text-white font-medium text-sm shadow-sm hover:bg-orange-600 transition-all flex items-center gap-2 cursor-pointer"
+        class="px-5 py-2.5 rounded-xl bg-orange-500 text-white font-bold text-sm shadow-2xs hover:bg-orange-600 transition-all flex items-center gap-2 cursor-pointer"
         type="submit"
       >
         <span class="material-symbols-outlined text-[18px]">save</span>
@@ -163,6 +184,18 @@
 </section>
 
 <script>
+  import { syncUserSession } from "../../services/userSession";
+  import { updateAvatar } from '../../services/avatar';
+
+  const form = document.getElementById("profile-form") as HTMLFormElement;
+  const avatarUpload = document.getElementById(
+    "avatar-upload",
+  ) as HTMLInputElement;
+  const btnChangeAvatar = document.getElementById("btn-change-avatar");
+  const btnRemoveAvatar = document.getElementById("btn-remove-avatar");
+  const initialsEl = document.getElementById("avatar-initials");
+  const imgEl = document.getElementById("avatar-image") as HTMLImageElement;
+
   function populateProfileForm() {
     const savedData = localStorage.getItem("user_profile_data");
     if (!savedData) return;
@@ -173,39 +206,124 @@
       const nameInput = document.getElementById(
         "admin-name",
       ) as HTMLInputElement;
+      const roleInput = document.getElementById(
+        "admin-role",
+      ) as HTMLInputElement;
       const businessInput = document.getElementById(
         "business-name",
       ) as HTMLInputElement;
-      const initialsEl = document.getElementById("profile-avatar-initials");
-      const imgEl = document.getElementById(
-        "profile-avatar-img",
-      ) as HTMLImageElement;
+      const phoneInput = document.getElementById(
+        "business-phone",
+      ) as HTMLInputElement;
 
       if (nameInput && data.adminName) nameInput.value = data.adminName;
-      if (businessInput && data.businessName)
-        businessInput.value = data.businessName;
+      if (roleInput && data.role) roleInput.value = data.role;
+      if (businessInput) businessInput.value = data.businessName || '';
+      if (phoneInput && data.phone) phoneInput.value = data.phone;
 
+      // Actualizar Iniciales
       if (data.adminName && initialsEl) {
         const initials = data.adminName
+          .trim()
           .split(" ")
+          .filter(Boolean)
           .map((n: string) => n[0])
           .join("")
           .substring(0, 2)
           .toUpperCase();
-        initialsEl.textContent = initials;
+        initialsEl.textContent = initials || "US";
       }
 
-      if (data.avatarUrl && imgEl && initialsEl) {
-        imgEl.src = data.avatarUrl;
-        imgEl.classList.remove("hidden");
-        initialsEl.classList.add("hidden");
-      }
-    } catch (e) {}
+      // Actualizar Foto
+      updateAvatar(imgEl, initialsEl, data.adminName || 'Usuario', data.avatarUrl,
+        visible => btnRemoveAvatar?.classList.toggle('hidden', !visible));
+    } catch (e) {
+      console.error("Error al cargar perfil desde localStorage", e);
+    }
   }
 
-  // Ejecutar al cargar la vista
+  // Cargar datos al iniciar
   populateProfileForm();
-
-  // Escuchar si los datos se actualizan dinámicamente
   window.addEventListener("profile-updated", populateProfileForm);
+
+  // Manejador del botón "Cambiar foto"
+  btnChangeAvatar?.addEventListener("click", () => {
+    avatarUpload?.click();
+  });
+
+  // Previsualización y carga de imagen
+  avatarUpload?.addEventListener("change", (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      if ((window as any).showToast) {
+        (window as any).showToast(
+          "La imagen no debe superar los 2MB",
+          "warning",
+        );
+      }
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Url = event.target?.result as string;
+
+      updateAvatar(imgEl, initialsEl,
+        (document.getElementById('admin-name') as HTMLInputElement)?.value || 'Usuario', base64Url,
+        visible => btnRemoveAvatar?.classList.toggle('hidden', !visible));
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Manejador de "Eliminar foto"
+  btnRemoveAvatar?.addEventListener("click", () => {
+    updateAvatar(imgEl, initialsEl,
+      (document.getElementById('admin-name') as HTMLInputElement)?.value || 'Usuario', null,
+      visible => btnRemoveAvatar?.classList.toggle('hidden', !visible));
+    if (avatarUpload) avatarUpload.value = "";
+  });
+
+  // Guardar Cambios de Perfil
+  form?.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const nameInput = document.getElementById("admin-name") as HTMLInputElement;
+    const roleInput = document.getElementById("admin-role") as HTMLInputElement;
+    const businessInput = document.getElementById(
+      "business-name",
+    ) as HTMLInputElement;
+    const phoneInput = document.getElementById(
+      "business-phone",
+    ) as HTMLInputElement;
+
+    const currentProfile = JSON.parse(
+      localStorage.getItem("user_profile_data") || "{}",
+    );
+
+    const updatedProfile = {
+      ...currentProfile,
+      adminName: nameInput?.value.trim(),
+      role: roleInput?.value.trim(),
+      businessName: businessInput?.value.trim(),
+      phone: phoneInput?.value.trim(),
+      avatarUrl: imgEl?.classList.contains("hidden") ? "" : imgEl.src,
+    };
+
+    localStorage.setItem("user_profile_data", JSON.stringify(updatedProfile));
+
+    // Emitir eventos globales y actualizar sesión en vivo
+    syncUserSession();
+    window.dispatchEvent(new Event("profile-updated"));
+
+    if ((window as any).showToast) {
+      (window as any).showToast(
+        "Perfil y datos del negocio guardados correctamente",
+        "success",
+      );
+    }
+  });
 </script>

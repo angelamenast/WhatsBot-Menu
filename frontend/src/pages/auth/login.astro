@@ -31,67 +31,20 @@ import ToastContainer from "../../components/common/ToastContainer.astro";
   <ToastContainer />
 </Layout>
 
+
 <script>
-  import { authService } from "../../services/auth.service";
-  import { syncUserSession } from "../../services/userSession"; // <-- Importado del lado del cliente
-
-  const form = document.getElementById("loginForm") as HTMLFormElement;
-  const btnSubmit = document.getElementById("btnSubmit") as HTMLButtonElement;
-  const btnText = document.getElementById("btnText");
-  const btnGoogle = document.getElementById("btnGoogle");
-
-  // Evento Clic para Login con Google
-  btnGoogle?.addEventListener("click", () => {
-    authService.loginWithGoogle();
-  });
-
-  // Evento Submit para Login tradicional Email/Password
-  form?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const emailInput = document.getElementById("email") as HTMLInputElement;
-    const passwordInput = document.getElementById(
-      "password",
-    ) as HTMLInputElement;
-
-    const email = emailInput?.value.trim();
-    const password = passwordInput?.value;
-
-    if (!email || !password) return;
-
-    if (btnSubmit) btnSubmit.disabled = true;
-    if (btnText) btnText.textContent = "Autenticando...";
-
-    try {
-      const response = await authService.login({ email, password });
-
-      if (response.access_token) {
-        localStorage.setItem("auth_token", response.access_token);
-        document.cookie = `jwt_token=${response.access_token}; path=/; max-age=86400; SameSite=Lax`;
-
-        // Sincroniza la información del usuario en localStorage y emite el evento global
-        syncUserSession();
-      }
-
-      if ((window as any).showToast) {
-        (window as any).showToast("¡Sesión iniciada correctamente!", "success");
-      }
-
-      setTimeout(() => {
-        window.location.href = "/orders";
-      }, 1000);
-    } catch (error: any) {
-      if ((window as any).showToast) {
-        (window as any).showToast(
-          error.message || "Credenciales incorrectas. Intenta de nuevo.",
-          "warning",
-        );
-      } else {
-        alert(error.message || "Error al iniciar sesión");
-      }
-    } finally {
-      if (btnSubmit) btnSubmit.disabled = false;
-      if (btnText) btnText.textContent = "Iniciar Sesión";
-    }
+  import { authService } from '../../services/auth.service';
+  import { syncUserSession } from '../../services/userSession';
+  import { clearSession } from '../../api/http';
+  import { bindLoginForm } from '../../services/auth-forms';
+  bindLoginForm({
+    login: credentials => authService.login(credentials),
+    google: () => authService.loginWithGoogle(),
+    failure: clearSession,
+    async success() {
+      await syncUserSession();
+      const target = new URL(new URLSearchParams(location.search).get('next') || '/orders', location.origin);
+      location.assign(target.origin === location.origin ? target.href : '/orders');
+    },
   });
 </script>

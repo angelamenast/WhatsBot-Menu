@@ -10,7 +10,7 @@
       class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-700 text-xs font-medium"
     >
       <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-      <span>Conectado a WhatsApp Business API</span>
+      <span data-page-user data-whatsapp-status>Cargando conexión…</span>
     </div>
   </div>
 
@@ -47,7 +47,9 @@
 </header>
 
 <script>
+  import { updateAvatar } from '../../services/avatar';
   const updateHeaderUI = (data: any) => {
+    if (!data) return;
     const initialsEl = document.getElementById("header-avatar-initials");
     const imgEl = document.getElementById(
       "header-avatar-img",
@@ -63,16 +65,7 @@
       initialsEl.textContent = initials;
     }
 
-    if (data.avatarUrl) {
-      if (imgEl) {
-        imgEl.src = data.avatarUrl;
-        imgEl.classList.remove("hidden");
-      }
-      if (initialsEl) initialsEl.classList.add("hidden");
-    } else if (data.avatarUrl === null) {
-      if (imgEl) imgEl.classList.add("hidden");
-      if (initialsEl) initialsEl.classList.remove("hidden");
-    }
+    updateAvatar(imgEl, initialsEl, data.adminName || 'Usuario', data.avatarUrl);
   };
 
   const savedData = localStorage.getItem("user_profile_data");

@@ -15,9 +15,6 @@ import type { AuthenticatedRequest } from '../../../../../shared/types/authentic
 import type { NegocioRepository } from '../../../../business/domain/repositories/negocio.repository';
 import { NEGOCIO_REPOSITORY } from '../../../../business/domain/repositories/negocio.repository';
 
-// Página de retorno mientras el frontend no defina WOMPI_REDIRECT_URL.
-const REDIRECT_URL_POR_DEFECTO = 'https://tu-frontend.com/pago-confirmado';
-
 @Controller('payments')
 export class PaymentsController {
   constructor(
@@ -38,24 +35,22 @@ export class PaymentsController {
   @Post('generate-link')
   async generarLink(@Req() req: AuthenticatedRequest, @Body() dto: GenerarLinkPagoRequestDto) {
     try {
-      let negocioId = dto.negocioId;
-      if (!negocioId) {
-        const negocio = await this.negocioRepository.buscarPorUsuario(req.user.id);
-        if (!negocio) {
-          throw new NotFoundException('No tienes un negocio registrado para asociar a este plan');
-        }
-        negocioId = negocio.id;
+      const negocio = await this.negocioRepository.buscarPorUsuario(req.user.id);
+      if (!negocio || (dto.negocioId && dto.negocioId !== negocio.id)) {
+        throw new NotFoundException('No tienes un negocio registrado para asociar a este plan');
       }
+      const negocioId = negocio.id;
       const command = new GenerarLinkPagoCommand(
         negocioId,
         dto.planId,
-        this.configService.get<string>('WOMPI_REDIRECT_URL') ?? REDIRECT_URL_POR_DEFECTO,
+        this.configService.get<string>('WOMPI_REDIRECT_URL') ?? `${this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:4321'}/billing`,
       );
       return await this.generarLinkPagoUseCase.execute(command);
     } catch (error) {
       if (error instanceof PlanNoEncontradoError) {
         throw new NotFoundException(error.message);
       }
+      if (error instanceof NotFoundException) throw error;
       throw new BadRequestException('No se pudo generar el link de pago');
     }
   }
