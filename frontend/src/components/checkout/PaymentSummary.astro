@@ -1,0 +1,120 @@
+---
+
+---
+
+<div class="lg:col-span-5 xl:col-span-4 flex flex-col gap-space-xl">
+  <div
+    class="bg-surface-container-lowest rounded-xl p-space-lg sm:p-space-xl shadow-sm flex flex-col gap-space-lg sticky top-20"
+  >
+    <div
+      class="flex items-center justify-between pb-space-sm border-b border-surface-container-high"
+    >
+      <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+        Resumen de tu Orden
+      </h2>
+      <span
+        class="bg-primary/10 text-primary px-space-sm py-0.5 rounded-full font-label-sm text-label-sm font-bold uppercase"
+      >
+        Lock de Precio
+      </span>
+    </div>
+
+    <div
+      class="bg-surface-container-low rounded-lg p-space-md flex flex-col gap-space-xs"
+    >
+      <div class="flex items-center justify-between">
+        <span
+          class="font-headline-sm text-headline-sm font-bold text-on-surface"
+          id="pay-summary-plan">WhatsBot Pro</span
+        >
+        <span
+          class="font-label-sm text-label-sm bg-secondary-container text-on-secondary-container font-semibold px-2 py-0.5 rounded-full"
+          id="pay-summary-badge">Anual</span
+        >
+      </div>
+      <p
+        class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-space-xxs"
+      >
+        <span class="material-symbols-outlined text-[16px] text-primary"
+          >autorenew</span
+        >
+        Soporte 24/7 VIP
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-space-sm font-body-md text-body-md">
+      <div class="flex justify-between items-center text-on-surface-variant">
+        <span>Subtotal</span>
+        <span class="text-on-surface font-medium" id="pay-summary-subtotal"
+          >$24.00 USD</span
+        >
+      </div>
+      <div
+        class="flex justify-between items-center text-primary font-medium"
+        id="pay-discount-row"
+      >
+        <span>Descuento Aplicado</span>
+        <span id="pay-summary-discount">-$4.80 USD</span>
+      </div>
+
+      <div
+        class="pt-space-md mt-space-xs bg-surface-container-low rounded-lg p-space-md flex flex-col gap-space-xxs"
+      >
+        <div class="flex justify-between items-baseline">
+          <span
+            class="font-headline-sm text-headline-sm font-bold text-on-surface"
+            >Total Hoy:</span
+          >
+          <span
+            class="font-display-lg text-display-lg font-bold text-primary"
+            id="pay-summary-total">$19.20</span
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function renderPaymentSummary() {
+    const params = new URLSearchParams(window.location.search);
+    const plan =
+      params.get("plan") || localStorage.getItem("checkout_plan") || "pro";
+    const billing =
+      params.get("billing") ||
+      localStorage.getItem("checkout_billing") ||
+      "annual";
+
+    const PLAN_MAP: Record<
+      string,
+      { name: string; monthly: number; annual: number }
+    > = {
+      starter: { name: "WhatsBot Starter", monthly: 0, annual: 0 },
+      pro: { name: "WhatsBot Professional", monthly: 29, annual: 24 },
+      enterprise: { name: "WhatsBot Enterprise", monthly: 99, annual: 79 },
+    };
+
+    const data = PLAN_MAP[plan] || PLAN_MAP.pro;
+    const isAnnual = billing === "annual";
+    const price = isAnnual ? data.annual : data.monthly;
+    const discount = isAnnual ? price * 0.2 : 0;
+    const total = Math.max(0, price - discount);
+
+    const planElem = document.getElementById("pay-summary-plan");
+    const badgeElem = document.getElementById("pay-summary-badge");
+    const subtotalElem = document.getElementById("pay-summary-subtotal");
+    const discountRow = document.getElementById("pay-discount-row");
+    const discountElem = document.getElementById("pay-summary-discount");
+    const totalElem = document.getElementById("pay-summary-total");
+
+    if (planElem) planElem.textContent = data.name;
+    if (badgeElem) badgeElem.textContent = isAnnual ? "Anual" : "Mensual";
+    if (subtotalElem) subtotalElem.textContent = `$${price.toFixed(2)} USD`;
+    if (discountRow)
+      discountRow.style.display = isAnnual && price > 0 ? "flex" : "none";
+    if (discountElem) discountElem.textContent = `-$${discount.toFixed(2)} USD`;
+    if (totalElem) totalElem.textContent = `$${total.toFixed(2)}`;
+  }
+
+  renderPaymentSummary();
+</script>

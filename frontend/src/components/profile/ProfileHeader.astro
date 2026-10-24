@@ -1,0 +1,88 @@
+---
+
+---
+
+<header
+  class="fixed top-0 left-72 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-zinc-200/80 z-40 flex items-center justify-between px-8"
+>
+  <div class="flex items-center gap-3">
+    <div
+      class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-700 text-xs font-medium"
+    >
+      <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+      <span>Conectado a WhatsApp Business API</span>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <button
+      class="w-9 h-9 rounded-xl bg-zinc-100 text-zinc-600 hover:bg-zinc-200/80 hover:text-zinc-900 flex items-center justify-center transition-colors cursor-pointer"
+      type="button"
+      aria-label="Notificaciones"
+    >
+      <span class="material-symbols-outlined text-[20px]">notifications</span>
+    </button>
+    <button
+      class="w-9 h-9 rounded-xl bg-zinc-100 text-zinc-600 hover:bg-zinc-200/80 hover:text-zinc-900 flex items-center justify-center transition-colors cursor-pointer"
+      type="button"
+      aria-label="Ayuda"
+    >
+      <span class="material-symbols-outlined text-[20px]">help_outline</span>
+    </button>
+
+    <!-- Header Avatar Linked -->
+    <a
+      id="header-avatar-container"
+      class="w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-xs hover:bg-orange-600 transition-colors cursor-pointer shadow-sm overflow-hidden"
+      href="/profile"
+    >
+      <span id="header-avatar-initials">AR</span>
+      <img
+        id="header-avatar-img"
+        class="w-full h-full object-cover hidden"
+        alt="Header Avatar"
+      />
+    </a>
+  </div>
+</header>
+
+<script>
+  const updateHeaderUI = (data: any) => {
+    const initialsEl = document.getElementById("header-avatar-initials");
+    const imgEl = document.getElementById(
+      "header-avatar-img",
+    ) as HTMLImageElement;
+
+    if (data.adminName && initialsEl) {
+      const initials = data.adminName
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .substring(0, 2)
+        .toUpperCase();
+      initialsEl.textContent = initials;
+    }
+
+    if (data.avatarUrl) {
+      if (imgEl) {
+        imgEl.src = data.avatarUrl;
+        imgEl.classList.remove("hidden");
+      }
+      if (initialsEl) initialsEl.classList.add("hidden");
+    } else if (data.avatarUrl === null) {
+      if (imgEl) imgEl.classList.add("hidden");
+      if (initialsEl) initialsEl.classList.remove("hidden");
+    }
+  };
+
+  const savedData = localStorage.getItem("user_profile_data");
+  if (savedData) {
+    try {
+      updateHeaderUI(JSON.parse(savedData));
+    } catch (e) {}
+  }
+
+  window.addEventListener("profile-updated", (e: any) => {
+    updateHeaderUI(e.detail);
+  });
+</script>

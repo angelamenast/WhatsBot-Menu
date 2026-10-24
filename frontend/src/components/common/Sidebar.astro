@@ -1,0 +1,240 @@
+---
+import Logo from "../common/Logo.astro";
+
+const pathname = Astro.url.pathname;
+
+const isActive = (path: string) => {
+  if (path === "/") return pathname === "/";
+  return pathname.startsWith(path);
+};
+
+const getLinkClass = (path: string) =>
+  isActive(path)
+    ? "flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-orange-500 text-white font-medium text-sm shadow-sm transition-all"
+    : "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors text-sm font-medium";
+---
+
+<!-- Fondo Oscuro Backdrop para Móvil -->
+<div
+  id="sidebar-backdrop"
+  class="fixed inset-0 bg-zinc-900/50 backdrop-blur-xs z-40 lg:hidden hidden transition-opacity duration-300"
+>
+</div>
+
+<!-- Sidebar Drawer Responsivo -->
+<aside
+  id="app-sidebar"
+  class="fixed top-0 left-0 h-screen w-72 bg-white border-r border-zinc-200/80 z-50 flex flex-col justify-between p-6 overflow-y-auto transition-transform duration-300 -translate-x-full lg:translate-x-0 shadow-xl lg:shadow-none"
+>
+  <div class="flex flex-col gap-6">
+    <!-- Header del Sidebar con Logo y Botón Cerrar en Móvil -->
+    <div class="flex items-center justify-between px-2">
+      <Logo />
+      <button
+        id="btn-close-sidebar"
+        class="lg:hidden p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer"
+        type="button"
+      >
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+
+    <!-- Active Store Switcher -->
+    <div
+      class="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center gap-3"
+    >
+      <div
+        class="w-10 h-10 rounded-xl bg-orange-100/80 flex items-center justify-center text-orange-600 shrink-0"
+      >
+        <span class="material-symbols-outlined text-[20px]">store</span>
+      </div>
+      <div class="flex flex-col min-w-0 flex-1">
+        <span
+          id="sidebar-business-name"
+          class="font-semibold text-sm text-zinc-900 truncate"
+        >
+          Main Street Cafe
+        </span>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"
+          ></span>
+          <span class="text-xs text-zinc-500 truncate">WhatsApp AI Active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Button -->
+    <button
+      id="btn-create-bot"
+      class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-orange-500 text-white font-medium text-sm shadow-sm hover:bg-orange-600 active:scale-95 transition-all cursor-pointer"
+    >
+      <span class="material-symbols-outlined text-[18px]">add</span>
+      <span>Crear Nuevo Bot</span>
+    </button>
+
+    <!-- Main Navigation -->
+    <nav class="flex flex-col gap-1">
+      <a class={getLinkClass("/orders")} href="/orders">
+        <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
+        <span>Pedidos</span>
+      </a>
+      <a class={getLinkClass("/customization")} href="/customization">
+        <span class="material-symbols-outlined text-[20px]">tune</span>
+        <span>Personalización</span>
+      </a>
+      <a class={getLinkClass("/analytics")} href="/analytics">
+        <span class="material-symbols-outlined text-[20px]">analytics</span>
+        <span>Analíticas</span>
+      </a>
+      <a class={getLinkClass("/billing")} href="/billing">
+        <span class="material-symbols-outlined text-[20px]">credit_card</span>
+        <span>Facturación</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="flex flex-col gap-2 pt-6 border-t border-zinc-100">
+    <nav class="flex flex-col gap-1">
+      <a class={getLinkClass("/profile")} href="/profile">
+        <span class="material-symbols-outlined text-[20px]"
+          >manage_accounts</span
+        >
+        <span>Perfil y Seguridad</span>
+      </a>
+      <a class={getLinkClass("/vincular-whatsapp")} href="/vincular-whatsapp">
+        <span class="material-symbols-outlined text-[20px]">settings</span>
+        <span>Configuración</span>
+      </a>
+      <a class={getLinkClass("/support")} href="/support">
+        <span class="material-symbols-outlined text-[20px]">help_outline</span>
+        <span>Soporte</span>
+      </a>
+    </nav>
+
+    <!-- User Profile Footer -->
+    <a
+      class="flex items-center gap-3 p-2.5 mt-2 rounded-xl bg-zinc-50 hover:bg-zinc-100 border border-zinc-100 transition-colors group cursor-pointer"
+      href="/profile"
+    >
+      <div
+        id="sidebar-avatar-container"
+        class="w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center shrink-0 font-bold text-xs overflow-hidden"
+      >
+        <span id="sidebar-avatar-initials">MA</span>
+        <img
+          id="sidebar-avatar-img"
+          class="w-full h-full object-cover hidden"
+          alt="Avatar"
+        />
+      </div>
+      <div class="flex flex-col min-w-0 flex-1">
+        <span
+          id="sidebar-user-name"
+          class="text-xs font-semibold text-zinc-900 truncate group-hover:text-orange-600 transition-colors"
+        >
+          Alex Ramírez
+        </span>
+        <span
+          id="sidebar-user-email"
+          class="text-[11px] text-zinc-500 truncate"
+        >
+          alex.ramirez@gmail.com
+        </span>
+      </div>
+      <span
+        class="material-symbols-outlined text-zinc-400 group-hover:text-orange-600 text-[18px] transition-colors"
+      >
+        chevron_right
+      </span>
+    </a>
+  </div>
+</aside>
+
+<script>
+  // Control de apertura/cierre responsivo
+  const sidebar = document.getElementById("app-sidebar");
+  const backdrop = document.getElementById("sidebar-backdrop");
+  const btnClose = document.getElementById("btn-close-sidebar");
+
+  function openSidebar() {
+    sidebar?.classList.remove("-translate-x-full");
+    backdrop?.classList.remove("hidden");
+    document.body.classList.add("overflow-hidden", "lg:overflow-auto");
+  }
+
+  function closeSidebar() {
+    sidebar?.classList.add("-translate-x-full");
+    backdrop?.classList.add("hidden");
+    document.body.classList.remove("overflow-hidden", "lg:overflow-auto");
+  }
+
+  btnClose?.addEventListener("click", closeSidebar);
+  backdrop?.addEventListener("click", closeSidebar);
+
+  // Escuchar evento global emitido desde el Header
+  window.addEventListener("open-sidebar", openSidebar);
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth >= 1024) {
+      closeSidebar();
+    }
+  });
+
+  // Botón "Crear Nuevo Bot"
+  document.getElementById("btn-create-bot")?.addEventListener("click", () => {
+    if ((window as any).showToast) {
+      (window as any).showToast(
+        "Iniciando asistente de creación de Bot...",
+        "info",
+      );
+    }
+  });
+
+  // Lógica de perfil guardado
+  const updateSidebarUI = (data: any) => {
+    const businessNameEl = document.getElementById("sidebar-business-name");
+    const userNameEl = document.getElementById("sidebar-user-name");
+    const userEmailEl = document.getElementById("sidebar-user-email");
+    const initialsEl = document.getElementById("sidebar-avatar-initials");
+    const imgEl = document.getElementById(
+      "sidebar-avatar-img",
+    ) as HTMLImageElement;
+
+    if (data.businessName && businessNameEl)
+      businessNameEl.textContent = data.businessName;
+    if (data.adminName && userNameEl) {
+      userNameEl.textContent = data.adminName;
+      const initials = data.adminName
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .substring(0, 2)
+        .toUpperCase();
+      if (initialsEl) initialsEl.textContent = initials;
+    }
+    if (data.email && userEmailEl) userEmailEl.textContent = data.email;
+
+    if (data.avatarUrl) {
+      if (imgEl) {
+        imgEl.src = data.avatarUrl;
+        imgEl.classList.remove("hidden");
+      }
+      if (initialsEl) initialsEl.classList.add("hidden");
+    } else if (data.avatarUrl === null) {
+      if (imgEl) imgEl.classList.add("hidden");
+      if (initialsEl) initialsEl.classList.remove("hidden");
+    }
+  };
+
+  const savedData = localStorage.getItem("user_profile_data");
+  if (savedData) {
+    try {
+      updateSidebarUI(JSON.parse(savedData));
+    } catch (e) {}
+  }
+
+  window.addEventListener("profile-updated", (e: any) => {
+    updateSidebarUI(e.detail);
+  });
+</script>

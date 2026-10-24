@@ -1,0 +1,16 @@
+---
+import CheckoutLayout from "../../layouts/CheckoutLayout.astro";
+import Stepper from "../../components/checkout/Stepper.astro";
+import PricingSection from "../../components/checkout/PricingSection.astro";
+import OrderSummary from "../../components/checkout/OrderSummary.astro";
+---
+
+<CheckoutLayout title="Planes y Precios | WhatsBot">
+  <div
+    class="max-w-container-max mx-auto px-gutter-mobile lg:px-gutter-desktop pt-space-xl pb-space-5xl"
+  >
+    <Stepper currentStep={1} />
+    <PricingSection />
+    <OrderSummary />
+  </div>
+</CheckoutLayout>

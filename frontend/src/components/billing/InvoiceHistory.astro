@@ -1,0 +1,156 @@
+---
+
+---
+
+<div
+  class="rounded-2xl bg-white border border-zinc-200/80 p-5 sm:p-6 shadow-xs flex flex-col gap-5 min-w-0"
+>
+  <div
+    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-zinc-100"
+  >
+    <div class="flex flex-col">
+      <h3 class="text-xl sm:text-2xl font-bold text-zinc-900">
+        Historial de Facturas y Recibos
+      </h3>
+      <p class="text-xs sm:text-sm text-zinc-500 mt-0.5">
+        Descarga tus comprobantes en PDF o XML con validez fiscal.
+      </p>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+      <div
+        class="flex items-center px-3 py-1.5 rounded-xl bg-zinc-100 border border-zinc-200/80 text-xs w-full sm:w-auto"
+      >
+        <span class="material-symbols-outlined text-[18px] text-zinc-400 mr-2"
+          >search</span
+        >
+        <input
+          class="bg-transparent focus:outline-none w-full sm:w-32 placeholder:text-zinc-400 text-zinc-900 font-medium"
+          placeholder="Buscar por ID..."
+          type="text"
+        />
+      </div>
+      <button
+        class="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold transition-colors cursor-pointer w-full sm:w-auto shrink-0"
+        type="button"
+      >
+        <span class="material-symbols-outlined text-[16px]">download</span>
+        <span>Exportar (ZIP)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabla Responsiva con Scroll Horizontal Suave -->
+  <div class="w-full overflow-x-auto rounded-xl border border-zinc-100">
+    <table class="w-full text-left min-w-[650px]">
+      <thead>
+        <tr
+          class="bg-zinc-50 text-zinc-500 font-bold text-[11px] uppercase tracking-wider border-b border-zinc-200/80"
+        >
+          <th class="py-3 px-4">ID Factura</th>
+          <th class="py-3 px-4">Emisión</th>
+          <th class="py-3 px-4">Concepto / Plan</th>
+          <th class="py-3 px-4">Importe</th>
+          <th class="py-3 px-4">Estado</th>
+          <th class="py-3 px-4 text-right">Descargas</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-100 text-zinc-800 text-xs sm:text-sm">
+        <tr class="hover:bg-zinc-50/80 transition-colors">
+          <td
+            class="py-3.5 px-4 font-mono font-bold text-orange-600 whitespace-nowrap"
+            >INV-2024-0010</td
+          >
+          <td class="py-3.5 px-4 text-zinc-500 whitespace-nowrap"
+            >10 Oct, 2024</td
+          >
+          <td class="py-3.5 px-4 whitespace-nowrap">
+            <div class="flex flex-col">
+              <span class="font-bold text-zinc-900"
+                >Tremia Pro (Renovación)</span
+              >
+              <span class="text-[11px] text-zinc-500">Periodo 2024 - 2025</span>
+            </div>
+          </td>
+          <td class="py-3.5 px-4 font-extrabold text-zinc-900 whitespace-nowrap"
+            >$288.00 USD</td
+          >
+          <td class="py-3.5 px-4 whitespace-nowrap">
+            <span
+              class="px-2.5 py-0.5 rounded-full bg-red-100 border border-red-200 text-red-700 text-xs font-bold inline-flex items-center gap-1"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+              Vencido
+            </span>
+          </td>
+          <td class="py-3.5 px-4 text-right whitespace-nowrap">
+            <div class="flex items-center justify-end gap-2">
+              <a
+                class="flex items-center gap-1 px-3 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs transition-colors cursor-pointer shadow-2xs"
+                href="/checkout/payment?plan=pro&billing=annual"
+              >
+                <span>Pagar Ahora</span>
+              </a>
+              <button
+                class="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer"
+                title="Descargar PDF"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[18px]"
+                  >picture_as_pdf</span
+                >
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="hover:bg-zinc-50/80 transition-colors">
+          <td
+            class="py-3.5 px-4 font-mono font-bold text-zinc-900 whitespace-nowrap"
+            >INV-2023-0009</td
+          >
+          <td class="py-3.5 px-4 text-zinc-500 whitespace-nowrap"
+            >10 Oct, 2023</td
+          >
+          <td class="py-3.5 px-4 whitespace-nowrap">
+            <div class="flex flex-col">
+              <span class="font-bold text-zinc-900"
+                >Tremia Pro (Suscripción)</span
+              >
+              <span class="text-[11px] text-zinc-500">Periodo 2023 - 2024</span>
+            </div>
+          </td>
+          <td class="py-3.5 px-4 font-extrabold text-zinc-900 whitespace-nowrap"
+            >$288.00 USD</td
+          >
+          <td class="py-3.5 px-4 whitespace-nowrap">
+            <span
+              class="px-2.5 py-0.5 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold inline-flex items-center gap-1"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+              Pagado
+            </span>
+          </td>
+          <td class="py-3.5 px-4 text-right whitespace-nowrap">
+            <div class="flex items-center justify-end gap-1">
+              <button
+                class="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer"
+                title="Descargar PDF"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[18px]"
+                  >picture_as_pdf</span
+                >
+              </button>
+              <button
+                class="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer"
+                title="Descargar XML"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[18px]">code</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

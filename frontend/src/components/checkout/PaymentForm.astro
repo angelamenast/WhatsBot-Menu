@@ -1,0 +1,347 @@
+---
+
+---
+
+<div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-space-xl">
+  <div
+    class="bg-surface-container-lowest rounded-xl p-space-lg sm:p-space-xl shadow-sm flex flex-col gap-space-lg"
+  >
+    <!-- Encabezado -->
+    <div
+      class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md pb-space-md"
+    >
+      <div class="flex flex-col">
+        <div class="flex items-center gap-space-xs mb-space-xxs">
+          <span
+            class="material-symbols-outlined text-primary-container text-[22px]"
+            >verified_user</span
+          >
+          <h1 class="font-headline-md text-headline-md text-on-surface">
+            Información de Pago Seguro
+          </h1>
+        </div>
+        <p class="font-body-md text-body-md text-on-surface-variant">
+          Transacción protegida con estándar bancario internacional.
+        </p>
+      </div>
+      <div class="flex items-center gap-space-xs">
+        <span
+          class="inline-flex items-center gap-space-xxs px-space-sm py-space-xxs rounded-full bg-surface-container-low text-on-surface font-label-sm text-label-sm"
+        >
+          <span class="material-symbols-outlined text-[14px] text-primary"
+            >lock</span
+          > 256-Bit SSL
+        </span>
+      </div>
+    </div>
+
+    <!-- Pestañas de Métodos de Pago -->
+    <div class="flex flex-col gap-space-sm">
+      <label class="font-label-md text-label-md text-on-surface font-semibold"
+        >Selecciona tu método de pago</label
+      >
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+        <button
+          class="pay-tab active flex flex-col items-center justify-center p-space-md rounded-lg bg-surface-container-low text-primary shadow-sm ring-2 ring-primary-container cursor-pointer transition-all"
+          data-target="card-form"
+          type="button"
+        >
+          <span class="material-symbols-outlined text-[26px] mb-space-xxs"
+            >credit_card</span
+          >
+          <span class="font-label-md text-label-md font-bold">Tarjeta</span>
+        </button>
+        <button
+          class="pay-tab flex flex-col items-center justify-center p-space-md rounded-lg bg-surface hover:bg-surface-container-low text-on-surface cursor-pointer transition-all"
+          data-target="paypal-view"
+          type="button"
+        >
+          <span
+            class="material-symbols-outlined text-[26px] mb-space-xxs text-on-surface-variant"
+            >account_balance_wallet</span
+          >
+          <span class="font-label-md text-label-md font-bold">PayPal</span>
+        </button>
+        <button
+          class="pay-tab flex flex-col items-center justify-center p-space-md rounded-lg bg-surface hover:bg-surface-container-low text-on-surface cursor-pointer transition-all"
+          data-target="wallet-view"
+          type="button"
+        >
+          <span
+            class="material-symbols-outlined text-[26px] mb-space-xxs text-on-surface-variant"
+            >contactless</span
+          >
+          <span class="font-label-md text-label-md font-bold">Pay Rápido</span>
+        </button>
+        <button
+          class="pay-tab flex flex-col items-center justify-center p-space-md rounded-lg bg-surface hover:bg-surface-container-low text-on-surface cursor-pointer transition-all"
+          data-target="bank-view"
+          type="button"
+        >
+          <span
+            class="material-symbols-outlined text-[26px] mb-space-xxs text-on-surface-variant"
+            >account_balance</span
+          >
+          <span class="font-label-md text-label-md font-bold">SPEI / SEPA</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- VISTA 1: Formulario de Tarjeta -->
+    <form
+      class="flex flex-col gap-space-md mt-space-sm pay-content"
+      id="card-form"
+    >
+      <div class="flex flex-col gap-space-xxs">
+        <label
+          class="font-label-md text-label-md text-on-surface font-semibold"
+          for="card_name">Nombre en la tarjeta</label
+        >
+        <div class="relative">
+          <span
+            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]"
+            >person</span
+          >
+          <input
+            class="w-full bg-surface-container-low text-on-surface pl-10 pr-space-md py-space-sm rounded-lg font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary-container"
+            id="card_name"
+            placeholder="Camila Morales"
+            required
+            type="text"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-space-xxs">
+        <label
+          class="font-label-md text-label-md text-on-surface font-semibold"
+          for="card_number">Número de tarjeta</label
+        >
+        <div class="relative">
+          <span
+            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]"
+            >credit_card</span
+          >
+          <input
+            class="w-full bg-surface-container-low text-on-surface font-mono pl-10 pr-12 py-space-sm rounded-lg font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary-container"
+            id="card_number"
+            maxlength="19"
+            placeholder="4242 •••• •••• 4242"
+            required
+            type="text"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+        <div class="flex flex-col gap-space-xxs">
+          <label
+            class="font-label-md text-label-md text-on-surface font-semibold"
+            for="card_exp">Vencimiento (MM/AA)</label
+          >
+          <input
+            class="w-full bg-surface-container-low text-on-surface font-mono px-space-md py-space-sm rounded-lg font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary-container"
+            id="card_exp"
+            maxlength="5"
+            placeholder="12/28"
+            required
+            type="text"
+          />
+        </div>
+        <div class="flex flex-col gap-space-xxs">
+          <label
+            class="font-label-md text-label-md text-on-surface font-semibold"
+            for="card_cvc">CVC / CVV</label
+          >
+          <input
+            class="w-full bg-surface-container-low text-on-surface font-mono px-space-md py-space-sm rounded-lg font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary-container"
+            id="card_cvc"
+            maxlength="4"
+            placeholder="893"
+            required
+            type="password"
+          />
+        </div>
+      </div>
+
+      <!-- Desplegable Factura Fiscal -->
+      <div class="bg-surface-container-low rounded-lg p-space-md mt-space-xs">
+        <button
+          class="w-full flex items-center justify-between text-left cursor-pointer"
+          id="fiscal-btn"
+          type="button"
+        >
+          <span
+            class="font-label-md text-label-md text-on-surface font-semibold"
+            >¿Requieres factura fiscal? (RFC, CIF)</span
+          >
+          <span
+            class="material-symbols-outlined text-on-surface-variant text-[20px] transition-transform"
+            id="fiscal-chevron">expand_more</span
+          >
+        </button>
+        <div
+          class="hidden flex-col gap-space-sm pt-space-md mt-space-sm border-t border-surface-container-high"
+          id="fiscal-drawer"
+        >
+          <input
+            class="w-full bg-surface-container-lowest text-on-surface px-space-sm py-space-xs rounded font-body-sm text-body-sm"
+            placeholder="RFC / CIF / NIF"
+            type="text"
+          />
+          <input
+            class="w-full bg-surface-container-lowest text-on-surface px-space-sm py-space-xs rounded font-body-sm text-body-sm"
+            placeholder="Razón Social"
+            type="text"
+          />
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        class="w-full py-space-lg px-space-xl rounded-lg bg-primary-container hover:bg-secondary transition-all text-on-primary font-headline-sm text-headline-sm font-bold shadow-lg flex items-center justify-center gap-space-sm cursor-pointer mt-space-md"
+        id="submit-pay-btn"
+        type="submit"
+      >
+        <span class="material-symbols-outlined text-[24px]">lock</span>
+        <span id="submit-btn-label">Pagar y Activar WhatsBot Ahora</span>
+      </button>
+    </form>
+
+    <!-- VISTAS ALTERNATIVAS -->
+    <div
+      class="hidden pay-content py-space-2xl text-center flex-col items-center gap-space-md"
+      id="paypal-view"
+    >
+      <span class="material-symbols-outlined text-primary-container text-[48px]"
+        >account_balance_wallet</span
+      >
+      <h2 class="font-headline-sm text-headline-sm text-on-surface">
+        Conectar con PayPal
+      </h2>
+      <button
+        class="py-space-md px-space-2xl rounded-lg bg-[#ffc439] hover:bg-[#f4b82a] text-[#111111] font-bold shadow cursor-pointer"
+        type="button"
+      >
+        PayPal Checkout
+      </button>
+    </div>
+
+    <div
+      class="hidden pay-content py-space-2xl text-center flex-col items-center gap-space-md"
+      id="wallet-view"
+    >
+      <span class="material-symbols-outlined text-primary-container text-[48px]"
+        >contactless</span
+      >
+      <h2 class="font-headline-sm text-headline-sm text-on-surface">
+        Pagar con Apple Pay / Google Pay
+      </h2>
+      <button
+        class="py-space-md px-space-2xl rounded-lg bg-on-surface text-surface font-bold shadow cursor-pointer"
+        type="button"
+      >
+        Continuar con Cartera Digital
+      </button>
+    </div>
+
+    <div
+      class="hidden pay-content py-space-2xl text-center flex-col items-center gap-space-md"
+      id="bank-view"
+    >
+      <span class="material-symbols-outlined text-primary-container text-[48px]"
+        >account_balance</span
+      >
+      <h2 class="font-headline-sm text-headline-sm text-on-surface">
+        Transferencia SPEI / SEPA
+      </h2>
+      <button
+        class="py-space-md px-space-2xl rounded-lg bg-surface-container-high text-on-surface font-bold shadow cursor-pointer"
+        type="button"
+      >
+        Generar Ficha SPEI
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cambiar Pestañas
+  const tabs = document.querySelectorAll(".pay-tab");
+  const contents = document.querySelectorAll(".pay-content");
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(
+        (t) =>
+          (t.className =
+            "pay-tab flex flex-col items-center justify-center p-space-md rounded-lg bg-surface hover:bg-surface-container-low text-on-surface cursor-pointer transition-all"),
+      );
+      tab.className =
+        "pay-tab active flex flex-col items-center justify-center p-space-md rounded-lg bg-surface-container-low text-primary shadow-sm ring-2 ring-primary-container cursor-pointer transition-all";
+
+      contents.forEach((c) => c.classList.add("hidden"));
+      const targetId = tab.getAttribute("data-target");
+      if (targetId) {
+        document.getElementById(targetId)?.classList.remove("hidden");
+      }
+    });
+  });
+
+  // Toggle Fiscal
+  const fiscalBtn = document.getElementById("fiscal-btn");
+  const fiscalDrawer = document.getElementById("fiscal-drawer");
+  const fiscalChevron = document.getElementById("fiscal-chevron");
+
+  if (fiscalBtn && fiscalDrawer && fiscalChevron) {
+    fiscalBtn.addEventListener("click", () => {
+      fiscalDrawer.classList.toggle("hidden");
+      fiscalDrawer.classList.toggle("flex");
+      fiscalChevron.style.transform = fiscalDrawer.classList.contains("hidden")
+        ? "rotate(0deg)"
+        : "rotate(180deg)";
+    });
+  }
+
+  // Formateador de tarjeta de crédito
+  const cardNum = document.getElementById("card_number") as HTMLInputElement;
+  if (cardNum) {
+    cardNum.addEventListener("input", (e) => {
+      let v = cardNum.value.replace(/\D/g, "").substring(0, 16);
+      cardNum.value = v.replace(/(\d{4})(?=\d)/g, "$1 ");
+    });
+  }
+
+  // Formateador de Expiración MM/AA
+  const cardExp = document.getElementById("card_exp") as HTMLInputElement;
+  if (cardExp) {
+    cardExp.addEventListener("input", () => {
+      let v = cardExp.value.replace(/\D/g, "").substring(0, 4);
+      if (v.length >= 3) {
+        cardExp.value = `${v.substring(0, 2)}/${v.substring(2)}`;
+      } else {
+        cardExp.value = v;
+      }
+    });
+  }
+
+  // Simulación de Pago
+  const cardForm = document.getElementById("card-form");
+  const submitBtn = document.getElementById("submit-pay-btn");
+  const submitLabel = document.getElementById("submit-btn-label");
+
+  if (cardForm) {
+    cardForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (submitBtn && submitLabel) {
+        submitBtn.setAttribute("disabled", "true");
+        submitLabel.textContent = "Procesando Pago Seguro...";
+
+        setTimeout(() => {
+          alert("🎉 ¡Pago procesado con éxito! Bienvenido a WhatsBot Pro.");
+          window.location.href = "/";
+        }, 1500);
+      }
+    });
+  }
+</script>

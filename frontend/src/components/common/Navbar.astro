@@ -1,0 +1,98 @@
+---
+import Logo from "./Logo.astro";
+
+interface Props {
+  variant?: "public" | "app";
+}
+
+const { variant = "public" } = Astro.props;
+---
+
+{variant === "public" ? (
+  /* --- VARIANTE 1: NAVBAR PÚBLICO (LANDING PAGE) --- */
+  <nav class="bg-surface sticky top-0 z-50 border-b border-surface-variant backdrop-blur-md bg-surface/90">
+    <div class="flex justify-between items-center w-full px-gutter-mobile md:px-gutter-desktop py-4 max-w-7xl mx-auto">
+      <Logo />
+
+      <div class="hidden md:flex items-center gap-gutter-desktop">
+        <a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium" href="#product">
+          Product
+        </a>
+        <a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium" href="#solutions">
+          Solutions
+        </a>
+        <a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium" href="#pricing">
+          Pricing
+        </a>
+        <a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium" href="#resources">
+          Resources
+        </a>
+      </div>
+
+      <div class="hidden md:flex items-center gap-unit-sm">
+        <a href="/auth/login" class="text-on-surface-variant hover:text-primary transition-colors duration-300 px-3 py-2 font-medium">
+          Log In
+        </a>
+        <a href="/register" class="bg-primary hover:bg-secondary text-white font-semibold px-4 py-2 rounded-lg transition-colors">
+          Get Started
+        </a>
+      </div>
+
+      <button class="md:hidden text-on-surface-variant p-2 cursor-pointer" type="button" aria-label="Menú">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+    </div>
+  </nav>
+) : (
+  /* --- VARIANTE 2: NAVBAR PRIVADO (PANEL Y DASHBOARD DE LA APP) --- */
+  <header class="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-xs z-40 flex items-center justify-between px-4 sm:px-6 lg:px-8 border-b border-surface-container-high">
+    <div class="flex items-center gap-3 min-w-0">
+      <!-- Botón Hamburguesa (Móvil / Tablet) -->
+      <button
+        id="btn-open-sidebar"
+        class="lg:hidden p-2 rounded-xl bg-zinc-100 text-zinc-700 hover:bg-zinc-200 transition-colors cursor-pointer shrink-0"
+        type="button"
+        aria-label="Abrir menú de navegación"
+      >
+        <span class="material-symbols-outlined text-[22px]">menu</span>
+      </button>
+
+      <!-- Pill de Estado WhatsApp -->
+      <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold truncate">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+        <span class="truncate">Conectado a WhatsApp Business API</span>
+      </div>
+    </div>
+
+    <!-- Acciones Rápidas del Usuario -->
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <button
+        class="w-9 h-9 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition-colors cursor-pointer"
+        type="button"
+        title="Notificaciones"
+      >
+        <span class="material-symbols-outlined text-[20px]">notifications</span>
+      </button>
+      <button
+        class="w-9 h-9 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition-colors cursor-pointer"
+        type="button"
+        title="Soporte y Ayuda"
+      >
+        <span class="material-symbols-outlined text-[20px]">help</span>
+      </button>
+      <a
+        class="w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center font-bold text-xs transition-colors cursor-pointer"
+        href="/profile"
+        title="Mi Perfil"
+      >
+        <span class="material-symbols-outlined text-[18px]">person</span>
+      </a>
+    </div>
+  </header>
+
+  <script>
+    document.getElementById("btn-open-sidebar")?.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("open-sidebar"));
+    });
+  </script>
+)}

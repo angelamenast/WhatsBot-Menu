@@ -1,0 +1,153 @@
+---
+
+---
+
+<div
+  class="lg:col-span-7 flex flex-col justify-between rounded-2xl bg-white border border-zinc-200/80 p-5 sm:p-7 shadow-xs relative overflow-hidden min-w-0"
+>
+  <div
+    class="absolute -right-8 -top-8 w-44 h-44 rounded-full bg-orange-100/50 blur-2xl pointer-events-none"
+  >
+  </div>
+
+  <div class="flex flex-col gap-5 relative z-10">
+    <div
+      class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-zinc-100"
+    >
+      <div class="flex flex-col min-w-0">
+        <span
+          class="text-xs uppercase tracking-wider text-orange-600 font-extrabold"
+          >Plan Actual</span
+        >
+        <div class="flex items-center gap-2 flex-wrap mt-1">
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-zinc-900">
+            Tremia Professional
+          </h2>
+          <span
+            class="px-2.5 py-0.5 rounded-full bg-red-100 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-1 shrink-0"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+            Pago Pendiente
+          </span>
+        </div>
+        <p class="text-xs sm:text-sm text-zinc-500 mt-1">
+          Optimizado para cafeterías y retail con alta rotación de comandas vía
+          WhatsApp.
+        </p>
+      </div>
+
+      <div
+        class="text-left sm:text-right shrink-0 bg-zinc-50 sm:bg-transparent p-3 sm:p-0 rounded-xl border border-zinc-100 sm:border-0"
+      >
+        <div class="flex items-baseline justify-start sm:justify-end gap-1">
+          <span
+            class="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tight"
+            >$24</span
+          >
+          <span class="text-xs font-semibold text-zinc-500">USD / mes</span>
+        </div>
+        <span class="text-xs text-orange-600 font-bold block mt-0.5"
+          >Facturado anualmente ($288/año)</span
+        >
+      </div>
+    </div>
+
+    <!-- Beneficios -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div
+        class="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 border border-zinc-100"
+      >
+        <span
+          class="material-symbols-outlined text-[20px] text-orange-600 shrink-0"
+          >forum</span
+        >
+        <div class="flex flex-col min-w-0">
+          <span class="text-xs font-bold text-zinc-900 truncate"
+            >Mensajes Sin Límite</span
+          >
+          <span class="text-[11px] text-zinc-500 truncate"
+            >Sin tarifas por volumen extra</span
+          >
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 border border-zinc-100"
+      >
+        <span
+          class="material-symbols-outlined text-[20px] text-orange-600 shrink-0"
+          >smart_toy</span
+        >
+        <div class="flex flex-col min-w-0">
+          <span class="text-xs font-bold text-zinc-900 truncate"
+            >5 Agentes IA Entrenados</span
+          >
+          <span class="text-[11px] text-zinc-500 truncate"
+            >Menús, reservas y entregas</span
+          >
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 border border-zinc-100"
+      >
+        <span
+          class="material-symbols-outlined text-[20px] text-orange-600 shrink-0"
+          >receipt_long</span
+        >
+        <div class="flex flex-col min-w-0">
+          <span class="text-xs font-bold text-zinc-900 truncate"
+            >Integración POS & Pedidos</span
+          >
+          <span class="text-[11px] text-zinc-500 truncate"
+            >Exportación directa de órdenes</span
+          >
+        </div>
+      </div>
+      <div
+        class="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 border border-zinc-100"
+      >
+        <span
+          class="material-symbols-outlined text-[20px] text-orange-600 shrink-0"
+          >support_agent</span
+        >
+        <div class="flex flex-col min-w-0">
+          <span class="text-xs font-bold text-zinc-900 truncate"
+            >Soporte Prioritario 24/7</span
+          >
+          <span class="text-[11px] text-zinc-500 truncate"
+            >Asistencia directa WhatsApp</span
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-5 mt-5 border-t border-zinc-100"
+  >
+    <div
+      class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5"
+    >
+      <a
+        class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-xs transition-all cursor-pointer text-center"
+        href="/checkout/payment?plan=pro&billing=annual"
+      >
+        <span class="material-symbols-outlined text-[18px]">sync</span>
+        <span>Renovar Plan Ahora</span>
+      </a>
+      <a
+        class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold text-sm transition-colors cursor-pointer text-center"
+        href="/checkout/plans"
+      >
+        <span class="material-symbols-outlined text-[18px]">bolt</span>
+        <span>Cambiar de Plan</span>
+      </a>
+    </div>
+    <a
+      class="text-xs font-semibold text-zinc-500 hover:text-orange-600 transition-colors flex items-center justify-center sm:justify-start gap-1 mt-1 sm:mt-0"
+      href="#"
+    >
+      <span>Consultar periodo de gracia</span>
+      <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+    </a>
+  </div>
+</div>

@@ -1,0 +1,100 @@
+---
+
+---
+
+<div
+  class="lg:col-span-6 rounded-2xl bg-white border border-zinc-200/80 p-5 sm:p-6 shadow-xs flex flex-col justify-between gap-5 min-w-0"
+>
+  <div class="flex flex-col gap-4">
+    <div
+      class="flex items-center justify-between pb-3 border-b border-zinc-100"
+    >
+      <div class="flex items-center gap-3 min-w-0">
+        <span
+          class="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 shrink-0"
+        >
+          <span class="material-symbols-outlined text-[20px]">credit_card</span>
+        </span>
+        <div class="flex flex-col min-w-0">
+          <h3 class="text-lg sm:text-xl font-bold text-zinc-900 truncate">
+            Método de Pago Predeterminado
+          </h3>
+          <span class="text-xs text-zinc-500 truncate"
+            >Cobros automáticos procesados vía Stripe Gateway</span
+          >
+        </div>
+      </div>
+      <span
+        class="px-2.5 py-0.5 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-700 text-xs font-bold shrink-0"
+        >Seguro</span
+      >
+    </div>
+
+    <!-- Mockup Tarjeta -->
+    <div
+      class="relative overflow-hidden rounded-xl bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-5 text-white shadow-md"
+    >
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[24px] text-amber-400"
+            >contactless</span
+          >
+          <span
+            class="text-[11px] font-bold uppercase tracking-widest text-zinc-400"
+            >Corporativa</span
+          >
+        </div>
+        <div class="flex -space-x-2">
+          <div class="w-6 h-6 rounded-full bg-orange-500 opacity-90"></div>
+          <div class="w-6 h-6 rounded-full bg-amber-400 opacity-90"></div>
+        </div>
+      </div>
+      <div class="my-5">
+        <span
+          class="text-xl sm:text-2xl font-bold tracking-widest text-zinc-100 font-mono"
+          >•••• •••• •••• 4242</span
+        >
+      </div>
+      <div class="flex items-end justify-between text-xs text-zinc-400">
+        <div class="flex flex-col">
+          <span class="text-[10px] uppercase font-bold opacity-75">Titular</span
+          >
+          <span
+            class="font-bold text-zinc-100 truncate max-w-[160px] sm:max-w-none"
+            >MAIN STREET CAFE S.L.</span
+          >
+        </div>
+        <div class="flex flex-col text-right">
+          <span class="text-[10px] uppercase font-bold opacity-75">Expira</span>
+          <span class="font-bold text-zinc-100">08 / 2028</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1.5 text-xs text-zinc-600 font-medium">
+      <span
+        class="material-symbols-outlined text-[16px] text-emerald-600 shrink-0"
+        >check_circle</span
+      >
+      <span>Tarjeta registrada para renovación automática.</span>
+    </div>
+  </div>
+
+  <div
+    class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-zinc-100"
+  >
+    <a
+      class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold text-sm transition-colors cursor-pointer text-center"
+      href="/checkout/payment"
+    >
+      <span class="material-symbols-outlined text-[18px]">edit</span>
+      <span>Actualizar Método de Pago</span>
+    </a>
+    <button
+      class="text-xs font-bold text-red-600 hover:underline cursor-pointer py-1 text-center"
+      type="button"
+    >
+      Eliminar
+    </button>
+  </div>
+</div>

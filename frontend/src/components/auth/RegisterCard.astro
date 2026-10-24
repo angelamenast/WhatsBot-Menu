@@ -1,0 +1,196 @@
+---
+import Logo from "../common/Logo.astro";
+---
+
+<div
+  class="relative w-full max-w-container-max mx-auto flex flex-col items-center justify-center py-space-xl"
+>
+  <!-- Dynamic Ambient Glows -->
+  <div
+    class="absolute top-1/4 -left-16 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl pointer-events-none -z-10"
+  >
+  </div>
+  <div
+    class="absolute bottom-1/3 -right-16 w-80 h-80 bg-tertiary-container/10 rounded-full blur-3xl pointer-events-none -z-10"
+  >
+  </div>
+
+  <!-- Micro Header Bar -->
+  <header
+    class="w-full max-w-lg flex items-center justify-between px-space-base py-space-sm mb-space-xl bg-surface-container-lowest/80 backdrop-blur-md rounded-full shadow-sm"
+  >
+    <Logo />
+    <a
+      class="font-label-md text-label-md text-secondary hover:text-primary transition-colors flex items-center gap-space-xxs"
+      href="/auth/login"
+    >
+      <span>¿Ya tienes cuenta? </span>
+      <span
+        class="font-bold underline decoration-secondary/30 underline-offset-2"
+        >Iniciar Sesión</span
+      >
+    </a>
+  </header>
+
+  <!-- Main Registration Card -->
+  <div
+    class="w-full max-w-lg bg-surface-container-lowest rounded-xl shadow-md p-space-2xl md:p-space-3xl flex flex-col items-center text-center relative overflow-hidden transition-all duration-300 hover:shadow-lg"
+  >
+    <!-- Top Accent Bar -->
+    <div
+      class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary-fixed-dim via-primary-container to-secondary"
+    >
+    </div>
+
+    <!-- Hero Robot Badge -->
+    <div class="relative mb-space-lg group cursor-pointer">
+      <div
+        class="w-16 h-16 rounded-2xl bg-primary-container text-on-primary flex items-center justify-center shadow-md transform transition-transform group-hover:scale-105 duration-200"
+      >
+        <span class="material-symbols-outlined text-4xl fill">smart_toy</span>
+      </div>
+      <span class="absolute -bottom-1 -right-1 flex h-4 w-4">
+        <span
+          class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"
+        ></span>
+        <span
+          class="relative inline-flex rounded-full h-4 w-4 bg-primary-container ring-2 ring-surface-container-lowest"
+        ></span>
+      </span>
+    </div>
+
+    <!-- Headings -->
+    <div class="space-y-space-xs mb-space-2xl max-w-sm">
+      <h1
+        class="font-headline-lg text-headline-lg text-on-surface tracking-tight"
+      >
+        Crea tu cuenta en Tremia
+      </h1>
+      <p class="font-body-md text-body-md text-on-surface-variant">
+        Comienza tus 14 días de prueba gratis. Sin tarjeta de crédito requerida.
+      </p>
+    </div>
+
+    <!-- SSO Buttons -->
+    <div class="w-full space-y-space-md mb-space-2xl">
+      <button
+        class="w-full relative flex items-center justify-center gap-space-md py-3.5 px-space-lg bg-surface-container-lowest hover:bg-surface-container-low text-on-surface rounded-lg shadow-sm hover:shadow active:scale-[0.99] transition-all duration-150 group"
+        id="google-sso-btn"
+        type="button"
+      >
+        <svg
+          class="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110 duration-200"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17Z"
+            fill="#4285F4"></path>
+          <path
+            d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.29 21.37 7.37 24 12 24Z"
+            fill="#34A853"></path>
+          <path
+            d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.14-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.98 0 12s.46 3.84 1.26 5.42l4.02-3.15Z"
+            fill="#FBBC05"></path>
+          <path
+            d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.29 2.63 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"
+            fill="#EA4335"></path>
+        </svg>
+        <span class="font-label-lg text-label-lg font-semibold tracking-normal">
+          Continuar con Google
+        </span>
+        <span
+          class="absolute right-space-base opacity-0 group-hover:opacity-100 transition-opacity text-primary"
+        >
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </span>
+      </button>
+    </div>
+
+    <!-- Badges -->
+    <div
+      class="w-full flex flex-wrap items-center justify-center gap-space-xs mb-space-xl"
+    >
+      <div
+        class="inline-flex items-center gap-1.5 px-space-sm py-1 bg-surface-container-low rounded-full text-secondary font-label-sm text-label-sm shadow-sm"
+      >
+        <span>⚡</span>
+        <span>Configuración en 2 minutos</span>
+      </div>
+      <div
+        class="inline-flex items-center gap-1.5 px-space-sm py-1 bg-surface-container-low rounded-full text-secondary font-label-sm text-label-sm shadow-sm"
+      >
+        <span>🔒</span>
+        <span>Cifrado SSL de 256 bits</span>
+      </div>
+      <div
+        class="inline-flex items-center gap-1.5 px-space-sm py-1 bg-surface-container-low rounded-full text-secondary font-label-sm text-label-sm shadow-sm"
+      >
+        <span>🚫</span>
+        <span>Cancela cuando quieras</span>
+      </div>
+    </div>
+
+    <!-- Trust Widget -->
+    <div
+      class="w-full bg-surface-container-low/60 rounded-lg p-space-sm mb-space-lg flex items-center justify-between"
+    >
+      <div class="flex items-center gap-space-sm">
+        <div class="flex -space-x-2">
+          <div
+            class="w-7 h-7 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-[10px] ring-2 ring-surface-container-lowest"
+          >
+            JD
+          </div>
+          <div
+            class="w-7 h-7 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary font-bold text-[10px] ring-2 ring-surface-container-lowest"
+          >
+            MC
+          </div>
+          <div
+            class="w-7 h-7 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary font-bold text-[10px] ring-2 ring-surface-container-lowest"
+          >
+            AR
+          </div>
+        </div>
+        <span
+          class="font-body-sm text-body-sm text-on-surface-variant text-left"
+        >
+          <strong class="text-on-surface font-semibold">1,400+ empresas</strong> conectadas
+          hoy
+        </span>
+      </div>
+      <div class="flex items-center text-primary-container">
+        <span class="material-symbols-outlined text-sm fill">star</span>
+        <span class="material-symbols-outlined text-sm fill">star</span>
+        <span class="material-symbols-outlined text-sm fill">star</span>
+        <span class="material-symbols-outlined text-sm fill">star</span>
+        <span class="material-symbols-outlined text-sm fill">star</span>
+      </div>
+    </div>
+
+    <!-- Legal Disclaimer -->
+    <p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">
+      Al registrarte, aceptas nuestros
+      <a
+        class="text-secondary underline decoration-secondary/30 hover:text-primary transition-colors"
+        href="#">Términos de Servicio</a
+      > y la
+      <a
+        class="text-secondary underline decoration-secondary/30 hover:text-primary transition-colors"
+        href="#">Política de Privacidad</a
+      > de Tremia.
+    </p>
+  </div>
+</div>
+
+<script>
+  import { authService } from "../../services/auth.service";
+
+  const googleBtn = document.getElementById("google-sso-btn");
+
+  if (googleBtn) {
+    googleBtn.addEventListener("click", () => {
+      authService.loginWithGoogle();
+    });
+  }
+</script>

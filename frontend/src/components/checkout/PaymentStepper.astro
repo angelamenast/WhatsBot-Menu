@@ -1,0 +1,81 @@
+---
+
+---
+
+<section class="w-full bg-surface-container-low py-space-lg shadow-sm">
+  <div
+    class="max-w-container-max mx-auto px-gutter-mobile lg:px-gutter-desktop"
+  >
+    <div
+      class="flex flex-col md:flex-row md:items-center justify-between gap-space-md"
+    >
+      <!-- Indicador Interactivo -->
+      <div class="flex items-center gap-space-sm sm:gap-space-md">
+        <!-- Paso 1 Completado -->
+        <a
+          class="flex items-center gap-space-xs group transition-all duration-200"
+          href="/checkout/plans"
+        >
+          <span
+            class="w-7 h-7 rounded-full bg-primary-container/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors"
+          >
+            <span class="material-symbols-outlined text-[16px] font-bold"
+              >check</span
+            >
+          </span>
+          <div class="flex flex-col">
+            <span
+              class="font-label-sm text-label-sm text-on-surface-variant line-through opacity-80"
+              >Paso 1</span
+            >
+            <span
+              class="font-label-md text-label-md text-on-surface font-semibold group-hover:text-primary"
+              >Plan Seleccionado</span
+            >
+          </div>
+        </a>
+
+        <div class="w-8 sm:w-16 h-0.5 bg-primary-container/30"></div>
+
+        <!-- Paso 2 Activo -->
+        <div class="flex items-center gap-space-xs">
+          <span
+            class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-label-md text-label-md shadow-sm ring-4 ring-primary-container/20"
+          >
+            2
+          </span>
+          <div class="flex flex-col">
+            <span
+              class="font-label-sm text-label-sm text-primary font-bold uppercase tracking-wider"
+              >Paso 2 de 2</span
+            >
+            <span class="font-label-md text-label-md text-on-surface font-bold"
+              >Pasarela de Pago Seguro</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones del plan -->
+      <div class="flex items-center gap-space-base self-start md:self-auto">
+        <div
+          class="hidden sm:flex items-center gap-space-xs bg-surface-container px-space-md py-space-xs rounded-full"
+        >
+          <span class="w-2 h-2 rounded-full bg-secondary-container animate-ping"
+          ></span>
+          <span
+            class="font-label-sm text-label-sm text-on-surface-variant font-medium"
+            >Bloqueo de precio garantizado</span
+          >
+        </div>
+        <a
+          class="inline-flex items-center gap-space-xs font-label-md text-label-md text-secondary hover:text-primary font-semibold transition-colors"
+          href="/checkout/plans"
+        >
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+          Modificar plan
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

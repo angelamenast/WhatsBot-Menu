@@ -1,0 +1,50 @@
+---
+
+---
+
+<div
+  id="toast-container"
+  class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"
+>
+</div>
+
+<script>
+  // Exponer función global para disparar toasts desde cualquier script
+  (window as any).showToast = (
+    message: string,
+    type: "success" | "error" | "info" = "success",
+  ) => {
+    const container = document.getElementById("toast-container");
+    if (!container) return;
+
+    const toast = document.createElement("div");
+    const bgClass =
+      type === "success"
+        ? "bg-emerald-900 text-emerald-100 border-emerald-700"
+        : type === "error"
+          ? "bg-rose-900 text-rose-100 border-rose-700"
+          : "bg-zinc-900 text-zinc-100 border-zinc-700";
+
+    const icon =
+      type === "success" ? "check_circle" : type === "error" ? "error" : "info";
+
+    toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl text-sm font-medium transition-all duration-300 transform translate-y-4 opacity-0 ${bgClass}`;
+    toast.innerHTML = `
+      <span class="material-symbols-outlined text-[20px]">${icon}</span>
+      <span>${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    // Animar entrada
+    requestAnimationFrame(() => {
+      toast.classList.remove("translate-y-4", "opacity-0");
+    });
+
+    // Auto eliminar
+    setTimeout(() => {
+      toast.classList.add("translate-y-2", "opacity-0");
+      setTimeout(() => toast.remove(), 300);
+    }, 3500);
+  };
+</script>

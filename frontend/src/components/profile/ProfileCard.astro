@@ -1,0 +1,211 @@
+---
+
+---
+
+<section
+  class="bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-sm flex flex-col gap-6"
+>
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div
+        class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center"
+      >
+        <span class="material-symbols-outlined text-[22px]">badge</span>
+      </div>
+      <div>
+        <h2 class="text-base font-bold text-zinc-900">
+          Información Personal y del Negocio
+        </h2>
+        <p class="text-xs text-zinc-500">
+          Datos del titular de la cuenta y establecimiento asociado
+        </p>
+      </div>
+    </div>
+    <span
+      class="px-3 py-1 rounded-full bg-orange-50 text-orange-700 font-semibold text-xs border border-orange-200/60"
+      >Admin Principal</span
+    >
+  </div>
+
+  <div
+    class="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl bg-zinc-50 border border-zinc-100"
+  >
+    <div class="relative shrink-0">
+      <!-- Elemento de imagen para previsualización -->
+      <div
+        id="avatar-preview-container"
+        class="w-16 h-16 rounded-2xl bg-orange-500 text-white flex items-center justify-center text-xl font-bold shadow-md overflow-hidden"
+      >
+        <span id="avatar-initials">AR</span>
+        <img
+          id="avatar-image"
+          class="w-full h-full object-cover hidden"
+          alt="Foto de Perfil"
+        />
+      </div>
+      <span
+        class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm text-[12px]"
+      >
+        ✓
+      </span>
+    </div>
+
+    <div class="flex flex-col gap-1 text-center sm:text-left">
+      <span class="text-xs font-semibold text-zinc-900"
+        >Foto de Perfil del Administrador</span
+      >
+      <p class="text-xs text-zinc-500">JPG, WebP o PNG. Máximo 2MB.</p>
+      <div class="flex items-center justify-center sm:justify-start gap-2 mt-1">
+        <!-- Input File Oculto -->
+        <input
+          type="file"
+          id="avatar-upload"
+          accept="image/png, image/jpeg, image/webp"
+          class="hidden"
+        />
+        <button
+          id="btn-change-avatar"
+          class="px-3 py-1.5 rounded-lg bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 text-xs font-medium transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+          type="button"
+        >
+          <span class="material-symbols-outlined text-[16px]">upload</span>
+          <span>Cambiar foto</span>
+        </button>
+        <button
+          id="btn-remove-avatar"
+          class="px-3 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 text-xs font-medium transition-colors cursor-pointer hidden"
+          type="button"
+        >
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <form class="flex flex-col gap-4" id="profile-form">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-zinc-700" for="admin-name"
+          >Nombre completo</label
+        >
+        <div class="relative">
+          <span
+            class="material-symbols-outlined absolute left-3 top-2.5 text-zinc-400 text-[18px]"
+            >person</span
+          >
+          <input
+            class="w-full bg-white text-zinc-900 rounded-xl pl-9 pr-3 py-2 text-sm border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+            id="admin-name"
+            type="text"
+            value="Alex Ramírez"
+            required
+          />
+        </div>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium text-zinc-700" for="admin-role"
+          >Rol en la empresa</label
+        >
+        <div class="relative">
+          <span
+            class="material-symbols-outlined absolute left-3 top-2.5 text-zinc-400 text-[18px]"
+            >work</span
+          >
+          <input
+            class="w-full bg-white text-zinc-900 rounded-xl pl-9 pr-3 py-2 text-sm border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+            id="admin-role"
+            type="text"
+            value="Administrador / Dueño"
+            required
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <div class="flex items-center justify-between">
+        <label class="text-xs font-medium text-zinc-700" for="business-name"
+          >Nombre del Negocio vinculado</label
+        >
+        <span class="text-[11px] text-zinc-400">ID: CAFE-7749</span>
+      </div>
+      <div class="relative">
+        <span
+          class="material-symbols-outlined absolute left-3 top-2.5 text-zinc-400 text-[18px]"
+          >storefront</span
+        >
+        <input
+          class="w-full bg-white text-zinc-900 rounded-xl pl-9 pr-28 py-2 text-sm border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+          id="business-name"
+          type="text"
+          value="Main Street Cafe"
+          required
+        />
+        <span
+          class="absolute right-2 top-2 px-2 py-0.5 rounded-md bg-orange-100 text-orange-800 font-medium text-[11px]"
+        >
+          Negocio Principal
+        </span>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end pt-2">
+      <button
+        id="btn-save-profile"
+        class="px-5 py-2.5 rounded-xl bg-orange-500 text-white font-medium text-sm shadow-sm hover:bg-orange-600 transition-all flex items-center gap-2 cursor-pointer"
+        type="submit"
+      >
+        <span class="material-symbols-outlined text-[18px]">save</span>
+        <span>Guardar Cambios de Perfil</span>
+      </button>
+    </div>
+  </form>
+</section>
+
+<script>
+  function populateProfileForm() {
+    const savedData = localStorage.getItem("user_profile_data");
+    if (!savedData) return;
+
+    try {
+      const data = JSON.parse(savedData);
+
+      const nameInput = document.getElementById(
+        "admin-name",
+      ) as HTMLInputElement;
+      const businessInput = document.getElementById(
+        "business-name",
+      ) as HTMLInputElement;
+      const initialsEl = document.getElementById("profile-avatar-initials");
+      const imgEl = document.getElementById(
+        "profile-avatar-img",
+      ) as HTMLImageElement;
+
+      if (nameInput && data.adminName) nameInput.value = data.adminName;
+      if (businessInput && data.businessName)
+        businessInput.value = data.businessName;
+
+      if (data.adminName && initialsEl) {
+        const initials = data.adminName
+          .split(" ")
+          .map((n: string) => n[0])
+          .join("")
+          .substring(0, 2)
+          .toUpperCase();
+        initialsEl.textContent = initials;
+      }
+
+      if (data.avatarUrl && imgEl && initialsEl) {
+        imgEl.src = data.avatarUrl;
+        imgEl.classList.remove("hidden");
+        initialsEl.classList.add("hidden");
+      }
+    } catch (e) {}
+  }
+
+  // Ejecutar al cargar la vista
+  populateProfileForm();
+
+  // Escuchar si los datos se actualizan dinámicamente
+  window.addEventListener("profile-updated", populateProfileForm);
+</script>

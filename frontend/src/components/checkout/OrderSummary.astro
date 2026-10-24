@@ -1,0 +1,218 @@
+---
+
+---
+
+<div class="max-w-2xl mx-auto w-full">
+  <div
+    class="bg-surface-container-lowest rounded-xl p-space-xl shadow-lg border-2 border-primary-container/20"
+  >
+    <div
+      class="flex items-center justify-between pb-space-md mb-space-md border-b border-surface-container-high"
+    >
+      <div class="flex items-center gap-space-sm">
+        <span class="material-symbols-outlined text-primary text-[24px]"
+          >receipt_long</span
+        >
+        <h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">
+          Resumen del Pedido
+        </h3>
+      </div>
+      <span
+        class="font-label-sm text-label-sm text-primary font-bold bg-primary-fixed px-space-sm py-0.5 rounded-full"
+        >Paso 1 de 2</span
+      >
+    </div>
+
+    <div
+      class="space-y-space-sm pb-space-lg mb-space-lg border-b border-surface-container-high"
+    >
+      <div class="flex items-center justify-between">
+        <div class="flex flex-col">
+          <span
+            class="font-body-md text-body-md font-semibold text-on-surface"
+            id="summary-plan-title">Plan WhatsBot Professional</span
+          >
+          <span
+            class="font-label-sm text-label-sm text-on-surface-variant"
+            id="summary-plan-billing"
+            >Facturación Anual • Prueba gratis de 14 días</span
+          >
+        </div>
+        <span
+          class="font-label-lg text-label-lg font-semibold text-on-surface"
+          id="summary-base-price">$24.00 USD</span
+        >
+      </div>
+      <div
+        class="flex items-center justify-between text-primary font-medium"
+        id="summary-discount-row"
+      >
+        <span class="font-body-md text-body-md flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px]">sell</span
+          >Descuento Anual (2 meses gratis)
+        </span>
+        <span
+          class="font-label-lg text-label-lg font-bold"
+          id="summary-discount-amount">-$4.80 USD</span
+        >
+      </div>
+    </div>
+
+    <div
+      class="flex items-baseline justify-between mb-space-lg bg-surface-container-low p-space-md rounded-lg"
+    >
+      <div>
+        <span
+          class="font-headline-sm text-headline-sm font-bold text-on-surface block"
+          >Total a Pagar Hoy:</span
+        >
+        <span class="font-body-sm text-body-sm text-primary font-semibold"
+          >Luego de 14 días gratis</span
+        >
+      </div>
+      <div class="text-right">
+        <span
+          class="font-display-lg text-display-lg font-extrabold text-primary"
+          id="order-total">$19.20</span
+        >
+        <span
+          class="font-label-md text-label-md text-on-surface-variant block font-medium"
+          >USD / mes</span
+        >
+      </div>
+    </div>
+
+    <!-- Anuncio Informativo para Plan Gratuito (Oculto por defecto) -->
+    <div
+      id="free-plan-notice"
+      class="hidden p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-start gap-2.5 my-3 animate-fade-in"
+    >
+      <span
+        class="material-symbols-outlined text-emerald-600 text-[20px] shrink-0 mt-0.5"
+        >verified</span
+      >
+      <div class="flex flex-col">
+        <span class="font-bold text-emerald-900">¡Plan Starter Gratuito!</span>
+        <span
+          >No necesitas registrar ninguna tarjeta ni realizar pagos hoy. Tu
+          prueba se activará automáticamente.</span
+        >
+      </div>
+    </div>
+
+    <!-- Botón de Continuar al Pago -->
+    <button
+      id="btn-proceed-pay"
+      class="w-full py-3 px-4 rounded-xl bg-orange-500 text-white font-bold text-sm shadow-sm hover:bg-orange-600 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-orange-500"
+      type="button"
+    >
+      <span>Continuar al Pago</span>
+      <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+    </button>
+  </div>
+</div>
+
+<script is:inline>
+  (function initOrderSummary() {
+    const PLAN_DATA = {
+      starter: { name: "WhatsBot Starter", monthly: 0, annual: 0 },
+      pro: { name: "WhatsBot Professional", monthly: 29, annual: 24 },
+      enterprise: { name: "WhatsBot Enterprise", monthly: 99, annual: 79 },
+    };
+
+    function renderSummary(planKey, billing) {
+      const data = PLAN_DATA[planKey] || PLAN_DATA.pro;
+      const isAnnual = billing === "annual";
+      const price = isAnnual ? data.annual : data.monthly;
+      const discount = isAnnual ? price * 0.2 : 0;
+      const finalPrice = Math.max(0, price - discount);
+
+      const titleEl = document.getElementById("summary-plan-title");
+      const billingEl = document.getElementById("summary-plan-billing");
+      const basePriceEl = document.getElementById("summary-base-price");
+      const discountRow = document.getElementById("summary-discount-row");
+      const discountAmountEl = document.getElementById(
+        "summary-discount-amount",
+      );
+      const totalEl = document.getElementById("order-total");
+      const btnTextEl = document.getElementById("proceed-btn-text");
+      const btnEl = document.getElementById("btn-proceed");
+
+      if (titleEl) titleEl.textContent = data.name;
+      if (billingEl)
+        billingEl.textContent = isAnnual
+          ? "Facturación Anual • Prueba gratis de 14 días"
+          : "Facturación Mensual • Prueba gratis de 14 días";
+      if (basePriceEl)
+        basePriceEl.textContent = "$" + price.toFixed(2) + " USD";
+
+      if (discountRow) {
+        discountRow.style.display = isAnnual && price > 0 ? "flex" : "none";
+        if (discountAmountEl)
+          discountAmountEl.textContent = "-$" + discount.toFixed(2) + " USD";
+      }
+
+      if (totalEl) totalEl.textContent = "$" + finalPrice.toFixed(2);
+      if (btnTextEl)
+        btnTextEl.textContent =
+          "Continuar al Pago Seguro ($" + finalPrice.toFixed(2) + " USD)";
+      if (btnEl)
+        btnEl.setAttribute(
+          "href",
+          "/checkout/payment?plan=" + planKey + "&billing=" + billing,
+        );
+    }
+
+    window.addEventListener("plan-changed", function (e) {
+      if (e && e.detail) {
+        renderSummary(e.detail.plan, e.detail.billing);
+      }
+    });
+
+    const savedPlan = localStorage.getItem("checkout_plan") || "pro";
+    const savedBilling = localStorage.getItem("checkout_billing") || "annual";
+    renderSummary(savedPlan, savedBilling);
+  })();
+
+  (function initFreePlanHandler() {
+    const freeNotice = document.getElementById("free-plan-notice");
+    const btnPay = document.getElementById("btn-proceed-pay");
+
+    function handlePlanUI(plan) {
+      if (!btnPay) return;
+
+      if (plan === "starter") {
+        // Mostrar anuncio
+        if (freeNotice) freeNotice.classList.remove("hidden");
+
+        // Desactivar botón y cambiar texto
+        btnPay.disabled = true;
+        btnPay.innerHTML = `
+          <span class="material-symbols-outlined text-[18px]">block</span>
+          <span>No requiere pago</span>
+        `;
+      } else {
+        // Ocultar anuncio
+        if (freeNotice) freeNotice.classList.add("hidden");
+
+        // Habilitar botón
+        btnPay.disabled = false;
+        btnPay.innerHTML = `
+          <span>Continuar al Pago</span>
+          <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+        `;
+      }
+    }
+
+    // Escuchar cambios enviados desde la tarjeta de precios
+    window.addEventListener("plan-changed", function (e) {
+      if (e.detail && e.detail.plan) {
+        handlePlanUI(e.detail.plan);
+      }
+    });
+
+    // Carga inicial según el estado guardado en localStorage
+    const initialPlan = localStorage.getItem("checkout_plan") || "pro";
+    handlePlanUI(initialPlan);
+  })();
+</script>
