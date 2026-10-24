@@ -1,6 +1,6 @@
 ---
 import SessionGuard from '../components/common/SessionGuard.astro';
-const requireSession = ['/profile', '/orders', '/billing', '/vincular-whatsapp', '/checkout/', '/support'].some(path => Astro.url.pathname.startsWith(path));
+const requireSession = ['/customization', '/catalog', '/profile', '/orders', '/billing', '/vincular-whatsapp', '/checkout/', '/support'].some(path => Astro.url.pathname.startsWith(path));
 import Sidebar from "../components/common/Sidebar.astro";
 import Navbar from "../components/common/Navbar.astro";
 import ToastContainer from "../components/common/ToastContainer.astro";

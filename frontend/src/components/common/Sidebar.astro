@@ -4,6 +4,7 @@ import Logo from "../common/Logo.astro";
 const pathname = Astro.url.pathname;
 
 const isActive = (path: string) => {
+  if (path === "/customization" && pathname.startsWith("/catalog")) return true;
   if (path === "/") return pathname === "/";
   return pathname.startsWith(path);
 };

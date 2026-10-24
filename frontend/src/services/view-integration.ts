@@ -1,7 +1,7 @@
 import { platform, type Plan, type Order, type Business, type Subscription } from './platform';
 import { ApiError } from '../api/http';
 import { syncUserSession } from './userSession';
-import { notify, confirmAction, editFields } from './notifications';
+import { notify, confirmAction } from './notifications';
 import { setText as text, loadPageData, showBusinessSetup } from './page-data';
 
 // La integración modifica datos y eventos de los componentes originales, no su diseño.
@@ -171,12 +171,7 @@ async function whatsapp() {
   });
   captureClick('#btn-refresh-qr', () => notify('El backend actual vincula por número y no genera códigos QR.'));
   captureClick('#btn-check-status', () => { void act(null, async () => { const result = await platform.connection(); notify(result ? `${result.phoneNumber}: ${result.status}${result.simulated ? ' (prueba)' : ''}` : 'No hay conexión registrada.'); }); });
-  if (new URLSearchParams(location.search).get('configure') === 'agent') {
-    const current = await platform.agent();
-    const fields = await editFields('Configura tu agente', [{name:'personality',label:'Personalidad',value:current.personality || ''},{name:'tone',label:'Tono',value:current.tone || ''},{name:'welcomeMessage',label:'Mensaje de bienvenida',value:current.welcomeMessage || ''}]);
-    if (!fields) return;
-    await platform.saveAgent({ personality:fields.personality, tone:fields.tone, welcomeMessage:fields.welcomeMessage }); notify('Configuración del agente guardada.', 'success');
-  }
+  if (new URLSearchParams(location.search).get('configure') === 'agent') { location.replace('/customization'); }
 }
 
 async function orders() {
@@ -251,17 +246,17 @@ async function orders() {
 }
 
 function navigation() {
-  const customize = $<HTMLAnchorElement>('a[href="/customization"]'); if (customize) customize.href = '/vincular-whatsapp?configure=agent';
+
   const analytics = $<HTMLAnchorElement>('a[href="/analytics"]'); if (analytics) analytics.href = '/orders';
-  captureClick('#btn-create-bot', () => location.assign('/vincular-whatsapp?configure=agent'));
+  captureClick('#btn-create-bot', () => location.assign('/customization'));
 }
 
 navigation();
 if (document.documentElement.dataset.appState === 'loading' && localStorage.getItem('auth_token')) {
-  const run = path === '/profile' ? profile : path === '/orders' ? orders : path === '/billing' ? billing : path === '/vincular-whatsapp' ? whatsapp : path.startsWith('/checkout/') ? checkout : null;
+  const run = ['/customization','/catalog'].includes(path) ? async () => (await import('./customization')).initCustomization() : path === '/profile' ? profile : path === '/orders' ? orders : path === '/billing' ? billing : path === '/vincular-whatsapp' ? whatsapp : path.startsWith('/checkout/') ? checkout : null;
   void loadPageData(async () => {
     const account = await syncUserSession();
-    const requiresBusiness = ['/orders','/billing','/vincular-whatsapp'].includes(path) || path.startsWith('/checkout/');
+    const requiresBusiness = ['/orders','/billing','/vincular-whatsapp','/customization','/catalog'].includes(path) || path.startsWith('/checkout/');
     if (requiresBusiness && account?.hasBusiness === false) { showBusinessSetup(); return; }
     if (run) await run();
   }).catch(failure);
