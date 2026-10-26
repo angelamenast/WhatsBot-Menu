@@ -11,6 +11,7 @@ describe('AgentDispatchAdapter', () => {
   const command = {
     businessId: 'business-1',
     conversationId: 'conversation-1',
+    messageId: 'message-1',
     customerNumber: '+573001111111',
     message: 'Hola',
   };
@@ -32,10 +33,17 @@ describe('AgentDispatchAdapter', () => {
     expect(processCustomerMessageUseCase.execute).toHaveBeenCalledWith({
       businessId: command.businessId,
       conversationId: command.conversationId,
+      messageId: command.messageId,
       customerNumber: command.customerNumber,
       message: command.message,
     });
-    expect(result).toEqual({ responseText: 'Hola, ¿en qué te ayudo?' });
+    expect(result).toBe('Hola, ¿en qué te ayudo?');
+  });
+
+  it('si agent no responde (null), devuelve null', async () => {
+    processCustomerMessageUseCase.execute.mockResolvedValue(null);
+
+    await expect(adapter.dispatch(command)).resolves.toBeNull();
   });
 
   it('propaga los errores de agent sin tragarlos (el manejo es de quien despacha)', async () => {

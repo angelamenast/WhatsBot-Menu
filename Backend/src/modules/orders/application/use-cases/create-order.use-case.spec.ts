@@ -7,9 +7,12 @@ import {
 } from '../../domain/repositories/catalog-lookup.repository';
 import { OrderStatus } from '../../domain/entities/order.entity';
 import {
+  ConversationAlreadyHasOrderError,
   ConversationNotInBusinessError,
   EmptyOrderError,
 } from '../../domain/errors/order.errors';
+import { Order } from '../../domain/entities/order.entity';
+import { OrderItem } from '../../domain/entities/order-item.entity';
 import { CreateOrderCommand } from '../dto/create-order.command';
 
 const BURGER_ID = '11111111-1111-4111-8111-111111111111';
@@ -54,6 +57,7 @@ describe('CreateOrderUseCase', () => {
       findById: jest.fn(),
       findViewById: jest.fn(),
       findViewsByBusiness: jest.fn(),
+      findOpenByConversation: jest.fn(),
       insert: jest.fn(),
       updateStatus: jest.fn(),
     };
@@ -461,6 +465,61 @@ describe('CreateOrderUseCase', () => {
       ).rejects.toBe(lookupError);
 
       expect(orderRepository.insert).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('un solo pedido abierto por conversación', () => {
+    const existingOrder = () =>
+      Order.reconstitute({
+        id: 'existing-order-id',
+        businessId: 'business-1',
+        conversationId: 'conversation-1',
+        status: OrderStatus.PENDING,
+        items: [
+          OrderItem.create({ productId: BURGER_ID, productNameSnapshot: 'Hamburguesa clásica', unitPrice: 15000, quantity: 1 }),
+        ],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+    it('con pedido abierto: lanza ConversationAlreadyHasOrderError con su id y NO consulta el catálogo ni inserta', async () => {
+      orderRepository.findOpenByConversation.mockResolvedValue(existingOrder());
+
+      const error = await useCase
+        .execute(commandWith([{ productId: BURGER_ID, quantity: 1 }]))
+        .catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(ConversationAlreadyHasOrderError);
+      expect((error as ConversationAlreadyHasOrderError).orderId).toBe('existing-order-id');
+      expect(orderRepository.findOpenByConversation).toHaveBeenCalledWith('conversation-1', 'business-1');
+      expect(catalogLookupRepository.findManyByIds).not.toHaveBeenCalled();
+      expect(orderRepository.insert).not.toHaveBeenCalled();
+    });
+
+    it('sin pedido abierto (p. ej. el anterior se canceló): crea el pedido normalmente', async () => {
+      orderRepository.findOpenByConversation.mockResolvedValue(null);
+      catalogLookupRepository.findManyByIds.mockResolvedValue([burger]);
+
+      const { order } = await useCase.execute(commandWith([{ productId: BURGER_ID, quantity: 1 }]));
+
+      expect(order?.status).toBe(OrderStatus.PENDING);
+      expect(orderRepository.insert).toHaveBeenCalledTimes(1);
+    });
+
+    it('la validación de lista vacía no cambia de orden: sigue lanzando EmptyOrderError primero', async () => {
+      orderRepository.findOpenByConversation.mockResolvedValue(existingOrder());
+
+      await expect(useCase.execute(commandWith([]))).rejects.toThrow(EmptyOrderError);
+    });
+
+    it('si el insert pierde la carrera, el error de dominio del repositorio se propaga', async () => {
+      orderRepository.findOpenByConversation.mockResolvedValue(null);
+      catalogLookupRepository.findManyByIds.mockResolvedValue([burger]);
+      orderRepository.insert.mockRejectedValue(new ConversationAlreadyHasOrderError('winner-id'));
+
+      await expect(
+        useCase.execute(commandWith([{ productId: BURGER_ID, quantity: 1 }])),
+      ).rejects.toThrow(ConversationAlreadyHasOrderError);
     });
   });
 });

@@ -7,6 +7,8 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 import { AGENT_CONFIG_REPOSITORY } from './domain/repositories/agent-config.repository';
 import { SupabaseAgentConfigRepository } from './infrastructure/persistence/supabase-agent-config.repository';
+import { BUSINESS_ATTENTION_REPOSITORY } from './domain/repositories/business-attention.repository';
+import { SupabaseBusinessAttentionRepository } from './infrastructure/persistence/supabase-business-attention.repository';
 import { CATALOG_REPOSITORY } from './domain/repositories/catalog.repository';
 import { SupabaseCatalogRepository } from './infrastructure/persistence/supabase-catalog.repository';
 import { FakeCatalogRepository } from './infrastructure/persistence/fake-catalog.repository';
@@ -19,6 +21,10 @@ import { FakeLlmProvider } from './infrastructure/adapters/fake-llm.adapter';
 
 import { TOKEN_USAGE_PORT } from './application/ports/out/token-usage.port';
 import { SupabaseTokenUsageAdapter } from './infrastructure/adapters/supabase-token-usage.adapter';
+
+import { USAGE_QUOTA_PORT } from './application/ports/out/usage-quota.port';
+import { FakeUsageQuotaProvider } from './infrastructure/adapters/fake-usage-quota.adapter';
+import { SupabaseUsageQuotaAdapter } from './infrastructure/adapters/supabase-usage-quota.adapter';
 
 import { ORDER_PORT } from './application/ports/out/order.port';
 import { FakeOrderProvider } from './infrastructure/adapters/fake-order.adapter';
@@ -34,7 +40,8 @@ import { AgentConfigController } from './presentation/controllers/agent-config.c
   controllers: [AgentConfigController],
   providers: [
     { provide: AGENT_CONFIG_REPOSITORY, useClass: SupabaseAgentConfigRepository },
-    // El catálogo es dominio de Business: se mantiene fake hasta que ese módulo exista.
+    { provide: BUSINESS_ATTENTION_REPOSITORY, useClass: SupabaseBusinessAttentionRepository },
+    // El agente lee su propio catálogo (catalogo_productos); `fake` solo si se pide explícitamente.
     FakeCatalogRepository,
     SupabaseCatalogRepository,
     {
@@ -45,7 +52,7 @@ import { AgentConfigController } from './presentation/controllers/agent-config.c
         fakeCatalogRepository: FakeCatalogRepository,
         supabaseCatalogRepository: SupabaseCatalogRepository,
       ) => {
-        const provider = configService.get<string>('CATALOG_PROVIDER') ?? 'fake';
+        const provider = configService.get<string>('CATALOG_PROVIDER') ?? 'supabase';
         switch (provider) {
           case 'fake':
             return fakeCatalogRepository;
@@ -76,6 +83,28 @@ import { AgentConfigController } from './presentation/controllers/agent-config.c
     },
 
     { provide: TOKEN_USAGE_PORT, useClass: SupabaseTokenUsageAdapter },
+
+    FakeUsageQuotaProvider,
+    SupabaseUsageQuotaAdapter,
+    {
+      provide: USAGE_QUOTA_PORT,
+      inject: [ConfigService, FakeUsageQuotaProvider, SupabaseUsageQuotaAdapter],
+      useFactory: (
+        configService: ConfigService,
+        fakeUsageQuotaProvider: FakeUsageQuotaProvider,
+        supabaseUsageQuotaAdapter: SupabaseUsageQuotaAdapter,
+      ) => {
+        const provider = configService.get<string>('USAGE_QUOTA_PROVIDER') ?? 'fake';
+        switch (provider) {
+          case 'fake':
+            return fakeUsageQuotaProvider;
+          case 'supabase':
+            return supabaseUsageQuotaAdapter;
+          default:
+            throw new Error(`USAGE_QUOTA_PROVIDER inválido: "${provider}". Usa "fake" o "supabase".`);
+        }
+      },
+    },
 
     FakeOrderProvider,
     OrdersOrderAdapter,

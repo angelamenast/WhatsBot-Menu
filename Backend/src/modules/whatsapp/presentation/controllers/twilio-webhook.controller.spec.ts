@@ -3,12 +3,22 @@ import { INestApplication, Logger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { TwilioWebhookController } from './twilio-webhook.controller';
+import 'reflect-metadata';
+import type { TwilioWebhookController as TwilioWebhookControllerClass } from './twilio-webhook.controller';
 import { TwilioSignatureGuard } from '../guards/twilio-signature.guard';
 import { HandleIncomingMessageUseCase } from '../../application/use-cases/handle-incoming-message.use-case';
 import { WhatsappConnectionNotFoundError } from '../../domain/errors/whatsapp.errors';
 
 describe('TwilioWebhookController', () => {
+  // Carga dinámica: @nestjs/throttler es CommonJS y, con Jest en modo ESM, falla si se importa
+  // estáticamente antes de que @nestjs/common esté evaluado (mismo caso que orders.controller.spec).
+  let TwilioWebhookController: typeof TwilioWebhookControllerClass;
+
+  beforeAll(async () => {
+    const controllerPath = './twilio-webhook.controller';
+    ({ TwilioWebhookController } = await import(controllerPath));
+  });
+
   let app: INestApplication<App>;
   let handleIncomingMessageUseCase: { execute: any };
 
@@ -90,5 +100,10 @@ describe('TwilioWebhookController', () => {
     expect(logged).not.toContain(payload.Body);
 
     warnSpy.mockRestore();
+  });
+
+  it('omite el throttler global: Twilio llama desde IPs compartidas por todos los negocios', () => {
+    // Metadata que escribe @SkipThrottle() (THROTTLER_SKIP + nombre del throttler).
+    expect(Reflect.getMetadata('THROTTLER:SKIPdefault', TwilioWebhookController)).toBe(true);
   });
 });

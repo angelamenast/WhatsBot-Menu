@@ -1,9 +1,13 @@
 import { Body, Controller, HttpCode, Logger, Post, UseGuards } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { TwilioSignatureGuard } from '../guards/twilio-signature.guard';
 import { TwilioWebhookDto } from '../dto/twilio-webhook.dto';
 import { HandleIncomingMessageUseCase } from '../../application/use-cases/handle-incoming-message.use-case';
 import { WhatsappConnectionNotFoundError } from '../../domain/errors/whatsapp.errors';
 
+// Twilio llama desde IPs compartidas por todos los negocios: el throttler global (por IP) lo cortaría con 429.
+// La firma de Twilio (TwilioSignatureGuard) es la protección de este endpoint.
+@SkipThrottle()
 @Controller('whatsapp/webhook')
 @UseGuards(TwilioSignatureGuard)
 export class TwilioWebhookController {

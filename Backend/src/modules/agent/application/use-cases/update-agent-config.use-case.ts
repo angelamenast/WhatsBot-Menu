@@ -12,12 +12,14 @@ export class UpdateAgentConfigUseCase {
 
   async execute(command: UpdateAgentConfigCommand): Promise<AgentConfig> {
     const existing = await this.agentConfigRepository.findByBusinessId(command.businessId);
-    const config = existing ?? AgentConfig.initialize(command.businessId);
+    const config = existing ?? AgentConfig.default(command.businessId);
 
     config.updateDetails({
       personality: command.personality,
       tone: command.tone,
+      regionalStyle: command.regionalStyle,
       welcomeMessage: command.welcomeMessage,
+      unavailableMessage: command.unavailableMessage,
       businessHours: command.businessHours,
     });
 

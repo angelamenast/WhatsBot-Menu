@@ -1,4 +1,4 @@
-export type HistorySender = 'CUSTOMER' | 'AGENT' | 'SYSTEM';
+export type HistorySender = 'CUSTOMER' | 'AGENT';
 
 export interface HistoryMessage {
   sender: HistorySender;
@@ -16,7 +16,15 @@ export interface HistoryMessage {
  */
 export interface ConversationHistoryRepository {
   countByConversationId(conversationId: string): Promise<number>;
-  findRecentByConversationId(conversationId: string, limit: number): Promise<HistoryMessage[]>;
+  /**
+   * Últimos `limit` mensajes en orden cronológico, sin el mensaje `excludeMessageId` (el entrante),
+   * solo de cliente y agente, y sin respuestas del agente cuyo envío falló.
+   */
+  findRecentByConversationId(
+    conversationId: string,
+    limit: number,
+    excludeMessageId: string,
+  ): Promise<HistoryMessage[]>;
 }
 
 export const CONVERSATION_HISTORY_REPOSITORY = Symbol('ConversationHistoryRepository');

@@ -3,11 +3,20 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { TwilioStatusCallbackController } from './twilio-status-callback.controller';
+import 'reflect-metadata';
+import type { TwilioStatusCallbackController as TwilioStatusCallbackControllerClass } from './twilio-status-callback.controller';
 import { TwilioSignatureGuard } from '../guards/twilio-signature.guard';
 import { HandleStatusCallbackUseCase } from '../../application/use-cases/handle-status-callback.use-case';
 
 describe('TwilioStatusCallbackController', () => {
+  // Carga dinámica por @nestjs/throttler (CommonJS) con Jest en modo ESM; ver twilio-webhook.controller.spec.
+  let TwilioStatusCallbackController: typeof TwilioStatusCallbackControllerClass;
+
+  beforeAll(async () => {
+    const controllerPath = './twilio-status-callback.controller';
+    ({ TwilioStatusCallbackController } = await import(controllerPath));
+  });
+
   let app: INestApplication<App>;
   let handleStatusCallbackUseCase: { execute: any };
   
@@ -56,5 +65,10 @@ describe('TwilioStatusCallbackController', () => {
       providerMessageId: payload.MessageSid,
       status: payload.MessageStatus,
     });
+  });
+
+  it('omite el throttler global: Twilio llama desde IPs compartidas por todos los negocios', () => {
+    // Metadata que escribe @SkipThrottle() (THROTTLER_SKIP + nombre del throttler).
+    expect(Reflect.getMetadata('THROTTLER:SKIPdefault', TwilioStatusCallbackController)).toBe(true);
   });
 });

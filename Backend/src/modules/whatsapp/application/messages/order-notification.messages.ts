@@ -3,30 +3,14 @@
  * y una función por estado: cuando los mensajes sean configurables por negocio,
  * este es el único punto que cambia.
  */
+import { formatCop, orderReference } from '../../../../shared/domain/order-display';
+
+// orderReference vive en shared; se reexporta porque los tests y consumidores de este archivo lo importan de aquí.
+export { orderReference };
+
 export interface OrderNotificationData {
   orderId: string;
   total: number;
-}
-
-const copFormat = (fractionDigits: 0 | 2) =>
-  new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  });
-
-const copWithoutDecimals = copFormat(0);
-const copWithDecimals = copFormat(2);
-
-/** Pesos enteros sin decimales ($ 36.000); con centavos, siempre dos ($ 15.000,50). */
-function formatCop(total: number): string {
-  return (Number.isInteger(total) ? copWithoutDecimals : copWithDecimals).format(total);
-}
-
-/** Referencia corta que ve el cliente: primeros 8 caracteres del UUID. */
-export function orderReference(orderId: string): string {
-  return orderId.slice(0, 8);
 }
 
 export function orderConfirmedMessage(data: OrderNotificationData): string {

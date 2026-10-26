@@ -6,7 +6,7 @@ import {
   HistorySender,
 } from '../../domain/repositories/conversation-history.repository';
 
-type Remitente = 'cliente' | 'agente_ia' | 'sistema';
+type Remitente = 'cliente' | 'agente_ia';
 
 interface MensajeRow {
   remitente: Remitente;
@@ -17,7 +17,6 @@ interface MensajeRow {
 const REMITENTE_TO_SENDER: Record<Remitente, HistorySender> = {
   cliente: 'CUSTOMER',
   agente_ia: 'AGENT',
-  sistema: 'SYSTEM',
 };
 
 @Injectable()
@@ -42,19 +41,25 @@ export class SupabaseConversationHistoryRepository implements ConversationHistor
   async findRecentByConversationId(
     conversationId: string,
     limit: number,
+    excludeMessageId: string,
   ): Promise<HistoryMessage[]> {
     const client = this.supabaseService.getClient();
 
-    // Se piden limit + 1: al llegar aquí, el mensaje actual del cliente ya fue
-    // persistido por whatsapp (ver handle-incoming-message.use-case.ts), así que
-    // el más reciente de este query ES el mensaje actual. Se descarta con slice(1)
-    // para no duplicarlo (ya se pasa aparte como `customerMessage` al LLM).
+    // El mensaje entrante se excluye por id (ya viaja aparte como `customerMessage`).
+    // Solo cuentan los mensajes del cliente y del agente. Las respuestas del agente cuyo envío
+    // falló nunca llegaron al cliente: se excluyen. Los del cliente tienen estado_envio nulo
+    // y por eso el filtro admite null explícitamente (un `neq` solo descartaría los null).
+    // Orden estable: created_at y, en empate, id.
     const { data, error } = await client
       .from('mensajes')
       .select('remitente, contenido, created_at')
       .eq('conversacion_id', conversationId)
+      .neq('id', excludeMessageId)
+      .in('remitente', ['cliente', 'agente_ia'])
+      .or('estado_envio.is.null,estado_envio.neq.fallido')
       .order('created_at', { ascending: false })
-      .limit(limit + 1)
+      .order('id', { ascending: false })
+      .limit(limit)
       .returns<MensajeRow[]>();
 
     if (error) {
@@ -62,7 +67,7 @@ export class SupabaseConversationHistoryRepository implements ConversationHistor
     }
 
     return (data ?? [])
-      .slice(1)
+      .slice()
       .reverse()
       .map((row) => ({
         sender: REMITENTE_TO_SENDER[row.remitente],
