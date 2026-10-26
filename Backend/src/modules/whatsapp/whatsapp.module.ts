@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { WhatsappStatusController } from './presentation/controllers/whatsapp-status.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { BusinessModule } from '../business/business.module';
@@ -38,7 +39,7 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
 
 @Module({
   imports: [ConfigModule, AuthModule, BusinessModule, AgentModule, SubscriptionsModule],
-  controllers: [TwilioWebhookController, TwilioStatusCallbackController, WhatsappOnboardingController],
+  controllers: [TwilioWebhookController, TwilioStatusCallbackController, WhatsappOnboardingController, WhatsappStatusController],
   providers: [
     FakeMessagingProvider,
     {

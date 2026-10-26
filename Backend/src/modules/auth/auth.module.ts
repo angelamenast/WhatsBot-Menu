@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AccountController } from './infrastructure/presentation/controllers/account.controller';
 import { AuthSessionController } from './infrastructure/presentation/controllers/auth-session.controller';
 import { AuthController } from './infrastructure/presentation/controllers/auth.controller';
 import { RegisterUserUseCase } from './application/use-cases/register-user.use-case';
@@ -11,7 +12,7 @@ import { SupabaseAuthRepository } from './infrastructure/persistence/supabase-au
 import { SupabaseAuthGuard } from './infrastructure/presentation/guards/supabase-auth.guard';
 
 @Module({
-  controllers: [AuthController, AuthSessionController],
+  controllers: [AuthController, AuthSessionController, AccountController],
   providers: [
     RegisterUserUseCase,
     LoginUseCase,

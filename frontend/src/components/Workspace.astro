@@ -1,0 +1,131 @@
+---
+import SessionGuard from './common/SessionGuard.astro';
+interface Props { mode: 'profile' | 'orders' | 'billing' | 'whatsapp' | 'checkout' }
+const { mode } = Astro.props;
+---
+<SessionGuard />
+<section id="workspace" data-mode={mode} class="workspace">
+  <div class="toolbar"><a href="/profile">Mi negocio</a><a href="/orders">Pedidos</a><a href="/billing">Suscripción</a><a href="/vincular-whatsapp">WhatsApp</a><button data-logout type="button">Cerrar sesión</button></div>
+  <p id="workspace-message" role="status" aria-live="polite">Cargando datos…</p>
+  <div id="workspace-content"></div>
+</section>
+<style is:global>
+  .workspace {color:#18181b;width:100%;max-width:1200px;margin:24px auto;font-family:inherit}
+  .workspace .toolbar {display:flex;flex-wrap:wrap;gap:18px;align-items:center;margin-bottom:24px}
+  .workspace a {color:#c2410c;text-decoration:underline}
+  .workspace .cards {display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+  .workspace .card {background:white;border:1px solid #e4e4e7;border-radius:20px;padding:24px;margin-bottom:20px}
+  .workspace h2 {font-size:22px;font-weight:700;margin:0 0 16px}.workspace h3 {font-size:17px;font-weight:700;margin-bottom:12px}
+  .workspace label {display:block;margin:14px 0}.workspace input,.workspace select,.workspace textarea {display:block;width:100%;border:1px solid #d4d4d8;border-radius:10px;padding:10px;margin-top:5px;background:white;color:#18181b}
+  .workspace button,.workspace .button {background:#ea580c;color:white;border-radius:10px;padding:10px 16px;cursor:pointer;display:inline-block;margin:6px 6px 0 0;text-decoration:none}
+  .workspace button:disabled {opacity:.45;cursor:wait}.workspace .muted {color:#71717a;font-size:14px;margin:10px 0}
+  .workspace .error {color:#b91c1c}.workspace .success {color:#166534}.workspace li {margin:8px 0}.workspace .order {border-top:1px solid #e4e4e7;padding:16px 0}
+  .workspace .filters {display:flex;flex-wrap:wrap;gap:12px;align-items:end}.workspace .filters label {flex:1;min-width:150px}
+</style>
+<script>
+  import { platform, type Subscription, type Order } from '../services/platform';
+  import { ApiError } from '../api/http';
+  import { syncUserSession } from '../services/userSession';
+  const root = document.querySelector<HTMLElement>('#workspace')!;
+  const mode = root.dataset.mode;
+  const content = document.querySelector<HTMLElement>('#workspace-content')!;
+  const message = document.querySelector<HTMLElement>('#workspace-message')!;
+  const esc = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
+  const money = (value: number) => new Intl.NumberFormat('es-CO', { style:'currency', currency:'COP', maximumFractionDigits:0 }).format(value);
+  const say = (text: string, error = false) => { message.textContent = text; message.className = error ? 'error' : 'success'; };
+  const fail = (error: unknown) => say(error instanceof Error ? error.message : 'No se pudo completar la operación.', true);
+  function onForm(id: string, action: (form: FormData) => Promise<void>) {
+    const form = document.querySelector<HTMLFormElement>('#' + id)!;
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault(); const button = form.querySelector<HTMLButtonElement>('button[type=submit]')!; button.disabled = true;
+      try { await action(new FormData(form)); } catch (error) { fail(error); } finally { button.disabled = false; }
+    });
+  }
+  const field = (name: string, label: string, value = '', type = 'text', required = true) => `<label>${label}<input name="${name}" type="${type}" value="${esc(value)}" ${required ? 'required' : ''} ${type === 'password' ? 'minlength="8" autocomplete="new-password"' : ''}></label>`;
+  function paymentRedirect(url: string) {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') throw new Error('La API devolvió una dirección de pago inválida.');
+    location.assign(parsed.href);
+  }
+  async function profile() {
+    const [{ user }, business] = await Promise.all([platform.me(), platform.business()]);
+    content.innerHTML = `<div class="cards"><form id="business-form" class="card"><h2>${business ? 'Mi negocio' : 'Registra tu negocio'}</h2>${field('name','Nombre comercial',business?.nombreNegocio)}${field('phone','WhatsApp con código de país',business?.numeroWhatsapp || '', 'tel')}${field('description','Descripción',business?.descripcion || '', 'text',false)}<button type="submit">Guardar negocio</button></form><form id="profile-form" class="card"><h2>Perfil</h2><p>${esc(user.email)}</p>${field('name','Tu nombre',user.user_metadata?.nombre || user.user_metadata?.full_name || '')}<button type="submit">Guardar nombre</button></form></div><div class="cards"><form id="email-form" class="card"><h2>Cambiar correo</h2>${field('email','Nuevo correo','','email')}<button type="submit">Solicitar cambio</button><p class="muted">Confirma el cambio desde los correos enviados por Supabase.</p></form><form id="password-form" class="card"><h2>Cambiar contraseña</h2>${field('current','Contraseña actual','','password')}${field('password','Nueva contraseña','','password')}<button type="submit">Actualizar contraseña</button></form></div>`;
+    onForm('business-form', async (form) => { await platform.saveBusiness(Boolean(business), { nombre_negocio:String(form.get('name')).trim(), numero_whatsapp:String(form.get('phone')).trim(), descripcion:String(form.get('description')).trim() }); await syncUserSession(); await profile(); say('Negocio guardado.'); });
+    onForm('profile-form', async (form) => { await platform.profile({ nombre:String(form.get('name')).trim() }); await syncUserSession(); say('Perfil guardado en el servidor.'); });
+    onForm('email-form', async (form) => { await platform.profile({email:String(form.get('email')).trim()}); say('Revisa tu correo para confirmar el cambio.'); });
+    onForm('password-form', async (form) => { await platform.profile({password:String(form.get('password')),currentPassword:String(form.get('current'))}); say('Contraseña actualizada.'); document.querySelector<HTMLFormElement>('#password-form')!.reset(); });
+    say(business ? 'Datos cargados desde tu cuenta.' : 'Primero registra tu negocio para asociar pedidos, plan y WhatsApp.');
+  }
+  async function billing() {
+    const status = await platform.subscription();
+    content.innerHTML = `<div class="card"><h2>${esc(status.plan?.nombre || 'Sin plan')}</h2><p>Estado: ${esc(status.estado)}</p><p>${status.plan ? money(status.plan.precio) : ''}</p><p>Vencimiento: ${status.fechaFin ? esc(new Date(status.fechaFin).toLocaleDateString('es-CO')) : 'Sin fecha'}</p><p>${esc(status.alerta?.mensaje || '')}</p><a class="button" href="/checkout/plans">Elegir plan</a>${status.plan ? '<button id="renew" type="button">Renovar plan actual</button>' : ''}</div>`;
+    document.querySelector<HTMLButtonElement>('#renew')?.addEventListener('click', async (event) => {
+      const button = event.currentTarget as HTMLButtonElement; button.disabled = true;
+      try {
+        let result;
+        try { result = await platform.renew(); } catch (error) {
+          if (!(error instanceof ApiError) || error.status !== 409) throw error;
+          if (!confirm(error.message + '\n¿Quieres renovar anticipadamente?')) return;
+          result = await platform.renew(true);
+        }
+        localStorage.setItem('renewal_reference',result.referencia); paymentRedirect(result.paymentUrl);
+      } catch (error) { fail(error); } finally { button.disabled = false; }
+    });
+    const reference = localStorage.getItem('renewal_reference');
+    if (reference) { const result = await platform.renewal(reference); say(result.mensaje); if (result.estado !== 'PENDIENTE') localStorage.removeItem('renewal_reference'); }
+    else say(localStorage.getItem('checkout_subscription') && !status.plan ? 'El pago está pendiente de confirmación por Wompi. Vuelve a consultar esta página después de completar el pago.' : status.puedeEditar ? 'Suscripción consultada.' : 'Tu cuenta está en modo de solo lectura. Puedes renovar aquí.');
+  }
+  async function checkout() {
+    const [plans,business] = await Promise.all([platform.plans(),platform.business()]);
+    content.innerHTML = `<div class="card"><h2>Elige tu plan</h2><p>El importe se calcula en el servidor y el pago se realiza en Wompi.</p>${!business ? '<p>Primero <a href="/profile">registra tu negocio</a> para asociar la suscripción.</p>' : ''}</div><div class="cards">${plans.map(plan=>`<section class="card"><h2>${esc(plan.nombre)}</h2><p>${money(plan.precio)}</p><p class="muted">Mensajes: ${esc(plan.limiteMensajes ?? 'Sin límite')} · Tokens: ${esc(plan.limiteTokens ?? 'Sin límite')}</p><button data-plan="${esc(plan.id)}" ${!business ? 'disabled' : ''}>Continuar al pago</button></section>`).join('')}</div>`;
+    content.querySelectorAll<HTMLButtonElement>('[data-plan]').forEach(button=>button.addEventListener('click',async()=>{
+      content.querySelectorAll<HTMLButtonElement>('[data-plan]').forEach(item=>item.disabled=true);
+      try { const result=await platform.checkout(button.dataset.plan!); localStorage.setItem('checkout_subscription',result.suscripcionId); paymentRedirect(result.paymentUrl); } catch(error){fail(error);content.querySelectorAll<HTMLButtonElement>('[data-plan]').forEach(item=>item.disabled=false);}
+    }));
+    say(plans.length ? 'Planes y precios cargados desde la API.' : 'No hay planes disponibles.');
+  }
+  let offset=0;
+  async function orders() {
+    content.innerHTML = '<form id="order-filter" class="filters card"><label>Desde<input name="from" type="date"></label><label>Hasta<input name="to" type="date"></label><label>Buscar teléfono o pedido<input name="search" type="search"></label><button type="submit">Buscar</button></form><div id="order-list"></div><button id="previous">Anterior</button><button id="next">Siguiente</button>';
+    const form=document.querySelector<HTMLFormElement>('#order-filter')!;
+    let status: Subscription;
+    async function load() {
+      const data=new FormData(form);const query=new URLSearchParams({limit:'30',offset:String(offset)});
+      if(data.get('from')) query.set('from',new Date(String(data.get('from'))+'T00:00:00').toISOString());
+      if(data.get('to')) query.set('to',new Date(String(data.get('to'))+'T23:59:59.999').toISOString());
+      const page=await platform.orders(query);const search=String(data.get('search') || '').toLowerCase();
+      const filtered=page.data.filter(order=>(order.id+' '+order.customerPhone).toLowerCase().includes(search));
+      const labels={PENDING:'Pendientes',CONFIRMED:'Confirmados',CANCELLED:'Cancelados'};
+      document.querySelector('#order-list')!.innerHTML='<div class="cards">'+Object.entries(labels).map(([state,label])=>`<section class="card"><h2>${label}</h2>${filtered.filter(order=>order.status===state).map(order=>orderCard(order,status.puedeEditar)).join('') || '<p class="muted">No hay pedidos en esta página.</p>'}</section>`).join('')+'</div>';
+      const prev=document.querySelector<HTMLButtonElement>('#previous')!; const next=document.querySelector<HTMLButtonElement>('#next')!;prev.disabled=offset===0;next.disabled=offset+page.data.length>=page.total;
+      say(`${page.total} pedidos · página ${offset/30+1}${status.puedeEditar ? '' : ' · Solo lectura: renueva tu plan para modificar pedidos.'}`);
+    }
+    status=await platform.subscription(); await load();
+    form.addEventListener('submit',event=>{event.preventDefault();offset=0;void load().catch(fail);});
+    document.querySelector('#previous')!.addEventListener('click',()=>{offset=Math.max(0,offset-30);void load().catch(fail);});
+    document.querySelector('#next')!.addEventListener('click',()=>{offset+=30;void load().catch(fail);});
+    document.querySelector('#order-list')!.addEventListener('click',async(event)=>{
+      const button=(event.target as Element).closest<HTMLButtonElement>('[data-action]'); if(!button) return;
+      const action=button.dataset.action as 'confirm'|'cancel'; if(action==='cancel'&&!confirm('¿Cancelar este pedido?'))return;
+      button.disabled=true;try{await platform.orderAction(button.dataset.id!,action);await load();}catch(error){fail(error);button.disabled=false;}
+    });
+  }
+  function orderCard(order: Order, editable: boolean) {
+    return `<article class="order"><h3>${esc(order.customerPhone)}</h3><p class="muted">${esc(order.id)} · ${esc(new Date(order.createdAt).toLocaleString('es-CO'))}</p><ul>${order.items.map(item=>`<li>${item.quantity} × ${esc(item.productName)} — ${money(item.subtotal)}</li>`).join('')}</ul><strong>${money(order.total)}</strong>${order.status==='PENDING' ? `<div><button data-id="${esc(order.id)}" data-action="confirm" ${editable?'':'disabled'}>Confirmar</button><button data-id="${esc(order.id)}" data-action="cancel" ${editable?'':'disabled'}>Cancelar</button></div>`:''}</article>`;
+  }
+  async function whatsapp() {
+    if (!(await platform.business())) {
+      content.innerHTML='<div class="card"><h2>Registra tu negocio</h2><a href="/profile">Completar los datos del negocio</a></div>';
+      say('Primero registra tu negocio para vincular WhatsApp.'); return;
+    }
+    const [business,connection,agent,status]=await Promise.all([platform.business(),platform.connection(),platform.agent(),platform.subscription()]);
+    content.innerHTML=`<form id="connection-form" class="card"><h2>Conexión de WhatsApp</h2><p>Estado: ${esc(connection?.status || 'Sin vincular')}</p><p>${esc(connection?.phoneNumber || '')}</p>${connection?.simulated ? '<p class="muted">Conexión de prueba: el proveedor de producción todavía no está configurado.</p>' : ''}${field('phone','Número en formato internacional',connection?.phoneNumber || business?.numeroWhatsapp || '', 'tel')}<button type="submit" ${status.puedeEditar?'':'disabled'}>Vincular número</button></form><form id="agent-form" class="card"><h2>Configura tu agente</h2>${field('personality','Personalidad',agent.personality || '', 'text',false)}${field('tone','Tono',agent.tone || '', 'text',false)}${field('welcome','Mensaje de bienvenida',agent.welcomeMessage || '', 'text',false)}<button type="submit" ${status.puedeEditar?'':'disabled'}>Guardar configuración</button></form>`;
+    onForm('connection-form',async(form)=>{const result=await platform.connect(String(form.get('phone')).trim());await whatsapp();say(result.status==='FAILED'?'No se pudo vincular. Revisa el proveedor y vuelve a intentar.':result.simulated?'Conexión de prueba registrada.':'Estado de conexión: '+result.status,result.status==='FAILED');});
+    onForm('agent-form',async(form)=>{await platform.saveAgent({personality:String(form.get('personality')),tone:String(form.get('tone')),welcomeMessage:String(form.get('welcome'))});say('Configuración del agente guardada.');});
+    say('Estado y configuración consultados en el servidor.');
+  }
+  if(localStorage.getItem('auth_token')) {
+    const run={profile,orders,billing,whatsapp,checkout}[mode as 'profile' | 'orders' | 'billing' | 'whatsapp' | 'checkout'];
+    void run().catch(fail);
+  }
+</script>

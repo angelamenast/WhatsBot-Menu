@@ -1,3 +1,4 @@
+import { CatalogModule } from './modules/catalog/catalog.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -17,7 +18,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env.local', '.env'] }),
     EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot([
       {
@@ -33,6 +34,7 @@ import { OrdersModule } from './modules/orders/orders.module';
     SupabaseModule,
     AgentModule,
     OrdersModule,
+    CatalogModule,
   ],
   controllers: [AppController, HealthController],     
   providers: [AppService, 

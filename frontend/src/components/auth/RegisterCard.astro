@@ -74,8 +74,9 @@ import Logo from "../common/Logo.astro";
     <!-- SSO Buttons -->
     <div class="w-full space-y-space-md mb-space-2xl">
       <button
-        class="w-full relative flex items-center justify-center gap-space-md py-3.5 px-space-lg bg-surface-container-lowest hover:bg-surface-container-low text-on-surface rounded-lg shadow-sm hover:shadow active:scale-[0.99] transition-all duration-150 group"
+        class="w-full relative flex items-center justify-center gap-space-md py-3.5 px-space-lg bg-surface-container-lowest hover:bg-surface-container-low text-on-surface rounded-lg shadow-sm hover:shadow active:scale-[0.99] transition-all duration-150 group disabled:opacity-50 disabled:cursor-not-allowed"
         id="google-sso-btn"
+
         type="button"
       >
         <svg
@@ -104,6 +105,7 @@ import Logo from "../common/Logo.astro";
           <span class="material-symbols-outlined text-sm">arrow_forward</span>
         </span>
       </button>
+      <p id="google-error" class="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800 text-left" role="alert" hidden></p>
     </div>
 
     <!-- Badges -->
@@ -185,12 +187,6 @@ import Logo from "../common/Logo.astro";
 
 <script>
   import { authService } from "../../services/auth.service";
-
-  const googleBtn = document.getElementById("google-sso-btn");
-
-  if (googleBtn) {
-    googleBtn.addEventListener("click", () => {
-      authService.loginWithGoogle();
-    });
-  }
+  import { bindGoogleRegistration } from "../../services/auth-forms";
+  bindGoogleRegistration(() => authService.loginWithGoogle('register'));
 </script>

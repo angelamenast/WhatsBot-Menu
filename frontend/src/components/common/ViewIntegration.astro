@@ -1,0 +1,8 @@
+---
+import SessionGuard from './SessionGuard.astro';
+const privatePage = ['/profile', '/orders', '/billing', '/vincular-whatsapp', '/checkout/', '/support'].some(path => Astro.url.pathname.startsWith(path));
+---
+{privatePage && <SessionGuard />}
+<script>
+  import '../../services/view-integration';
+</script>

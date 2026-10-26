@@ -54,7 +54,7 @@
             >
           </li>
         </ul>
-        <button
+        <button type="button" data-pricing-href="/register"
           class="w-full bg-surface-container hover:bg-orange-light hover:text-secondary text-on-surface px-6 py-3 rounded-lg font-semibold transition-colors duration-300"
           >Empezar Gratis</button
         >
@@ -112,7 +112,7 @@
             >
           </li>
         </ul>
-        <button
+        <button type="button" data-pricing-href="/checkout/plans"
           class="w-full bg-primary hover:bg-secondary text-on-primary px-6 py-3 rounded-lg font-semibold transition-colors duration-300 shadow-md"
           >Suscribirse Ahora</button
         >
@@ -156,7 +156,7 @@
             >
           </li>
         </ul>
-        <button
+        <button type="button" data-pricing-href="/support"
           class="w-full bg-transparent border border-outline hover:border-primary text-on-surface hover:text-primary px-6 py-3 rounded-lg font-semibold hover:bg-orange-subtle transition-colors duration-300"
           >Contactar Ventas</button
         >
@@ -164,3 +164,11 @@
     </div>
   </div>
 </section>
+<script>
+  document.querySelectorAll<HTMLButtonElement>('#pricing [data-pricing-href]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = button.dataset.pricingHref;
+      if (target) window.location.assign(target);
+    });
+  });
+</script>
