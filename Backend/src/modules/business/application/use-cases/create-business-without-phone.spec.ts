@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { validate } from 'class-validator';
 import { CreateNegocioUseCase } from './create-negocio.use-case';
 import { CreateNegocioCommand } from '../dto/create-negocio.command';
-import { CreateNegocioRequestDto } from '../../infrastructure/presentation/dto/create-negocio-request.dto';
+import { CreateNegocioRequestDto } from '../../presentation/dto/create-negocio-request.dto';
 import type { NegocioRepository } from '../../domain/repositories/negocio.repository';
 
 describe('Registro de negocio separado de WhatsApp', () => {

@@ -1,15 +1,15 @@
 import { Body, Controller, ForbiddenException, NotFoundException, Get, Post, Patch, Req, UseGuards } from '@nestjs/common';
-import { CreateNegocioUseCase } from '../../../application/use-cases/create-negocio.use-case';
-import { GetNegocioByUsuarioUseCase } from '../../../application/use-cases/get-negocio-by-usuario.use-case';
-import { UpdateNegocioUseCase } from '../../../application/use-cases/update-negocio.use-case';
-import { CreateNegocioCommand } from '../../../application/dto/create-negocio.command';
-import { GetNegocioByUsuarioCommand } from '../../../application/dto/get-negocio-by-usuario.command';
-import { UpdateNegocioCommand } from '../../../application/dto/update-negocio.command';
+import { CreateNegocioUseCase } from '../../application/use-cases/create-negocio.use-case';
+import { GetNegocioByUsuarioUseCase } from '../../application/use-cases/get-negocio-by-usuario.use-case';
+import { UpdateNegocioUseCase } from '../../application/use-cases/update-negocio.use-case';
+import { CreateNegocioCommand } from '../../application/dto/create-negocio.command';
+import { GetNegocioByUsuarioCommand } from '../../application/dto/get-negocio-by-usuario.command';
+import { UpdateNegocioCommand } from '../../application/dto/update-negocio.command';
 import { CreateNegocioRequestDto } from '../dto/create-negocio-request.dto';
 import { UpdateNegocioRequestDto } from '../dto/update-negocio-request.dto';
-import { SupabaseAuthGuard } from '../../../../auth/infrastructure/presentation/guards/supabase-auth.guard';
-import { NegocioYaExisteError, NegocioNoEncontradoError } from '../../../domain/errors/business.errors';
-import type { AuthenticatedRequest } from '../../../../../shared/types/authenticated-request';
+import { SupabaseAuthGuard } from '../../../auth/infrastructure/presentation/guards/supabase-auth.guard';
+import { NegocioYaExisteError, NegocioNoEncontradoError } from '../../domain/errors/business.errors';
+import type { AuthenticatedRequest } from '../../../../shared/types/authenticated-request';
 
 @Controller('business')
 @UseGuards(SupabaseAuthGuard)
