@@ -56,12 +56,12 @@ describe('ObtenerEstadoSuscripcionUseCase', () => {
     });
   });
 
-  it('expone solo id, nombre y precio del plan', async () => {
+  it('expone solo id, nombre, precio y duración del plan', async () => {
     repository.buscarVigentePorNegocio.mockResolvedValue(vigente('activa', 20));
 
     const result = await useCase.execute(ObtenerEstadoSuscripcionCommand.porNegocio('neg-1'), AHORA);
 
-    expect(result.plan).toEqual({ id: 'plan-1', nombre: 'Pro', precio: 50000 });
+    expect(result.plan).toEqual({ id: 'plan-1', nombre: 'Pro', precio: 50000, duracionMeses: 1 });
   });
 
   it('consulta por negocio sin resolver el usuario', async () => {

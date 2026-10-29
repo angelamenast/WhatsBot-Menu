@@ -1,6 +1,6 @@
 import { request } from '../api/http';
 export interface Business { id: string; nombreNegocio: string; numeroWhatsapp: string | null; descripcion: string | null }
-export interface Plan { id: string; nombre: string; precio: number; limiteMensajes: number | null; limiteTokens: number | null }
+export interface Plan { id: string; nombre: string; precio: number; limiteMensajes: number | null; limiteTokens: number | null; duracionMeses: number }
 export interface Subscription { estado: string; suscripcionId: string | null; plan: Plan | null; fechaFin: string | null; diasRestantes: number | null; puedeEditar: boolean; alerta: { mensaje: string } | null }
 export interface Order { id: string; status: 'PENDING' | 'CONFIRMED' | 'CANCELLED'; customerPhone: string; total: number; createdAt: string; items: { productName: string; quantity: number; subtotal: number }[] }
 export interface OrderPage { data: Order[]; total: number; limit: number; offset: number }

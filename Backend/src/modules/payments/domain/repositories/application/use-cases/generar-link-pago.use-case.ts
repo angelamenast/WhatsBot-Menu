@@ -26,7 +26,8 @@ export class GenerarLinkPagoUseCase {
 
   async execute(command: GenerarLinkPagoCommand): Promise<GenerarLinkPagoResult> {
     const plan = await this.planRepository.buscarPorId(command.planId);
-    if (!plan) {
+    // Un plan desactivado ya no se vende, aunque siga existiendo para las suscripciones antiguas.
+    if (!plan || !plan.activo) {
       throw new PlanNoEncontradoError();
     }
 

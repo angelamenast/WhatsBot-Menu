@@ -23,7 +23,7 @@ import { OrdersModule } from './modules/orders/orders.module';
     ThrottlerModule.forRoot([
       {
         ttl: 60000,  // ventana de 60 segundos
-        limit: 10,   // 10 peticiones por ventana, por defecto global
+        limit: 120,   // 120 peticiones por ventana, por defecto global
       },
     ]),
     AuthModule,

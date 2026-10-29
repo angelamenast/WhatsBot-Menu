@@ -70,4 +70,15 @@ describe('GenerarLinkPagoUseCase', () => {
 
     expect(suscripcionRepository.crear).not.toHaveBeenCalled();
   });
+
+  it('lanza PlanNoEncontradoError si el plan está desactivado, sin crear suscripción ni link', async () => {
+    planRepository.buscarPorId.mockResolvedValue(new Plan('plan-1', 'Pro', 50000, 1000, 100000, 1, false));
+
+    await expect(
+      useCase.execute(new GenerarLinkPagoCommand('negocio-1', 'plan-1', REDIRECT)),
+    ).rejects.toThrow(PlanNoEncontradoError);
+
+    expect(suscripcionRepository.crear).not.toHaveBeenCalled();
+    expect(paymentGateway.crearLinkPago).not.toHaveBeenCalled();
+  });
 });

@@ -20,6 +20,7 @@ export interface PlanResumen {
   id: string;
   nombre: string;
   precio: number;
+  duracionMeses: number;
 }
 
 export interface AlertaSuscripcion {
@@ -88,7 +89,7 @@ export class ObtenerEstadoSuscripcionUseCase {
       estado,
       negocioId,
       suscripcionId: vigente?.suscripcion.id ?? null,
-      plan: plan ? { id: plan.id, nombre: plan.nombre, precio: plan.precio } : null,
+      plan: plan ? { id: plan.id, nombre: plan.nombre, precio: plan.precio, duracionMeses: plan.duracionMeses } : null,
       fechaFin,
       diasRestantes,
       puedeEditar: puedeEditar(estado),

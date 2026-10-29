@@ -80,9 +80,11 @@ export function resolvePlan(key: string, available: Plan[], billing = 'monthly')
   const exact = available.find(plan => plan.id === key); if (exact) return exact;
   const aliases: Record<string, string[]> = { starter:['starter','gratis','free','basico','basic'], pro:['pro','professional','profesional','lowcost'], enterprise:['enterprise','highcost','premium','empresarial'] };
   const candidates = available.filter(plan => (aliases[key] || [key]).some(alias => normalize(plan.nombre).replace(/mensual|monthly|anual|annual/g, '') === alias));
-  const period = billing === 'annual' ? /anual|annual/i : /mensual|monthly/i;
-  return candidates.find(plan => period.test(plan.nombre)) || candidates.find(plan => !/anual|annual|mensual|monthly/i.test(plan.nombre));
+  // La periodicidad sale de duracionMeses (API), no del nombre del plan.
+  return candidates.find(plan => (plan.duracionMeses >= 12) === (billing === 'annual'));
 }
+const periodLabel = (plan: Plan) => plan.duracionMeses === 1 ? 'mes' : plan.duracionMeses === 12 ? 'año' : `${plan.duracionMeses} meses`;
+const billingLabel = (plan: Plan) => plan.duracionMeses === 1 ? 'Mensual' : plan.duracionMeses === 12 ? 'Anual' : `Cada ${plan.duracionMeses} meses`;
 function selectedPlan() {
   const query = new URLSearchParams(location.search);
   return resolvePlan(query.get('plan') || localStorage.getItem('checkout_plan') || 'pro', plans, query.get('billing') || localStorage.getItem('checkout_billing') || 'monthly');
@@ -92,12 +94,15 @@ function updateCheckout() {
     const plan = resolvePlan(card.dataset.plan || '', plans, localStorage.getItem('checkout_billing') || 'monthly');
     const price = card.querySelector<HTMLElement>('.font-display-lg');
     if (price) price.textContent = plan ? money(plan.precio) : 'No disponible';
+    const period = card.querySelector<HTMLElement>('.plan-period');
+    if (period) period.textContent = plan ? 'COP / ' + periodLabel(plan) : '';
   }
   const plan = selectedPlan();
   for (const selector of ['#summary-plan-title', '#pay-summary-plan']) text(selector, plan?.nombre || 'Selecciona un plan disponible');
   for (const selector of ['#summary-base-price', '#order-total', '#pay-summary-subtotal', '#pay-summary-total']) text(selector, plan ? money(plan.precio) : '—');
   for (const selector of ['#summary-discount-amount', '#pay-summary-discount']) text(selector, money(0));
-  for (const selector of ['#summary-plan-billing', '#pay-summary-badge']) text(selector, plan ? 'Según el plan seleccionado' : 'Sin seleccionar');
+  for (const selector of ['#summary-plan-billing', '#pay-summary-badge']) text(selector, plan ? billingLabel(plan) : 'Sin seleccionar');
+  text('#summary-period', plan ? 'COP / ' + periodLabel(plan) : '');
   const proceed = $<HTMLButtonElement>('#btn-proceed-pay'); if (proceed) proceed.disabled = !plan;
 }
 async function checkout() {
@@ -132,7 +137,7 @@ async function billing() {
     const badge = card.querySelector('.bg-red-100');
     if (badge) { const dot = badge.querySelector('span')?.cloneNode(true); badge.replaceChildren(); if (dot) badge.append(dot); badge.append(' ' + subscription.estado); }
     text('.text-orange-600.font-bold.block', subscription.fechaFin ? 'Vence: ' + new Date(subscription.fechaFin).toLocaleDateString('es-CO') : 'Sin fecha de vencimiento', card);
-    text('.text-xs.font-semibold.text-zinc-500', 'COP · periodo del plan', card);
+    text('.text-xs.font-semibold.text-zinc-500', subscription.plan ? 'COP · ' + billingLabel(subscription.plan) : 'COP', card);
   }
   const alert = $('[data-integration="billing-alert"]');
   if (alert) { text('h3', subscription.alerta?.mensaje || 'Estado de la suscripción: ' + subscription.estado, alert); text('p', subscription.fechaFin ? 'Vigencia hasta ' + new Date(subscription.fechaFin).toLocaleDateString('es-CO') : 'Elige un plan para activar tu suscripción.', alert); }

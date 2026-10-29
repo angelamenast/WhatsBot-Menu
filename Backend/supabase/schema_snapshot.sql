@@ -211,6 +211,8 @@ CREATE TABLE IF NOT EXISTS "public"."planes" (
     "limite_tokens" bigint,
     "descripcion" "text",
     "activo" boolean DEFAULT true NOT NULL,
+    "duracion_meses" integer DEFAULT 1 NOT NULL,
+    CONSTRAINT "planes_duracion_meses_check" CHECK (("duracion_meses" > 0)),
     CONSTRAINT "planes_precio_check" CHECK (("precio" >= (0)::numeric))
 );
 
