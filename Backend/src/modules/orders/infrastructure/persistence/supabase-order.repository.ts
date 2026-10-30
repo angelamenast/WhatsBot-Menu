@@ -8,6 +8,7 @@ import {
 } from '../../domain/repositories/order.repository';
 import { Order, OrderStatus } from '../../domain/entities/order.entity';
 import {
+  ConversationAlreadyHasOrderError,
   ConversationNotInBusinessError,
   EmptyOrderError,
 } from '../../domain/errors/order.errors';
@@ -23,6 +24,10 @@ const PEDIDO_VISTA_SELECT =
 const RPC_CONVERSATION_NOT_IN_BUSINESS = 'CONVERSATION_NOT_IN_BUSINESS';
 const RPC_ORDER_WITHOUT_ITEMS = 'ORDER_WITHOUT_ITEMS';
 
+// Violación de unicidad (SQLSTATE 23505) del índice de un solo pedido abierto por conversación.
+const UNIQUE_VIOLATION = '23505';
+const OPEN_ORDER_INDEX = 'uq_pedidos_conversacion_abierto';
+
 @Injectable()
 export class SupabaseOrderRepository implements OrderRepository {
   constructor(private readonly supabaseService: SupabaseService) {}
@@ -35,6 +40,31 @@ export class SupabaseOrderRepository implements OrderRepository {
       .select(PEDIDO_CON_ITEMS_SELECT)
       .eq('id', orderId)
       .eq('negocio_id', businessId)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return data ? OrderMapper.toDomain(data) : null;
+  }
+
+  async findOpenByConversation(
+    conversationId: string,
+    businessId: string,
+  ): Promise<Order | null> {
+    const client = this.supabaseService.getClient();
+
+    // El índice parcial garantiza a lo sumo uno; order+limit(1) evita que datos viejos duplicados
+    // rompan maybeSingle.
+    const { data, error } = await client
+      .from('pedidos')
+      .select(PEDIDO_CON_ITEMS_SELECT)
+      .eq('conversacion_id', conversationId)
+      .eq('negocio_id', businessId)
+      .neq('estado_codigo', OrderMapper.toEstadoCodigo(OrderStatus.CANCELLED))
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (error) {
@@ -116,6 +146,22 @@ export class SupabaseOrderRepository implements OrderRepository {
       }
       if (error.message?.includes(RPC_ORDER_WITHOUT_ITEMS)) {
         throw new EmptyOrderError();
+      }
+      if (
+        error.code === UNIQUE_VIOLATION &&
+        (error.message?.includes(OPEN_ORDER_INDEX) ||
+          error.details?.includes(OPEN_ORDER_INDEX))
+      ) {
+        // Carrera: otro pedido entró entre el pre-chequeo y el insert. Se busca el ganador
+        // para informar su id; si ya no está abierto (se canceló justo ahora) no hay a qué
+        // apuntar y se propaga el error original.
+        const existing = await this.findOpenByConversation(
+          order.conversationId,
+          order.businessId,
+        );
+        if (existing) {
+          throw new ConversationAlreadyHasOrderError(existing.id);
+        }
       }
       throw error;
     }

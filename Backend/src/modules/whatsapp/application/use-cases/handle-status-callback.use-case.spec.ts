@@ -20,6 +20,7 @@ describe('HandleStatusCallbackUseCase', () => {
     messageRepository = {
       save: jest.fn(),
       findByProviderMessageId: jest.fn(),
+      findLastMessageDate: jest.fn(),
     };
 
     useCase = new HandleStatusCallbackUseCase(messageRepository);

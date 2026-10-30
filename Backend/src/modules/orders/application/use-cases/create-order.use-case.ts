@@ -8,7 +8,10 @@ import {
   MAX_ITEM_QUANTITY,
   OrderItem,
 } from '../../domain/entities/order-item.entity';
-import { EmptyOrderError } from '../../domain/errors/order.errors';
+import {
+  ConversationAlreadyHasOrderError,
+  EmptyOrderError,
+} from '../../domain/errors/order.errors';
 import { CreateOrderCommand } from '../dto/create-order.command';
 import type {
   CreateOrderResult,
@@ -31,7 +34,8 @@ export class CreateOrderUseCase {
    * Validación por ítem: los ítems inválidos no tumban el pedido, se devuelven
    * en `rejectedItems` y el pedido se crea solo con los válidos. Si ninguno lo
    * es, no se persiste nada y `order` es null. Una lista de entrada vacía sí es
-   * una solicitud inválida y lanza EmptyOrderError.
+   * una solicitud inválida y lanza EmptyOrderError. Si la conversación ya tiene un
+   * pedido abierto lanza ConversationAlreadyHasOrderError (con el id de ese pedido).
    *
    * Nunca se confía en nombre/precio del invocador (ni siquiera existen en el
    * comando): siempre se relee la verdad actual del catálogo.
@@ -39,6 +43,16 @@ export class CreateOrderUseCase {
   async execute(command: CreateOrderCommand): Promise<CreateOrderResult> {
     if (command.items.length === 0) {
       throw new EmptyOrderError();
+    }
+
+    // Un solo pedido abierto (no cancelado) por conversación: se comprueba ANTES de gastar
+    // una consulta de catálogo. El índice único de la BD cubre la carrera entre dos creaciones.
+    const openOrder = await this.orderRepository.findOpenByConversation(
+      command.conversationId,
+      command.businessId,
+    );
+    if (openOrder) {
+      throw new ConversationAlreadyHasOrderError(openOrder.id);
     }
 
     const rejected = new Map<string, RejectedItem>();

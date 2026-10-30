@@ -4,7 +4,8 @@ import { ObtenerEstadoSuscripcionCommand } from '../../application/dto/obtener-e
 
 // Implementación real de PlanStatusPort (módulo whatsapp, HU-4.1). Cumple la interfaz
 // `isActive(businessId): Promise<boolean>` por tipado estructural, sin importar código de ese
-// módulo. Se registra en el factory de PLAN_STATUS_PORT del WhatsappModule.
+// módulo. El factory de PLAN_STATUS_PORT del WhatsappModule la usa con PLAN_STATUS_PROVIDER=subscriptions
+// (el default sigue siendo "fake"). Un negocio SIN plan (SIN_PLAN) tampoco recibe respuesta.
 @Injectable()
 export class SubscriptionPlanStatusAdapter {
   constructor(private readonly obtenerEstadoSuscripcionUseCase: ObtenerEstadoSuscripcionUseCase) {}

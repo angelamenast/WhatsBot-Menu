@@ -18,3 +18,11 @@ export class PhoneNumberAlreadyLinkedError extends Error {
     this.name = 'PhoneNumberAlreadyLinkedError';
   }
 }
+
+export class ActiveConversationAlreadyExistsError extends Error {
+  // Sin businessId ni número: el mensaje de la BD que originó este error trae el teléfono del cliente.
+  constructor() {
+    super('Ya existe una conversación activa para este cliente en el negocio');
+    this.name = 'ActiveConversationAlreadyExistsError';
+  }
+}

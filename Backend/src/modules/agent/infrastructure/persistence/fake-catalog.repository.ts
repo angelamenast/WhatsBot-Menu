@@ -30,7 +30,7 @@ const SAMPLE_CATALOG: CatalogItem[] = [
 
 @Injectable()
 export class FakeCatalogRepository implements CatalogRepository {
-  async findAvailableByBusinessId(_businessId: string): Promise<CatalogItem[]> {
-    return SAMPLE_CATALOG.filter((item) => item.available).map((item) => ({ ...item }));
+  async findByBusinessId(_businessId: string): Promise<CatalogItem[]> {
+    return SAMPLE_CATALOG.map((item) => ({ ...item }));
   }
 }

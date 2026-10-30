@@ -21,6 +21,7 @@ describe('ListOrdersByBusinessUseCase', () => {
       findViewsByBusiness: jest
         .fn<OrderRepository['findViewsByBusiness']>()
         .mockResolvedValue(emptyPage),
+      findOpenByConversation: jest.fn(),
       insert: jest.fn(),
       updateStatus: jest.fn(),
     };

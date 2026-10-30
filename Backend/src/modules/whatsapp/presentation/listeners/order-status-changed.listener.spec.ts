@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { OrderStatusChangedListener } from './order-status-changed.listener';
 import { SendMessageUseCase } from '../../application/use-cases/send-message.use-case';
+import { CloseConversationUseCase } from '../../application/use-cases/close-conversation.use-case';
 import {
   orderCancelledMessage,
   orderConfirmedMessage,
@@ -18,6 +19,7 @@ type AnyFn = (...args: any[]) => any;
 
 describe('OrderStatusChangedListener', () => {
   let sendMessageUseCase: { execute: jest.Mock<AnyFn> };
+  let closeConversationUseCase: { execute: jest.Mock<AnyFn> };
 
   const event = (
     status: OrderStatusChangedEvent['status'],
@@ -34,6 +36,7 @@ describe('OrderStatusChangedListener', () => {
 
   beforeEach(() => {
     sendMessageUseCase = { execute: jest.fn<AnyFn>().mockResolvedValue(undefined) };
+    closeConversationUseCase = { execute: jest.fn<AnyFn>().mockResolvedValue(undefined) };
     loggerSpies = (['log', 'warn', 'error', 'debug', 'verbose'] as const).map(
       (level) => jest.spyOn(Logger.prototype, level).mockImplementation(() => undefined),
     );
@@ -55,6 +58,7 @@ describe('OrderStatusChangedListener', () => {
     beforeEach(() => {
       listener = new OrderStatusChangedListener(
         sendMessageUseCase as unknown as SendMessageUseCase,
+        closeConversationUseCase as unknown as CloseConversationUseCase,
       );
     });
 
@@ -107,6 +111,59 @@ describe('OrderStatusChangedListener', () => {
       expect(allLoggedText()).not.toContain('+573001112233');
     });
 
+    describe('cierre de la conversación', () => {
+      it('CONFIRMED: notifica y DESPUÉS cierra la conversación del evento', async () => {
+        const order: string[] = [];
+        sendMessageUseCase.execute.mockImplementation(async () => {
+          order.push('send');
+        });
+        closeConversationUseCase.execute.mockImplementation(async () => {
+          order.push('close');
+        });
+
+        await listener.handle(event('CONFIRMED'));
+
+        expect(closeConversationUseCase.execute).toHaveBeenCalledWith('conversation-1');
+        expect(order).toEqual(['send', 'close']);
+      });
+
+      it('CONFIRMED: cierra aunque el envío haya fallado', async () => {
+        sendMessageUseCase.execute.mockRejectedValue(new Error('Twilio caído'));
+
+        await expect(listener.handle(event('CONFIRMED'))).resolves.toBeUndefined();
+
+        expect(closeConversationUseCase.execute).toHaveBeenCalledWith('conversation-1');
+      });
+
+      it('CONFIRMED: si el cierre falla no propaga y loguea solo ids', async () => {
+        closeConversationUseCase.execute.mockRejectedValue(new ConversationNotFoundError('conversation-1'));
+
+        await expect(listener.handle(event('CONFIRMED'))).resolves.toBeUndefined();
+
+        const logged = allLoggedText();
+        expect(logged).toContain('conversation-1');
+        expect(logged).toContain('3f1c8a52-7d0e-4c1b-9a64-2b5e8f0d1c77');
+        expect(logged).not.toMatch(/\+\d{6,}/);
+      });
+
+      it('CONFIRMED: un error de cierre que no es Error (objeto de Supabase) no vuelca sus detalles al log', async () => {
+        closeConversationUseCase.execute.mockRejectedValue({
+          details: 'Key (numero_cliente)=(+573001112233) ya existe',
+        });
+
+        await expect(listener.handle(event('CONFIRMED'))).resolves.toBeUndefined();
+
+        expect(allLoggedText()).not.toContain('+573001112233');
+      });
+
+      it('CANCELLED: solo notifica, no cierra la conversación', async () => {
+        await listener.handle(event('CANCELLED'));
+
+        expect(sendMessageUseCase.execute).toHaveBeenCalledTimes(1);
+        expect(closeConversationUseCase.execute).not.toHaveBeenCalled();
+      });
+    });
+
     it('nunca registra teléfonos ni el cuerpo del mensaje', async () => {
       sendMessageUseCase.execute.mockRejectedValue(new Error('falló'));
 
@@ -129,6 +186,7 @@ describe('OrderStatusChangedListener', () => {
         providers: [
           OrderStatusChangedListener,
           { provide: SendMessageUseCase, useValue: sendMessageUseCase },
+          { provide: CloseConversationUseCase, useValue: closeConversationUseCase },
         ],
       }).compile();
       // init() registra los @OnEvent en el emisor.

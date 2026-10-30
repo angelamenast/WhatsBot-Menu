@@ -8,6 +8,6 @@ export class FakeOrderProvider implements OrderPort {
 
   async createOrder(command: CreateOrderCommand): Promise<CreateOrderResult> {
     this.logger.log(`[FakeOrderProvider] Pedido simulado: ${JSON.stringify(command)}`);
-    return { orderId: randomUUID(), total: 0, rejectedItems: [] };
+    return { kind: 'CREATED', orderId: randomUUID(), total: 0, items: [], rejectedItems: [] };
   }
 }

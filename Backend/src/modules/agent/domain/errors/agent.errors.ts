@@ -13,3 +13,11 @@ export class IncomingMessageNotPersistedError extends Error {
     this.name = 'IncomingMessageNotPersistedError';
   }
 }
+
+
+export class BusinessNotFoundError extends Error {
+  constructor(businessId: string) {
+    super(`No existe el negocio ${businessId}`);
+    this.name = 'BusinessNotFoundError';
+  }
+}

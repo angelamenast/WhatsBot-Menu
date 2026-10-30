@@ -33,6 +33,19 @@ export class Conversation {
     });
   }
 
+  /**
+   * Transición activa → cerrada. Idempotente: cerrar una conversación ya cerrada no hace nada
+   * (no cambia `updatedAt`), para que reintentos y eventos repetidos sean inofensivos.
+   */
+  close(now: Date = new Date()): void {
+    if (this.props.status === ConversationStatus.CLOSED) {
+      return;
+    }
+
+    this.props.status = ConversationStatus.CLOSED;
+    this.props.updatedAt = now;
+  }
+
   get id(): string {
     return this.props.id;
   }
