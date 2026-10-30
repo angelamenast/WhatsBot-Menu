@@ -1,10 +1,11 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { WhatsappConnectionRepository } from '../../domain/repositories/whatsapp-connection.repository';
 import { WHATSAPP_CONNECTION_REPOSITORY } from '../../domain/repositories/whatsapp-connection.repository';
-import type { ProvisioningPort } from '../ports/out/provisioning.port';
+import type { ProvisioningPort, ProvisioningResult } from '../ports/out/provisioning.port';
 import { PROVISIONING_PORT } from '../ports/out/provisioning.port';
 import { WhatsappConnection } from '../../domain/entities/whatsapp-connection.entity';
 import { PhoneNumberAlreadyLinkedError } from '../../domain/errors/whatsapp.errors';
+import { normalizePhoneNumber } from '../../domain/phone-number';
 import { ConnectWhatsappCommand } from '../dto/connect-whatsapp.command';
 
 @Injectable()
@@ -18,13 +19,14 @@ export class ConnectWhatsappUseCase {
     private readonly provisioningPort: ProvisioningPort,
   ) {}
 
+  /** Vincula un número que ya existe en el proveedor: lo valida y guarda su número visible. */
   async execute(command: ConnectWhatsappCommand): Promise<WhatsappConnection> {
-    const existingByPhoneNumber = await this.whatsappConnectionRepository.findByPhoneNumber(
-      command.phoneNumber,
+    const existingByPhoneNumberId = await this.whatsappConnectionRepository.findByPhoneNumberId(
+      command.phoneNumberId,
     );
 
-    if (existingByPhoneNumber && existingByPhoneNumber.businessId !== command.businessId) {
-      throw new PhoneNumberAlreadyLinkedError(command.phoneNumber);
+    if (existingByPhoneNumberId && existingByPhoneNumberId.businessId !== command.businessId) {
+      throw new PhoneNumberAlreadyLinkedError(command.phoneNumberId);
     }
 
     const existingByBusiness = await this.whatsappConnectionRepository.findByBusinessId(
@@ -34,34 +36,48 @@ export class ConnectWhatsappUseCase {
     let connection: WhatsappConnection;
 
     if (existingByBusiness) {
-      existingByBusiness.requestReconnect(command.phoneNumber);
+      existingByBusiness.requestReconnect(command.phoneNumberId, command.wabaId);
       connection = existingByBusiness;
     } else {
       connection = WhatsappConnection.request({
         businessId: command.businessId,
-        phoneNumber: command.phoneNumber,
+        phoneNumberId: command.phoneNumberId,
+        wabaId: command.wabaId,
       });
     }
 
-    try {
-      const result = await this.provisioningPort.provision(command.phoneNumber);
+    const result = await this.link(command);
 
-      if (result.status === 'connected') {
-        connection.markConnected(result.subaccountSid, result.senderSid);
-      } else {
-        connection.markFailed();
+    if (result.status === 'connected') {
+      const phoneNumber = normalizePhoneNumber(result.displayPhoneNumber);
+
+      // El número visible solo se conoce tras consultar al proveedor: su unicidad se comprueba aquí.
+      const existingByPhoneNumber = await this.whatsappConnectionRepository.findByPhoneNumber(phoneNumber);
+
+      if (existingByPhoneNumber && existingByPhoneNumber.businessId !== command.businessId) {
+        throw new PhoneNumberAlreadyLinkedError(phoneNumber);
       }
-    } catch (error) {
-      this.logger.error(
-        `Fallo al aprovisionar la conexión de WhatsApp del negocio ${command.businessId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
+
+      connection.markConnected(phoneNumber);
+    } else {
       connection.markFailed();
     }
 
     await this.whatsappConnectionRepository.save(connection);
 
     return connection;
+  }
+
+  private async link(command: ConnectWhatsappCommand): Promise<ProvisioningResult> {
+    try {
+      return await this.provisioningPort.link(command.phoneNumberId);
+    } catch (error) {
+      this.logger.error(
+        `Fallo al vincular la conexión de WhatsApp del negocio ${command.businessId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      return { status: 'failed' };
+    }
   }
 }

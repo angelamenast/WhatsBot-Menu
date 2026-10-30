@@ -128,7 +128,7 @@ describe('OrderStatusChangedListener', () => {
       });
 
       it('CONFIRMED: cierra aunque el envío haya fallado', async () => {
-        sendMessageUseCase.execute.mockRejectedValue(new Error('Twilio caído'));
+        sendMessageUseCase.execute.mockRejectedValue(new Error('Proveedor caído'));
 
         await expect(listener.handle(event('CONFIRMED'))).resolves.toBeUndefined();
 

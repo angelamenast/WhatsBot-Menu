@@ -1,6 +1,8 @@
-export type TwilioMessageStatus = 'sent' | 'delivered' | 'failed' | 'undelivered';
+export type ProviderMessageStatus = 'sent' | 'delivered' | 'read' | 'failed';
 
 export interface HandleStatusCallbackCommand {
   providerMessageId: string;
-  status: TwilioMessageStatus;
+  status: ProviderMessageStatus;
+  /** Detalle del fallo que reporta el proveedor; solo viene con status "failed". */
+  error?: { code: number; message: string };
 }

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
-import { MessagingPort, SendMessageResult } from '../../application/ports/out/messaging.port';
+import { MessagingPort, SendMessageParams, SendMessageResult } from '../../application/ports/out/messaging.port';
 
 @Injectable()
 export class FakeMessagingProvider implements MessagingPort {
@@ -9,7 +9,7 @@ export class FakeMessagingProvider implements MessagingPort {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async sendMessage(_to: string, _body: string): Promise<SendMessageResult> {
+  async sendMessage(_params: SendMessageParams): Promise<SendMessageResult> {
     const forceFail = this.configService.get<string>('FAKE_MESSAGING_FORCE_FAIL') === 'true';
 
     if (forceFail) {

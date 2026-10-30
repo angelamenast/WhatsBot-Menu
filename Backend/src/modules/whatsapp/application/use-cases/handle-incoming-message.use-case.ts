@@ -17,6 +17,7 @@ import {
   ActiveConversationAlreadyExistsError,
   WhatsappConnectionNotFoundError,
 } from '../../domain/errors/whatsapp.errors';
+import { normalizePhoneNumber } from '../../domain/phone-number';
 import { CONVERSATION_INACTIVITY_MS } from '../constants/conversation-lifecycle';
 import { HandleIncomingMessageCommand } from '../dto/handle-incoming-message.command';
 import { SendMessageUseCase } from './send-message.use-case';
@@ -43,7 +44,7 @@ export class HandleIncomingMessageUseCase {
 
   /** `now` es inyectable para probar el límite de inactividad sin esperar. */
   async execute(command: HandleIncomingMessageCommand, now: Date = new Date()): Promise<void> {
-    // Duplicado (reintento de Twilio): no volver a tocar conversación/mensaje/agente.
+    // Duplicado (reintento del webhook de Meta): no volver a tocar conversación/mensaje/agente.
     const alreadyProcessed = await this.processedMessageRepository.existsByProviderMessageId(
       command.providerMessageId,
     );
@@ -52,15 +53,17 @@ export class HandleIncomingMessageUseCase {
       return;
     }
 
-    const connection = await this.whatsappConnectionRepository.findByPhoneNumber(command.toPhoneNumber);
+    const connection = await this.whatsappConnectionRepository.findByPhoneNumberId(command.phoneNumberId);
 
     if (!connection) {
-      throw new WhatsappConnectionNotFoundError(command.toPhoneNumber);
+      throw new WhatsappConnectionNotFoundError(`phone_number_id ${command.phoneNumberId}`);
     }
+
+    const customerNumber = normalizePhoneNumber(command.customerNumber);
 
     let conversation = await this.conversationRepository.findActiveByBusinessAndCustomer(
       connection.businessId,
-      command.fromCustomerNumber,
+      customerNumber,
     );
 
     // Una conversación inactiva se cierra aquí (una lectura por mensaje, sin escrituras extra
@@ -72,12 +75,12 @@ export class HandleIncomingMessageUseCase {
     }
 
     if (!conversation) {
-      conversation = await this.startConversation(connection.businessId, command.fromCustomerNumber);
+      conversation = await this.startConversation(connection.businessId, customerNumber);
     }
 
     const message = Message.receiveFromCustomer({
       conversationId: conversation.id,
-      content: command.body,
+      content: command.text,
       providerMessageId: command.providerMessageId,
     });
 
@@ -92,7 +95,7 @@ export class HandleIncomingMessageUseCase {
 
     // Desde aquí el mensaje ya está persistido: un fallo del agente o del envío se loguea
     // y no se propaga (el mensaje queda sin respuesta, igual que con plan vencido), para
-    // que el webhook responda 200 y Twilio no reintente algo que la deduplicación cortaría.
+    // que no se propague al webhook (que ya respondió 200 a Meta).
     let responseText: string | null;
 
     try {
@@ -100,8 +103,8 @@ export class HandleIncomingMessageUseCase {
         businessId: connection.businessId,
         conversationId: conversation.id,
         messageId: message.id,
-        customerNumber: command.fromCustomerNumber,
-        message: command.body,
+        customerNumber,
+        message: command.text,
       });
     } catch (error) {
       this.logger.error(

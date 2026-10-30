@@ -17,7 +17,8 @@ function spyOnLogger() {
 }
 
 describe('FakeMessagingProvider', () => {
-  const to = '+573001112233';
+  const to = '573001112233';
+  const phoneNumberId = '106540352242922';
   const body = 'Tu pedido #3f1c8a52 fue confirmado';
 
   const build = (forceFail: string) =>
@@ -32,7 +33,7 @@ describe('FakeMessagingProvider', () => {
   it('envío simulado exitoso: devuelve sent y loguea solo el providerMessageId', async () => {
     const logged = spyOnLogger();
 
-    const result = await build('false').sendMessage(to, body);
+    const result = await build('false').sendMessage({ phoneNumberId, to, body });
 
     expect(result.status).toBe('sent');
     expect(result.providerMessageId).toEqual(expect.any(String));
@@ -44,7 +45,7 @@ describe('FakeMessagingProvider', () => {
   it('envío simulado fallido: devuelve failed y NO loguea número ni cuerpo', async () => {
     const logged = spyOnLogger();
 
-    const result = await build('true').sendMessage(to, body);
+    const result = await build('true').sendMessage({ phoneNumberId, to, body });
 
     expect(result).toEqual({ providerMessageId: null, status: 'failed' });
     expect(logged()).not.toContain(to);
