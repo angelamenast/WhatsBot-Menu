@@ -233,12 +233,12 @@ ALTER TABLE "public"."categorias_producto" OWNER TO "postgres";
 CREATE TABLE IF NOT EXISTS "public"."conexiones_whatsapp" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "negocio_id" "uuid" NOT NULL,
-    "numero_whatsapp" "text" NOT NULL,
-    "twilio_subaccount_sid" "text",
-    "twilio_sender_sid" "text",
+    "numero_whatsapp" "text",
     "estado" "text" DEFAULT 'pendiente'::"text" NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "phone_number_id" "text" NOT NULL,
+    "waba_id" "text" NOT NULL,
     CONSTRAINT "conexiones_whatsapp_estado_check" CHECK (("estado" = ANY (ARRAY['pendiente'::"text", 'conectado'::"text", 'fallido'::"text"])))
 );
 
@@ -322,7 +322,7 @@ CREATE TABLE IF NOT EXISTS "public"."mensajes" (
     "conversacion_id" "uuid" NOT NULL,
     "remitente" "text" NOT NULL,
     "contenido" "text" NOT NULL,
-    "twilio_message_sid" "text",
+    "id_mensaje_proveedor" "text",
     "created_at" timestamp with time zone DEFAULT "now"(),
     "estado_envio" "text",
     CONSTRAINT "mensajes_estado_envio_check" CHECK ((("estado_envio" = ANY (ARRAY['enviado'::"text", 'fallido'::"text", 'pendiente'::"text"])) OR ("estado_envio" IS NULL))),
@@ -462,6 +462,11 @@ ALTER TABLE ONLY "public"."conexiones_whatsapp"
 
 
 ALTER TABLE ONLY "public"."conexiones_whatsapp"
+    ADD CONSTRAINT "conexiones_whatsapp_phone_number_id_key" UNIQUE ("phone_number_id");
+
+
+
+ALTER TABLE ONLY "public"."conexiones_whatsapp"
     ADD CONSTRAINT "conexiones_whatsapp_pkey" PRIMARY KEY ("id");
 
 
@@ -497,12 +502,12 @@ ALTER TABLE ONLY "public"."estados_pedido"
 
 
 ALTER TABLE ONLY "public"."mensajes"
-    ADD CONSTRAINT "mensajes_pkey" PRIMARY KEY ("id");
+    ADD CONSTRAINT "mensajes_id_mensaje_proveedor_key" UNIQUE ("id_mensaje_proveedor");
 
 
 
 ALTER TABLE ONLY "public"."mensajes"
-    ADD CONSTRAINT "mensajes_twilio_message_sid_key" UNIQUE ("twilio_message_sid");
+    ADD CONSTRAINT "mensajes_pkey" PRIMARY KEY ("id");
 
 
 
