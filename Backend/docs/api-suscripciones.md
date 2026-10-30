@@ -96,7 +96,7 @@ El guard (`PlanActivoGuard`) se aplica **por método**, nunca de forma global, y
 | `/api/orders`, `/api/orders/{id}` | GET | No | Lecturas: siguen funcionando con el plan vencido. |
 | `/api/agent/config`, `/api/business/mine` | GET | No | Lecturas. |
 | `/api/auth/*`, `/api/payments/*` (incluye `POST /api/payments/webhook` de Wompi), `/api/subscriptions/*` | todos | No | Deben seguir disponibles para iniciar sesión, pagar y renovar. |
-| `/api/health/*`, `/api/whatsapp/webhook`, `/api/whatsapp/status-callback` | todos | No | Los llama Twilio (se autentican con su firma), no el dashboard. |
+| `/api/health/*`, `/api/whatsapp/webhook` | todos | No | Los llama Meta (el POST se autentica con la firma `X-Hub-Signature-256`, el GET con el token de verificación), no el dashboard. |
 
 Con `SIN_PLAN` no se bloquea nada, para no interrumpir el onboarding (registro → negocio → plan). Esto incluye al usuario sin negocio, sin suscripción, con el pago pendiente o con la suscripción cancelada.
 
