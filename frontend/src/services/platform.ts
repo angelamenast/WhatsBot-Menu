@@ -6,7 +6,7 @@ export interface Order { id: string; status: 'PENDING' | 'CONFIRMED' | 'CANCELLE
 export interface OrderPage { data: Order[]; total: number; limit: number; offset: number }
 export interface Connection { phoneNumber: string; status: string; simulated?: boolean }
 export interface Agent { personality: string | null; tone: string | null; welcomeMessage: string | null }
-export interface User { id: string; email?: string; user_metadata: Record<string, string> }
+export interface User { id: string; email?: string; user_metadata: Record<string, string>; app_metadata?: { providers?: string[] } }
 const json = (method: string, data: unknown): RequestInit => ({ method, body: JSON.stringify(data) });
 export const platform = {
   me: () => request<{ user: User }>('/auth/me'),

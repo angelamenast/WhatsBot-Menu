@@ -38,6 +38,10 @@ let plans: Plan[] = [];
 async function profile() {
   const [{ user }, mine] = await Promise.all([platform.me(), platform.business()]);
   business = mine;
+  // Sin el proveedor email la cuenta no tiene contraseña: el perfil ofrece crearla.
+  const providers = user.app_metadata?.providers;
+  const createPassword = Array.isArray(providers) && !providers.includes('email');
+  window.dispatchEvent(new CustomEvent('password-mode', { detail: { create: createPassword } }));
   input('admin-name', user.user_metadata.nombre || user.user_metadata.full_name || '');
   input('business-name', mine?.nombreNegocio || '');
   text('#current-email-display', user.email);
@@ -62,10 +66,10 @@ async function profile() {
   captureForm('password-form', async () => {
     const password = $<HTMLInputElement>('#new-password')?.value || '';
     if (password !== $<HTMLInputElement>('#confirm-new-password')?.value) throw new Error('Las contraseñas no coinciden.');
-    await platform.profile({ password, currentPassword: $<HTMLInputElement>('#current-password')?.value || '' });
+    await platform.profile(createPassword ? { password } : { password, currentPassword: $<HTMLInputElement>('#current-password')?.value || '' });
     $<HTMLFormElement>('#password-form')?.reset();
     $('#new-password')?.dispatchEvent(new Event('input', { bubbles: true }));
-    notify('Contraseña actualizada.', 'success');
+    notify(createPassword ? 'Contraseña creada. Ya puedes entrar también con tu correo.' : 'Contraseña actualizada.', 'success');
   });
   captureClick('#btn-change-avatar, #btn-remove-avatar', () => notify('El backend todavía no ofrece almacenamiento de avatares.'));
   const twoFactor = $<HTMLInputElement>('#toggle-2fa');
