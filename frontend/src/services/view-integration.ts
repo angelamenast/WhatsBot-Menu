@@ -132,19 +132,43 @@ async function checkout() {
   captureClick('#paypal-view button, #wallet-view button, #bank-view button', element => { void act(element as HTMLButtonElement, pay); });
 }
 
+// El diseño de facturación viene pintado como plan vencido; el color y la etiqueta salen del estado real.
+const billingStatus: Record<string, { label: string; badge: string; dot: string; alert: string; icon: string; iconName: string; pill: string; title: string; cta: string }> = {
+  ACTIVO: { label: 'Activo', badge: 'bg-emerald-100 border-emerald-200 text-emerald-700', dot: 'bg-emerald-600', alert: 'from-emerald-50 border-emerald-200', icon: 'bg-emerald-600', iconName: 'check', pill: 'bg-emerald-600', title: 'Tu suscripción está activa', cta: 'Renovar Plan Ahora' },
+  POR_VENCER: { label: 'Por vencer', badge: 'bg-amber-100 border-amber-200 text-amber-700', dot: 'bg-amber-500', alert: 'from-amber-50 border-amber-200', icon: 'bg-amber-500', iconName: 'schedule', pill: 'bg-amber-500', title: 'Tu suscripción está por vencer', cta: 'Renovar Plan Ahora' },
+  VENCIDO: { label: 'Vencido', badge: 'bg-red-100 border-red-200 text-red-700', dot: 'bg-red-600', alert: 'from-red-50 border-red-200', icon: 'bg-red-600', iconName: 'priority_high', pill: 'bg-red-600', title: 'Tu suscripción venció', cta: 'Renovar Plan Ahora' },
+  SIN_PLAN: { label: 'Sin plan', badge: 'bg-zinc-100 border-zinc-200 text-zinc-600', dot: 'bg-zinc-400', alert: 'from-zinc-50 border-zinc-200', icon: 'bg-zinc-500', iconName: 'info', pill: 'bg-zinc-500', title: 'Aún no tienes un plan activo', cta: 'Elegir un plan' },
+};
 async function billing() {
   subscription = await platform.subscription();
+  const status = billingStatus[subscription.estado] || billingStatus.SIN_PLAN;
   const card = $('[data-integration="billing-plan"]');
   if (card) {
     text('h2', subscription.plan?.nombre || 'Sin plan', card);
     text('.font-black', subscription.plan ? money(subscription.plan.precio) : '—', card);
-    const badge = card.querySelector('.bg-red-100');
-    if (badge) { const dot = badge.querySelector('span')?.cloneNode(true); badge.replaceChildren(); if (dot) badge.append(dot); badge.append(' ' + subscription.estado); }
+    const badge = card.querySelector<HTMLElement>('[data-billing-badge]');
+    const dot = card.querySelector<HTMLElement>('[data-billing-dot]');
+    if (badge && dot) {
+      badge.className = 'px-2.5 py-0.5 rounded-full border text-xs font-bold flex items-center gap-1 shrink-0 ' + status.badge;
+      dot.className = 'w-1.5 h-1.5 rounded-full ' + status.dot;
+      badge.replaceChildren(dot, ' ' + status.label);
+    }
     text('.text-orange-600.font-bold.block', subscription.fechaFin ? 'Vence: ' + new Date(subscription.fechaFin).toLocaleDateString('es-CO') : 'Sin fecha de vencimiento', card);
     text('.text-xs.font-semibold.text-zinc-500', subscription.plan ? 'COP · ' + billingLabel(subscription.plan) : 'COP', card);
   }
   const alert = $('[data-integration="billing-alert"]');
-  if (alert) { text('h3', subscription.alerta?.mensaje || 'Estado de la suscripción: ' + subscription.estado, alert); text('p', subscription.fechaFin ? 'Vigencia hasta ' + new Date(subscription.fechaFin).toLocaleDateString('es-CO') : 'Elige un plan para activar tu suscripción.', alert); }
+  if (alert) {
+    // Con el plan activo y sin aviso del backend no hay nada que alertar.
+    alert.hidden = subscription.estado === 'ACTIVO' && !subscription.alerta;
+    alert.className = 'relative overflow-hidden rounded-2xl bg-gradient-to-r via-zinc-100 to-zinc-50 p-4 sm:p-6 border shadow-xs ' + status.alert;
+    const icon = alert.querySelector<HTMLElement>('[data-billing-alert-icon]');
+    if (icon) { icon.className = 'w-10 h-10 rounded-xl text-white flex items-center justify-center shrink-0 shadow-xs ' + status.icon; text('.material-symbols-outlined', status.iconName, icon); }
+    const pill = alert.querySelector<HTMLElement>('[data-billing-alert-pill]');
+    if (pill) { pill.className = 'px-2.5 py-0.5 rounded-full text-white text-[11px] font-extrabold uppercase tracking-wide ' + status.pill; pill.textContent = status.label; }
+    text('[data-billing-alert-cta]', status.cta, alert);
+    text('h3', subscription.alerta?.mensaje || status.title, alert);
+    text('p', subscription.fechaFin ? 'Vigencia hasta ' + new Date(subscription.fechaFin).toLocaleDateString('es-CO') : 'Elige un plan para activar tu suscripción.', alert);
+  }
   document.querySelectorAll('[data-integration="billing-invoices"] tbody td').forEach(cell => { cell.textContent = '—'; });
   const table = $('[data-integration="billing-invoices"]'); if (table) text('p', 'La API aún no dispone de facturas para descargar.', table);
   document.querySelectorAll<HTMLElement>('[data-integration="billing-usage"] .text-zinc-900.font-bold').forEach(element => { element.textContent = 'Sin datos'; });

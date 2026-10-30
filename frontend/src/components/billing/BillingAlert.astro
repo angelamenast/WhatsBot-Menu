@@ -10,6 +10,7 @@
   >
     <div class="flex items-start gap-3.5 min-w-0">
       <div
+        data-billing-alert-icon
         class="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-xs"
       >
         <span class="material-symbols-outlined text-[22px]">priority_high</span>
@@ -20,6 +21,7 @@
             Atención requerida: Tu ciclo venció el 10 de Octubre
           </h3>
           <span
+            data-billing-alert-pill
             class="px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold uppercase tracking-wide"
             >Inactivo</span
           >
@@ -38,7 +40,7 @@
         href="/checkout/payment?plan=pro&billing=annual"
       >
         <span class="material-symbols-outlined text-[18px]">autorenew</span>
-        <span>Renovar Plan Ahora</span>
+        <span data-billing-alert-cta>Renovar Plan Ahora</span>
       </a>
     </div>
   </div>
