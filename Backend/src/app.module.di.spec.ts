@@ -17,6 +17,10 @@ import { FakePlanStatusProvider } from './modules/whatsapp/infrastructure/adapte
 import { SubscriptionPlanStatusAdapter } from './modules/subscriptions/infrastructure/adapters/subscription-plan-status.adapter';
 import { PlanActivoGuard } from './modules/subscriptions/infrastructure/presentation/guards/plan-activo.guard';
 import { OrderStatusChangedListener } from './modules/whatsapp/presentation/listeners/order-status-changed.listener';
+import { MESSAGING_PORT } from './modules/whatsapp/application/ports/out/messaging.port';
+import { PROVISIONING_PORT } from './modules/whatsapp/application/ports/out/provisioning.port';
+import { MetaMessagingAdapter } from './modules/whatsapp/infrastructure/adapters/meta-messaging.adapter';
+import { MetaProvisioningAdapter } from './modules/whatsapp/infrastructure/adapters/meta-provisioning.adapter';
 
 /**
  * Test de humo de inyección de dependencias: compila el AppModule COMPLETO (sin
@@ -187,6 +191,65 @@ describe('AppModule (humo de DI)', () => {
 
     process.env.USAGE_QUOTA_PROVIDER = 'otro';
     await expect(compileApp()).rejects.toThrow(/USAGE_QUOTA_PROVIDER inválido/);
+  });
+
+  describe('WhatsApp con Meta', () => {
+    const WHATSAPP_KEYS = [
+      'WHATSAPP_ACCESS_TOKEN',
+      'WHATSAPP_APP_SECRET',
+      'WHATSAPP_VERIFY_TOKEN',
+      'WHATSAPP_API_VERSION',
+    ] as const;
+    const savedWhatsappEnv: Record<string, string | undefined> = {};
+
+    beforeEach(() => {
+      for (const key of WHATSAPP_KEYS) {
+        savedWhatsappEnv[key] = process.env[key];
+        // Vacío (no borrado): process.env tiene prioridad sobre el .env local y lo vacío cuenta como ausente.
+        process.env[key] = '';
+      }
+    });
+
+    afterEach(() => {
+      for (const key of WHATSAPP_KEYS) {
+        if (savedWhatsappEnv[key] === undefined) {
+          delete process.env[key];
+        } else {
+          process.env[key] = savedWhatsappEnv[key];
+        }
+      }
+    });
+
+    it.each(['MESSAGING_PROVIDER', 'PROVISIONING_PROVIDER'])(
+      '%s=meta sin variables de Meta: falla al arrancar nombrándolas, no al primer uso',
+      async (key) => {
+        process.env[key] = 'meta';
+
+        await expect(compileApp()).rejects.toThrow(
+          /faltan variables de entorno: WHATSAPP_ACCESS_TOKEN, WHATSAPP_APP_SECRET, WHATSAPP_VERIFY_TOKEN/,
+        );
+      },
+    );
+
+    it('con las variables completas, los puertos resuelven a los adaptadores de Meta', async () => {
+      process.env.MESSAGING_PROVIDER = 'meta';
+      process.env.PROVISIONING_PROVIDER = 'meta';
+      process.env.WHATSAPP_ACCESS_TOKEN = 'token-de-prueba';
+      process.env.WHATSAPP_APP_SECRET = 'secret-de-prueba';
+      process.env.WHATSAPP_VERIFY_TOKEN = 'verify-de-prueba';
+      const moduleRef = await compileApp();
+
+      expect(moduleRef.get(MESSAGING_PORT, { strict: false })).toBeInstanceOf(MetaMessagingAdapter);
+      expect(moduleRef.get(PROVISIONING_PORT, { strict: false })).toBeInstanceOf(MetaProvisioningAdapter);
+
+      await moduleRef.close();
+    });
+
+    it('twilio ya no es un proveedor válido', async () => {
+      process.env.MESSAGING_PROVIDER = 'twilio';
+
+      await expect(compileApp()).rejects.toThrow(/MESSAGING_PROVIDER inválido: "twilio". Usa "fake" o "meta"/);
+    });
   });
 
   it('la opción retirada ORDER_PROVIDER=supabase ahora es inválida y falla al compilar', async () => {

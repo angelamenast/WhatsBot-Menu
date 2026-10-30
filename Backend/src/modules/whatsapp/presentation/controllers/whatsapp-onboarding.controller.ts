@@ -44,7 +44,8 @@ export class WhatsappOnboardingController {
     try {
       const connection = await this.connectWhatsappUseCase.execute({
         businessId: business.id,
-        phoneNumber: dto.phoneNumber,
+        phoneNumberId: dto.phoneNumberId,
+        wabaId: dto.wabaId,
       });
 
       res.status(
@@ -54,10 +55,10 @@ export class WhatsappOnboardingController {
       return {
         id: connection.id,
         businessId: connection.businessId,
+        phoneNumberId: connection.phoneNumberId,
+        wabaId: connection.wabaId,
         phoneNumber: connection.phoneNumber,
         status: connection.status,
-        twilioSubaccountSid: connection.twilioSubaccountSid,
-        twilioSenderSid: connection.twilioSenderSid,
       };
     } catch (error) {
       if (error instanceof PhoneNumberAlreadyLinkedError) {

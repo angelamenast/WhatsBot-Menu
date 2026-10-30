@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { jest } from '@jest/globals';
-import { ExecutionContext, INestApplication } from '@nestjs/common';
+import { ExecutionContext, INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -24,7 +24,9 @@ describe('WhatsappOnboardingController', () => {
 
   const authenticatedUser = { id: 'user-1' };
   const business = { id: 'business-1' };
-  const phoneNumber = '+573000000000';
+  const phoneNumberId = '106540352242922';
+  const wabaId = '102290129340398';
+  const body = { phoneNumberId, wabaId };
 
   beforeEach(async () => {
     connectWhatsappUseCase = { execute: jest.fn() as any };
@@ -54,6 +56,7 @@ describe('WhatsappOnboardingController', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     await app.init();
   });
 
@@ -79,7 +82,7 @@ describe('WhatsappOnboardingController', () => {
 
       const response = await request(app.getHttpServer())
         .post('/whatsapp/connections')
-        .send({ phoneNumber })
+        .send(body)
         .expect(403);
 
       expect(response.body).toEqual({
@@ -97,9 +100,9 @@ describe('WhatsappOnboardingController', () => {
         WhatsappConnection.create({
           id: 'connection-1',
           businessId: business.id,
-          phoneNumber,
-          twilioSubaccountSid: 'AC123',
-          twilioSenderSid: 'MG123',
+          phoneNumberId,
+          wabaId,
+          phoneNumber: '15550253483',
           status: WhatsappConnectionStatus.CONNECTED,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -108,21 +111,21 @@ describe('WhatsappOnboardingController', () => {
 
       await request(app.getHttpServer())
         .post('/whatsapp/connections')
-        .send({ phoneNumber })
+        .send(body)
         .expect(201);
 
       expect(connectWhatsappUseCase.execute).toHaveBeenCalledTimes(1);
     });
   });
 
-  it('número disponible + provisioning exitoso: responde 201 con la conexión CONNECTED', async () => {
+  it('número disponible + vinculación exitosa: responde 201 con la conexión CONNECTED', async () => {
     connectWhatsappUseCase.execute.mockResolvedValue(
       WhatsappConnection.create({
         id: 'connection-1',
         businessId: business.id,
-        phoneNumber,
-        twilioSubaccountSid: 'AC123',
-        twilioSenderSid: 'MG123',
+        phoneNumberId,
+        wabaId,
+        phoneNumber: '15550253483',
         status: WhatsappConnectionStatus.CONNECTED,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -131,7 +134,7 @@ describe('WhatsappOnboardingController', () => {
 
     const response = await request(app.getHttpServer())
       .post('/whatsapp/connections')
-      .send({ phoneNumber })
+      .send(body)
       .expect(201);
 
     expect(businessService.findByUsuario).toHaveBeenCalledWith(
@@ -139,30 +142,48 @@ describe('WhatsappOnboardingController', () => {
     );
     expect(connectWhatsappUseCase.execute).toHaveBeenCalledWith({
       businessId: business.id,
-      phoneNumber,
+      phoneNumberId,
+      wabaId,
     });
-    expect(response.body.status).toBe(WhatsappConnectionStatus.CONNECTED);
+    expect(response.body).toMatchObject({
+      status: WhatsappConnectionStatus.CONNECTED,
+      phoneNumberId,
+      wabaId,
+      phoneNumber: '15550253483',
+    });
   });
 
   it('número ya vinculado a otro negocio: responde 409', async () => {
     connectWhatsappUseCase.execute.mockRejectedValue(
-      new PhoneNumberAlreadyLinkedError(phoneNumber),
+      new PhoneNumberAlreadyLinkedError(phoneNumberId),
     );
 
     await request(app.getHttpServer())
       .post('/whatsapp/connections')
-      .send({ phoneNumber })
+      .send(body)
       .expect(409);
   });
 
-  it('provisioning falla: responde 200 con la conexión en estado FAILED', async () => {
+  it.each([
+    ['sin cuerpo', {}],
+    ['phoneNumberId con caracteres no numéricos', { phoneNumberId: '+573000000000', wabaId }],
+    ['wabaId vacío', { phoneNumberId, wabaId: '' }],
+    ['falta wabaId', { phoneNumberId }],
+    ['el campo retirado phoneNumber no sirve', { phoneNumber: '+573000000000' }],
+  ])('validación: %s → 400 y no se conecta nada', async (_label, payload) => {
+    await request(app.getHttpServer()).post('/whatsapp/connections').send(payload).expect(400);
+
+    expect(connectWhatsappUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('la vinculación falla: responde 200 con la conexión en estado FAILED', async () => {
     connectWhatsappUseCase.execute.mockResolvedValue(
       WhatsappConnection.create({
         id: 'connection-1',
         businessId: business.id,
-        phoneNumber,
-        twilioSubaccountSid: null,
-        twilioSenderSid: null,
+        phoneNumberId,
+        wabaId,
+        phoneNumber: null,
         status: WhatsappConnectionStatus.FAILED,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -171,7 +192,7 @@ describe('WhatsappOnboardingController', () => {
 
     const response = await request(app.getHttpServer())
       .post('/whatsapp/connections')
-      .send({ phoneNumber })
+      .send(body)
       .expect(200);
 
     expect(response.body.status).toBe(WhatsappConnectionStatus.FAILED);
