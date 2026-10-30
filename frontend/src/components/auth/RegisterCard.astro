@@ -106,6 +106,158 @@ import Logo from "../common/Logo.astro";
         </span>
       </button>
       <p id="google-error" class="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800 text-left" role="alert" hidden></p>
+
+      <div class="relative flex items-center justify-center my-unit-md">
+        <div class="w-full h-px bg-surface-container-high"></div>
+        <span
+          class="absolute px-unit-sm bg-surface-container-lowest font-body-sm text-body-sm text-on-surface-variant"
+          >o regístrate con tu correo</span
+        >
+      </div>
+
+      <!-- Formulario Email/Pass -->
+      <form class="flex flex-col gap-unit-md text-left" id="registerForm" novalidate>
+        <div class="flex flex-col gap-unit-2xs">
+          <label
+            class="font-label-md text-label-md text-on-surface font-medium"
+            for="reg-nombre">Nombre</label
+          >
+          <div class="relative flex items-center">
+            <span
+              class="material-symbols-outlined absolute left-unit-sm text-[18px] text-outline pointer-events-none"
+              >person</span
+            >
+            <input
+              class="w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface font-body-md text-body-md pl-10 pr-unit-md py-unit-sm rounded-lg border border-surface-dim placeholder:text-outline outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all"
+              id="reg-nombre"
+              autocomplete="name"
+              aria-describedby="reg-nombre-error"
+              placeholder="Tu nombre"
+              required
+              type="text"
+            />
+          </div>
+          <p id="reg-nombre-error" class="text-sm text-orange-700" aria-live="polite" hidden></p>
+        </div>
+
+        <div class="flex flex-col gap-unit-2xs">
+          <label
+            class="font-label-md text-label-md text-on-surface font-medium"
+            for="reg-email">Correo electrónico</label
+          >
+          <div class="relative flex items-center">
+            <span
+              class="material-symbols-outlined absolute left-unit-sm text-[18px] text-outline pointer-events-none"
+              >mail</span
+            >
+            <input
+              class="w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface font-body-md text-body-md pl-10 pr-unit-md py-unit-sm rounded-lg border border-surface-dim placeholder:text-outline outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all"
+              id="reg-email"
+              autocomplete="email"
+              aria-describedby="reg-email-error"
+              placeholder="nombre@empresa.com"
+              required
+              type="email"
+            />
+          </div>
+          <p id="reg-email-error" class="text-sm text-orange-700" aria-live="polite" hidden></p>
+        </div>
+
+        <div class="flex flex-col gap-unit-2xs">
+          <label
+            class="font-label-md text-label-md text-on-surface font-medium"
+            for="reg-telefono">Teléfono <span class="text-on-surface-variant font-normal">(opcional)</span></label
+          >
+          <div class="relative flex items-center">
+            <span
+              class="material-symbols-outlined absolute left-unit-sm text-[18px] text-outline pointer-events-none"
+              >call</span
+            >
+            <input
+              class="w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface font-body-md text-body-md pl-10 pr-unit-md py-unit-sm rounded-lg border border-surface-dim placeholder:text-outline outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all"
+              id="reg-telefono"
+              autocomplete="tel"
+              placeholder="+57 300 000 0000"
+              type="tel"
+            />
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-unit-2xs">
+          <label
+            class="font-label-md text-label-md text-on-surface font-medium"
+            for="reg-password">Contraseña</label
+          >
+          <div class="relative flex items-center">
+            <span
+              class="material-symbols-outlined absolute left-unit-sm text-[18px] text-outline pointer-events-none"
+              >lock</span
+            >
+            <input
+              class="w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface font-body-md text-body-md pl-10 pr-10 py-unit-sm rounded-lg border border-surface-dim placeholder:text-outline outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all"
+              id="reg-password"
+              autocomplete="new-password"
+              aria-describedby="reg-password-error"
+              placeholder="Mínimo 8 caracteres"
+              required
+              type="password"
+            />
+            <button
+              aria-label="Mostrar u ocultar contraseña"
+              class="toggle-register-password absolute right-unit-sm text-outline hover:text-orange-600 transition-colors flex items-center justify-center p-unit-2xs"
+              data-target="reg-password"
+              type="button"
+            >
+              <span class="material-symbols-outlined text-[18px]">visibility</span>
+            </button>
+          </div>
+          <p id="reg-password-error" class="text-sm text-orange-700" aria-live="polite" hidden></p>
+        </div>
+
+        <div class="flex flex-col gap-unit-2xs">
+          <label
+            class="font-label-md text-label-md text-on-surface font-medium"
+            for="reg-confirm">Confirmar contraseña</label
+          >
+          <div class="relative flex items-center">
+            <span
+              class="material-symbols-outlined absolute left-unit-sm text-[18px] text-outline pointer-events-none"
+              >lock</span
+            >
+            <input
+              class="w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface font-body-md text-body-md pl-10 pr-10 py-unit-sm rounded-lg border border-surface-dim placeholder:text-outline outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all"
+              id="reg-confirm"
+              autocomplete="new-password"
+              aria-describedby="reg-confirm-error"
+              placeholder="Repite la contraseña"
+              required
+              type="password"
+            />
+            <button
+              aria-label="Mostrar u ocultar contraseña"
+              class="toggle-register-password absolute right-unit-sm text-outline hover:text-orange-600 transition-colors flex items-center justify-center p-unit-2xs"
+              data-target="reg-confirm"
+              type="button"
+            >
+              <span class="material-symbols-outlined text-[18px]">visibility</span>
+            </button>
+          </div>
+          <p id="reg-confirm-error" class="text-sm text-orange-700" aria-live="polite" hidden></p>
+        </div>
+
+        <button
+          id="btnRegister"
+          class="w-full bg-[#f97316] hover:bg-[#ea580c] active:bg-orange-700 text-white py-unit-sm px-unit-lg font-headline-sm text-headline-sm rounded-lg shadow-md transition-all flex items-center justify-center gap-unit-xs group mt-unit-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          type="submit"
+        >
+          <span id="btnRegisterText">Crear cuenta</span>
+          <span
+            class="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-1"
+            >arrow_forward</span
+          >
+        </button>
+        <p id="register-error" class="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800 text-left" role="alert" hidden></p>
+      </form>
     </div>
 
     <!-- Badges -->
@@ -187,6 +339,29 @@ import Logo from "../common/Logo.astro";
 
 <script>
   import { authService } from "../../services/auth.service";
-  import { bindGoogleRegistration } from "../../services/auth-forms";
+  import { syncUserSession } from "../../services/userSession";
+  import { clearSession } from "../../api/http";
+  import { bindGoogleRegistration, bindRegisterForm } from "../../services/auth-forms";
   bindGoogleRegistration(() => authService.loginWithGoogle('register'));
+  bindRegisterForm({
+    register: data => authService.register(data.email, data.password, data.nombre, data.telefono),
+    login: credentials => authService.login(credentials),
+    failure: clearSession,
+    async success() {
+      await syncUserSession();
+      const target = new URL(new URLSearchParams(location.search).get('next') || '/orders', location.origin);
+      location.assign(target.origin === location.origin ? target.href : '/orders');
+    },
+  });
+
+  document.querySelectorAll<HTMLButtonElement>(".toggle-register-password").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.target!) as HTMLInputElement | null;
+      const icon = btn.querySelector(".material-symbols-outlined");
+      if (!input || !icon) return;
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      icon.textContent = isPassword ? "visibility_off" : "visibility";
+    });
+  });
 </script>
