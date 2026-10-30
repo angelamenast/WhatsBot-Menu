@@ -9,9 +9,11 @@ export enum WhatsappConnectionStatus {
 export interface WhatsappConnectionProps {
   id: string;
   businessId: string;
-  phoneNumber: string;
-  twilioSubaccountSid: string | null;
-  twilioSenderSid: string | null;
+  /** Identificador del número en el proveedor; es por el que llegan los mensajes entrantes. */
+  phoneNumberId: string;
+  wabaId: string;
+  /** Número visible (solo dígitos). Null hasta que el proveedor lo confirma. */
+  phoneNumber: string | null;
   status: WhatsappConnectionStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -24,14 +26,14 @@ export class WhatsappConnection {
     return new WhatsappConnection(props);
   }
 
-  static request(params: { businessId: string; phoneNumber: string }): WhatsappConnection {
+  static request(params: { businessId: string; phoneNumberId: string; wabaId: string }): WhatsappConnection {
     const now = new Date();
     return new WhatsappConnection({
       id: randomUUID(),
       businessId: params.businessId,
-      phoneNumber: params.phoneNumber,
-      twilioSubaccountSid: null,
-      twilioSenderSid: null,
+      phoneNumberId: params.phoneNumberId,
+      wabaId: params.wabaId,
+      phoneNumber: null,
       status: WhatsappConnectionStatus.PENDING,
       createdAt: now,
       updatedAt: now,
@@ -46,16 +48,16 @@ export class WhatsappConnection {
     return this.props.businessId;
   }
 
-  get phoneNumber(): string {
+  get phoneNumberId(): string {
+    return this.props.phoneNumberId;
+  }
+
+  get wabaId(): string {
+    return this.props.wabaId;
+  }
+
+  get phoneNumber(): string | null {
     return this.props.phoneNumber;
-  }
-
-  get twilioSubaccountSid(): string | null {
-    return this.props.twilioSubaccountSid;
-  }
-
-  get twilioSenderSid(): string | null {
-    return this.props.twilioSenderSid;
   }
 
   get status(): WhatsappConnectionStatus {
@@ -70,17 +72,16 @@ export class WhatsappConnection {
     return this.props.updatedAt;
   }
 
-  requestReconnect(phoneNumber: string): void {
-    this.props.phoneNumber = phoneNumber;
-    this.props.twilioSubaccountSid = null;
-    this.props.twilioSenderSid = null;
+  requestReconnect(phoneNumberId: string, wabaId: string): void {
+    this.props.phoneNumberId = phoneNumberId;
+    this.props.wabaId = wabaId;
+    this.props.phoneNumber = null;
     this.props.status = WhatsappConnectionStatus.PENDING;
     this.props.updatedAt = new Date();
   }
 
-  markConnected(twilioSubaccountSid: string, twilioSenderSid: string): void {
-    this.props.twilioSubaccountSid = twilioSubaccountSid;
-    this.props.twilioSenderSid = twilioSenderSid;
+  markConnected(phoneNumber: string): void {
+    this.props.phoneNumber = phoneNumber;
     this.props.status = WhatsappConnectionStatus.CONNECTED;
     this.props.updatedAt = new Date();
   }

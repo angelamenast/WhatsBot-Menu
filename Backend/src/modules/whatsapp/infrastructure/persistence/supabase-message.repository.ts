@@ -25,7 +25,7 @@ export class SupabaseMessageRepository implements MessageRepository {
     const { data, error } = await client
       .from('mensajes')
       .select('*')
-      .eq('twilio_message_sid', providerMessageId)
+      .eq('id_mensaje_proveedor', providerMessageId)
       .maybeSingle();
 
     if (error) {

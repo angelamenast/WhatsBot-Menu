@@ -12,7 +12,7 @@ export class SupabaseProcessedMessageRepository implements ProcessedMessageRepos
     const { count, error } = await client
       .from('mensajes')
       .select('id', { count: 'exact', head: true })
-      .eq('twilio_message_sid', providerMessageId);
+      .eq('id_mensaje_proveedor', providerMessageId);
 
     if (error) {
       throw error;

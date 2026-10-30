@@ -40,6 +40,22 @@ export class SupabaseWhatsappConnectionRepository implements WhatsappConnectionR
     return data ? WhatsappConnectionMapper.toDomain(data) : null;
   }
 
+  async findByPhoneNumberId(phoneNumberId: string): Promise<WhatsappConnection | null> {
+    const client = this.supabaseService.getClient();
+
+    const { data, error } = await client
+      .from('conexiones_whatsapp')
+      .select('*')
+      .eq('phone_number_id', phoneNumberId)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return data ? WhatsappConnectionMapper.toDomain(data) : null;
+  }
+
   async save(connection: WhatsappConnection): Promise<void> {
     const client = this.supabaseService.getClient();
     const row = WhatsappConnectionMapper.toPersistence(connection);
