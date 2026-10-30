@@ -3,7 +3,8 @@ import { AppModule } from './app.module';
 import {ValidationPipe} from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // rawBody: MetaSignatureGuard firma sobre el cuerpo crudo del webhook de WhatsApp.
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   app.enableCors({
     origin: process.env.FRONTEND_URL ?? 'http://localhost:4321',
     credentials: true,
