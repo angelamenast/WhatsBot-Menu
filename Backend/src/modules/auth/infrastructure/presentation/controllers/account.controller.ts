@@ -21,11 +21,17 @@ export class AccountController {
     }
     if (dto.email) changes.email = dto.email;
     if (dto.password) {
-      if (!dto.currentPassword || !request.user.email) throw new BadRequestException('Escribe tu contraseña actual');
-      // Cliente aislado: la comprobación no altera sesiones de otros usuarios.
-      const isolated = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-      const { data, error } = await isolated.auth.signInWithPassword({ email: request.user.email, password: dto.currentPassword });
-      if (error || data.user?.id !== request.user.id) throw new BadRequestException('Contraseña actual incorrecta');
+      // Quien solo entra con Google no tiene contraseña que comprobar. Sin la lista de proveedores
+      // se exige la contraseña actual. app_metadata solo lo escribe Supabase; el usuario no puede alterarlo.
+      const providers = request.user.app_metadata?.providers;
+      const hasPassword = !Array.isArray(providers) || providers.includes('email');
+      if (hasPassword) {
+        if (!dto.currentPassword || !request.user.email) throw new BadRequestException('Escribe tu contraseña actual');
+        // Cliente aislado: la comprobación no altera sesiones de otros usuarios.
+        const isolated = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+        const { data, error } = await isolated.auth.signInWithPassword({ email: request.user.email, password: dto.currentPassword });
+        if (error || data.user?.id !== request.user.id) throw new BadRequestException('Contraseña actual incorrecta');
+      }
       changes.password = dto.password;
     }
     if (!Object.keys(changes).length) throw new BadRequestException('No hay cambios para guardar');
