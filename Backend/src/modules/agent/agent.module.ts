@@ -16,7 +16,11 @@ import { CONVERSATION_HISTORY_REPOSITORY } from './domain/repositories/conversat
 import { SupabaseConversationHistoryRepository } from './infrastructure/persistence/supabase-conversation-history.repository';
 
 import { LLM_PORT } from './application/ports/out/llm.port';
+import type { LlmPort } from './application/ports/out/llm.port';
 import { FakeLlmProvider } from './infrastructure/adapters/fake-llm.adapter';
+import { GeminiLlmAdapter } from './infrastructure/adapters/gemini/gemini-llm.adapter';
+import { createGeminiClient } from './infrastructure/adapters/gemini/create-gemini-client';
+import { readGeminiConfig } from './infrastructure/adapters/gemini/gemini-config';
 // import { OpenAiLlmAdapter } from './infrastructure/adapters/openai-llm.adapter'; // próximo paso
 
 import { TOKEN_USAGE_PORT } from './application/ports/out/token-usage.port';
@@ -69,15 +73,20 @@ import { AgentConfigController } from './presentation/controllers/agent-config.c
     {
       provide: LLM_PORT,
       inject: [ConfigService, FakeLlmProvider],
-      useFactory: (configService: ConfigService, fakeLlmProvider: FakeLlmProvider) => {
+      useFactory: async (configService: ConfigService, fakeLlmProvider: FakeLlmProvider): Promise<LlmPort> => {
         const provider = configService.get<string>('LLM_PROVIDER') ?? 'fake';
         switch (provider) {
           case 'fake':
             return fakeLlmProvider;
           case 'openai':
             throw new Error('OpenAiLlmAdapter no implementado todavía');
+          case 'gemini': {
+            // Falla al arrancar si falta GEMINI_API_KEY (o algún GEMINI_* es inválido).
+            const geminiConfig = readGeminiConfig((key) => configService.get<string>(key));
+            return new GeminiLlmAdapter(await createGeminiClient(geminiConfig), geminiConfig);
+          }
           default:
-            throw new Error(`LLM_PROVIDER inválido: "${provider}". Usa "fake" u "openai".`);
+            throw new Error(`LLM_PROVIDER inválido: "${provider}". Usa "fake", "openai" o "gemini".`);
         }
       },
     },

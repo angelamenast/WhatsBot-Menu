@@ -7,6 +7,9 @@ import { FakeCatalogRepository } from './modules/agent/infrastructure/persistenc
 import { USAGE_QUOTA_PORT } from './modules/agent/application/ports/out/usage-quota.port';
 import { FakeUsageQuotaProvider } from './modules/agent/infrastructure/adapters/fake-usage-quota.adapter';
 import { SupabaseUsageQuotaAdapter } from './modules/agent/infrastructure/adapters/supabase-usage-quota.adapter';
+import { LLM_PORT } from './modules/agent/application/ports/out/llm.port';
+import { FakeLlmProvider } from './modules/agent/infrastructure/adapters/fake-llm.adapter';
+import { GeminiLlmAdapter } from './modules/agent/infrastructure/adapters/gemini/gemini-llm.adapter';
 import { ORDER_PORT } from './modules/agent/application/ports/out/order.port';
 import { OrdersOrderAdapter } from './modules/agent/infrastructure/adapters/orders-order.adapter';
 import { FakeOrderProvider } from './modules/agent/infrastructure/adapters/fake-order.adapter';
@@ -249,6 +252,45 @@ describe('AppModule (humo de DI)', () => {
       process.env.MESSAGING_PROVIDER = 'twilio';
 
       await expect(compileApp()).rejects.toThrow(/MESSAGING_PROVIDER inválido: "twilio". Usa "fake" o "meta"/);
+    });
+  });
+
+  describe('LLM_PROVIDER', () => {
+    // process.env tiene prioridad sobre el .env local: una cadena vacía simula "sin clave" aunque
+    // el desarrollador tenga GEMINI_API_KEY en su .env.
+    afterEach(() => {
+      delete process.env.GEMINI_API_KEY;
+    });
+
+    it('por defecto (fake), LLM_PORT resuelve a FakeLlmProvider', async () => {
+      const moduleRef = await compileApp();
+
+      expect(moduleRef.get(LLM_PORT, { strict: false })).toBeInstanceOf(FakeLlmProvider);
+
+      await moduleRef.close();
+    });
+
+    it('con LLM_PROVIDER=gemini y GEMINI_API_KEY, LLM_PORT resuelve a GeminiLlmAdapter (sin llamar a la red)', async () => {
+      process.env.LLM_PROVIDER = 'gemini';
+      process.env.GEMINI_API_KEY = 'clave-de-prueba-no-real';
+      const moduleRef = await compileApp();
+
+      expect(moduleRef.get(LLM_PORT, { strict: false })).toBeInstanceOf(GeminiLlmAdapter);
+
+      await moduleRef.close();
+    });
+
+    it('con LLM_PROVIDER=gemini y sin GEMINI_API_KEY, el arranque falla nombrando la variable', async () => {
+      process.env.LLM_PROVIDER = 'gemini';
+      process.env.GEMINI_API_KEY = '';
+
+      await expect(compileApp()).rejects.toThrow(/GEMINI_API_KEY/);
+    });
+
+    it('un LLM_PROVIDER desconocido falla al compilar', async () => {
+      process.env.LLM_PROVIDER = 'otro';
+
+      await expect(compileApp()).rejects.toThrow(/LLM_PROVIDER inválido/);
     });
   });
 
