@@ -79,4 +79,22 @@ export class SupabaseNegocioRepository implements NegocioRepository {
 
     return NegocioMapper.toDomain(row);
   }
+
+  async actualizarAtencionAutomatica(negocioId: string, activa: boolean): Promise<boolean> {
+    const client = this.supabaseService.getClient();
+
+    const { data: row, error } = await client
+      .from('negocios')
+      .update({ atencion_automatica_activa: activa })
+      .eq('id', negocioId)
+      .is('deleted_at', null)
+      .select('atencion_automatica_activa')
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return row.atencion_automatica_activa;
+  }
 }

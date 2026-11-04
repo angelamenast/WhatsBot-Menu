@@ -15,6 +15,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_GUARD } from '@nestjs/core';
 import { AgentModule } from './modules/agent/agent.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { NegocioSetupModule } from './modules/negocio-setup/negocio-setup.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { OrdersModule } from './modules/orders/orders.module';
     AgentModule,
     OrdersModule,
     CatalogModule,
+    NegocioSetupModule,
   ],
   controllers: [AppController, HealthController],     
   providers: [AppService, 

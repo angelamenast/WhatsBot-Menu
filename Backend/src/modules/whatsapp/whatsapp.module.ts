@@ -135,6 +135,7 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
 
     OrderStatusChangedListener,
   ],
-  exports: [MESSAGING_PORT, PROVISIONING_PORT, PLAN_STATUS_PORT, AGENT_DISPATCH_PORT],
+  // WHATSAPP_CONNECTION_REPOSITORY lo lee el checklist de negocio-setup (TREMIA-104).
+  exports: [MESSAGING_PORT, PROVISIONING_PORT, PLAN_STATUS_PORT, AGENT_DISPATCH_PORT, WHATSAPP_CONNECTION_REPOSITORY],
 })
 export class WhatsappModule {}
