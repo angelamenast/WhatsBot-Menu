@@ -1,4 +1,4 @@
-import { AgentRegionalStyle, AgentTone } from '../../../domain/enums/agent-style';
+import { AgentRegionalStyle, AgentTone } from '../../domain/enums/agent-style';
 import {
   FORMAL_REGIONAL_LIMIT,
   REGIONAL_STYLE_GUIDE,
