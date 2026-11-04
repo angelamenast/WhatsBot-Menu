@@ -112,7 +112,7 @@ export class ProcessCustomerMessageUseCase {
     ]);
 
     let responseText: string;
-    let usage: { tokensInput: number; tokensOutput: number } | null = null;
+    let usage: { tokensInput: number; tokensOutput: number; model?: string } | null = null;
 
     let proposedOrder: ProposedOrder | null = null;
 
@@ -131,7 +131,7 @@ export class ProcessCustomerMessageUseCase {
 
       responseText = generated.text;
       proposedOrder = generated.proposedOrder;
-      usage = { tokensInput: generated.tokensInput, tokensOutput: generated.tokensOutput };
+      usage = { tokensInput: generated.tokensInput, tokensOutput: generated.tokensOutput, model: generated.model };
     } catch (error) {
       this.logger.error(
         `Fallo al generar respuesta del agente para el negocio ${command.businessId}: ${
@@ -158,6 +158,7 @@ export class ProcessCustomerMessageUseCase {
           messageId: command.messageId,
           tokensInput: usage.tokensInput,
           tokensOutput: usage.tokensOutput,
+          model: usage.model,
         });
       } catch (error) {
         this.logger.error(

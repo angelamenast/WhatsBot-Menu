@@ -246,6 +246,21 @@ describe('ProcessCustomerMessageUseCase', () => {
       expect(usageQuotaPort.hasQuota).not.toHaveBeenCalled();
     });
 
+    it('registra en el consumo el modelo que REALMENTE respondió (p. ej. el de respaldo)', async () => {
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(5);
+      llmPort.generateReply.mockResolvedValue({
+        text: 'Tenemos hamburguesas.',
+        proposedOrder: null,
+        model: 'modelo-de-respaldo',
+        tokensInput: 30,
+        tokensOutput: 12,
+      });
+
+      await useCase.execute(command);
+
+      expect(tokenUsagePort.record).toHaveBeenCalledWith(expect.objectContaining({ model: 'modelo-de-respaldo' }));
+    });
+
     it('con cuota: el flujo sigue y se registra el consumo con el id del mensaje entrante', async () => {
       conversationHistoryRepository.countByConversationId.mockResolvedValue(5);
 

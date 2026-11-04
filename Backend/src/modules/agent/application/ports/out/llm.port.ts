@@ -28,6 +28,8 @@ export interface ProposedOrder {
 
 export interface GenerateReplyResult {
   text: string;
+  /** Modelo que REALMENTE respondió (puede ser uno de respaldo); se registra en el consumo. */
+  model?: string;
   /** null cuando el modelo no propone ningún pedido en este turno. */
   proposedOrder: ProposedOrder | null;
   tokensInput: number;

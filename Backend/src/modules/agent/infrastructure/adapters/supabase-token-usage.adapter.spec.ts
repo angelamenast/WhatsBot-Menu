@@ -31,7 +31,23 @@ describe('SupabaseTokenUsageAdapter', () => {
       p_mensaje_id: 'message-1',
       p_tokens_entrada: 30,
       p_tokens_salida: 12,
+      p_modelo: null,
     });
+  });
+
+  it('registra el modelo que realmente respondió', async () => {
+    await adapter.record({
+      businessId: 'business-1',
+      conversationId: 'conversation-1',
+      tokensInput: 1,
+      tokensOutput: 2,
+      model: 'gemini-3.1-flash-lite',
+    });
+
+    expect(rpc).toHaveBeenCalledWith(
+      'registrar_consumo_ia',
+      expect.objectContaining({ p_modelo: 'gemini-3.1-flash-lite' }),
+    );
   });
 
   it('sin id de mensaje envía null', async () => {

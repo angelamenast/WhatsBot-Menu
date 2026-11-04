@@ -19,6 +19,7 @@ export class SupabaseTokenUsageAdapter implements TokenUsagePort {
       p_mensaje_id: command.messageId ?? null,
       p_tokens_entrada: command.tokensInput,
       p_tokens_salida: command.tokensOutput,
+      p_modelo: command.model ?? null,
     });
 
     if (error) {
