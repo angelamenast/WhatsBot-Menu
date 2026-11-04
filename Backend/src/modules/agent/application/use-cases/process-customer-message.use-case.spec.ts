@@ -556,6 +556,68 @@ describe('ProcessCustomerMessageUseCase', () => {
     });
   });
 
+  describe('diagnóstico de errores de la base de datos en los logs', () => {
+    const dbError = (code: string, message: string) => ({
+      code,
+      message,
+      details: 'Key (numero_cliente)=(573001112233) already exists.',
+      hint: '',
+    });
+
+    it('un error de Supabase que NO es instancia de Error ya no se registra como [object Object]', async () => {
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(5);
+      tokenUsagePort.record.mockRejectedValue(
+        dbError('23503', 'insert or update on table "consumo_ia" violates foreign key constraint "consumo_ia_mensaje_id_fkey"'),
+      );
+
+      await useCase.execute(command);
+
+      const logged = String(errorSpy.mock.calls[0][0]);
+      expect(logged).not.toContain('[object Object]');
+      expect(logged).toContain('código=23503');
+      expect(logged).toContain('consumo_ia_mensaje_id_fkey');
+    });
+
+    it('nunca registra el campo details (trae valores de filas, como teléfonos)', async () => {
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(5);
+      tokenUsagePort.record.mockRejectedValue(dbError('23505', 'duplicate key value'));
+
+      await useCase.execute(command);
+
+      expect(String(errorSpy.mock.calls[0][0])).not.toContain('573001112233');
+    });
+
+    it('al fallar la creación del pedido registra nombre y código, pero no el mensaje de la base', async () => {
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(5);
+      llmPort.generateReply.mockResolvedValue({
+        text: 'x',
+        proposedOrder: { items: [{ productId: 'p1', quantity: 1 }] },
+        tokensInput: 1,
+        tokensOutput: 1,
+      });
+      orderPort.createOrder.mockRejectedValue(
+        dbError('23503', 'violates foreign key constraint con producto Hamburguesa clásica'),
+      );
+
+      const result = await useCase.execute(command);
+
+      expect(result?.responseText).toBe(ORDER_REGISTRATION_FAILED_TEXT);
+      const logged = errorSpy.mock.calls.map((call: unknown[]) => String(call[0])).join('\n');
+      expect(logged).toContain('código=23503');
+      expect(logged).not.toContain('Hamburguesa');
+      expect(logged).not.toContain('[object Object]');
+    });
+
+    it('un valor que no es objeto se registra como error desconocido', async () => {
+      conversationHistoryRepository.countByConversationId.mockResolvedValue(5);
+      tokenUsagePort.record.mockRejectedValue('texto suelto');
+
+      await useCase.execute(command);
+
+      expect(String(errorSpy.mock.calls[0][0])).toContain('error desconocido');
+    });
+  });
+
   describe('contrato nuevo con el LLM', () => {
     it('pasa businessName, businessHours e isFirstMessage', async () => {
       const hours = { lunes: '8-18' };
