@@ -12,7 +12,7 @@ import type { ObtenerEstadoSuscripcionUseCase } from '../../../subscriptions/app
 const negocio = new Negocio('biz-1', 'user-1', 'Café', null, 'activo', null);
 const producto = new Product('p-1', 'biz-1', null, 'Tinto', null, 3000, true, null);
 const conexion = (status: WhatsappConnectionStatus) =>
-  WhatsappConnection.create({ id: 'c-1', businessId: 'biz-1', phoneNumber: '+573001234567', twilioSubaccountSid: null, twilioSenderSid: null, status, createdAt: new Date(), updatedAt: new Date() });
+  WhatsappConnection.create({ id: 'c-1', businessId: 'biz-1', phoneNumberId: 'pn-1', wabaId: 'waba-1', phoneNumber: '573001234567', status, createdAt: new Date(), updatedAt: new Date() });
 const configAgente = (tone: AgentTone | null, welcomeMessage: string | null) =>
   AgentConfig.create({ id: 'a-1', businessId: 'biz-1', personality: null, tone, regionalStyle: null, welcomeMessage, unavailableMessage: null, businessHours: null, createdAt: new Date(), updatedAt: new Date() });
 
