@@ -17,7 +17,7 @@ function spyOnLogger() {
 }
 
 describe('FakeProvisioningProvider', () => {
-  const phoneNumber = '+573009998877';
+  const phoneNumberId = '106540352242922';
 
   const build = (forceFail: string) =>
     new FakeProvisioningProvider({
@@ -28,21 +28,25 @@ describe('FakeProvisioningProvider', () => {
     jest.restoreAllMocks();
   });
 
-  it('aprovisionamiento exitoso: devuelve los SIDs y no loguea el número', async () => {
+  it('vinculación exitosa: devuelve un número visible de solo dígitos, estable por phone_number_id, y no loguea', async () => {
     const logged = spyOnLogger();
 
-    const result = await build('false').provision(phoneNumber);
+    const result = await build('false').link(phoneNumberId);
+    const again = await build('false').link(phoneNumberId);
+    const other = await build('false').link('999999999999999');
 
     expect(result.status).toBe('connected');
-    expect(logged()).not.toContain(phoneNumber);
+    const displayPhoneNumber = result.status === 'connected' ? result.displayPhoneNumber : '';
+    expect(displayPhoneNumber).toMatch(/^\d{11}$/);
+    expect(again).toEqual(result);
+    expect(other).not.toEqual(result);
+    expect(logged()).not.toContain(displayPhoneNumber);
+    expect(logged()).not.toContain(phoneNumberId);
   });
 
-  it('aprovisionamiento fallido: devuelve failed y no loguea el número', async () => {
-    const logged = spyOnLogger();
-
-    const result = await build('true').provision(phoneNumber);
+  it('vinculación fallida: devuelve failed', async () => {
+    const result = await build('true').link(phoneNumberId);
 
     expect(result).toEqual({ status: 'failed' });
-    expect(logged()).not.toContain(phoneNumber);
   });
 });

@@ -8,9 +8,9 @@ type EstadoConexion = 'pendiente' | 'conectado' | 'fallido';
 interface ConexionWhatsappRow {
   id: string;
   negocio_id: string;
-  numero_whatsapp: string;
-  twilio_subaccount_sid: string | null;
-  twilio_sender_sid: string | null;
+  phone_number_id: string;
+  waba_id: string;
+  numero_whatsapp: string | null;
   estado: EstadoConexion;
   created_at: string;
   updated_at: string;
@@ -33,9 +33,9 @@ export class WhatsappConnectionMapper {
     return WhatsappConnection.create({
       id: row.id,
       businessId: row.negocio_id,
+      phoneNumberId: row.phone_number_id,
+      wabaId: row.waba_id,
       phoneNumber: row.numero_whatsapp,
-      twilioSubaccountSid: row.twilio_subaccount_sid,
-      twilioSenderSid: row.twilio_sender_sid,
       status: ESTADO_TO_STATUS[row.estado],
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
@@ -46,9 +46,9 @@ export class WhatsappConnectionMapper {
     return {
       id: connection.id,
       negocio_id: connection.businessId,
+      phone_number_id: connection.phoneNumberId,
+      waba_id: connection.wabaId,
       numero_whatsapp: connection.phoneNumber,
-      twilio_subaccount_sid: connection.twilioSubaccountSid,
-      twilio_sender_sid: connection.twilioSenderSid,
       estado: STATUS_TO_ESTADO[connection.status],
       updated_at: connection.updatedAt.toISOString(),
     };

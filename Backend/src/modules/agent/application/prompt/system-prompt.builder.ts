@@ -1,6 +1,6 @@
-import { AgentRegionalStyle, AgentTone } from '../../../domain/enums/agent-style';
-import { formatCop } from '../../../../../shared/domain/order-display';
-import type { GenerateReplyParams } from '../../../application/ports/out/llm.port';
+import { AgentRegionalStyle, AgentTone } from '../../domain/enums/agent-style';
+import { formatCop } from '../../../../shared/domain/order-display';
+import type { GenerateReplyParams } from '../ports/out/llm.port';
 import {
   MAX_BUSINESS_HOURS_LENGTH,
   MAX_BUSINESS_NAME_LENGTH,
@@ -17,7 +17,7 @@ import {
   REGIONAL_STYLE_MODERATION,
   TONE_GUIDE,
 } from './style-dictionaries';
-import { PROPOSE_ORDER_TOOL_NAME } from './propose-order.tool';
+import { PROPOSE_ORDER_TOOL_NAME } from './propose-order.schema';
 
 /** Referencia corta (P1…Pn) que el modelo usa en lugar del id real del producto. */
 export interface ProductRef {

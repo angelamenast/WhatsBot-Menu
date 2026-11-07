@@ -1,4 +1,4 @@
-import { AgentRegionalStyle, AgentTone } from '../../../domain/enums/agent-style';
+import { AgentRegionalStyle, AgentTone } from '../../domain/enums/agent-style';
 
 /**
  * Textos de prompt de cada tono y estilo regional. Viven en infraestructura (el dominio solo

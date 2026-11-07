@@ -1,6 +1,6 @@
-import { AgentRegionalStyle, AgentTone } from '../../../domain/enums/agent-style';
-import type { CatalogItem } from '../../../domain/repositories/catalog.repository';
-import type { GenerateReplyParams } from '../../../application/ports/out/llm.port';
+import { AgentRegionalStyle, AgentTone } from '../../domain/enums/agent-style';
+import type { CatalogItem } from '../../domain/repositories/catalog.repository';
+import type { GenerateReplyParams } from '../ports/out/llm.port';
 import { assignProductRefs, buildSystemPrompt } from './system-prompt.builder';
 import { FORMAL_REGIONAL_LIMIT, REGIONAL_STYLE_GUIDE, TONE_GUIDE } from './style-dictionaries';
 

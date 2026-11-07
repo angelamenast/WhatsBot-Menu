@@ -33,6 +33,28 @@ import type { CatalogItem } from '../../domain/repositories/catalog.repository';
 
 const HISTORY_MESSAGES_LIMIT = 10;
 
+/**
+ * Resume un error para el log. Los errores de Supabase pueden NO ser instancias de Error (objetos
+ * { code, message, details, hint }) y entonces `String(error)` da "[object Object]". Siempre se
+ * incluye el nombre y el código de error (SQLSTATE o PGRST…); el `message` solo si se pide, porque
+ * el de la BD puede traer nombres de restricciones o ids. `details` nunca se registra: trae valores
+ * de filas (por ejemplo números de teléfono).
+ */
+function describeError(error: unknown, includeMessage: boolean): string {
+  const source = (typeof error === 'object' && error !== null ? error : {}) as {
+    name?: unknown;
+    code?: unknown;
+    message?: unknown;
+  };
+  const parts = [
+    typeof source.name === 'string' ? source.name : undefined,
+    typeof source.code === 'string' ? `código=${source.code}` : undefined,
+    includeMessage && typeof source.message === 'string' ? `mensaje="${source.message}"` : undefined,
+  ].filter((part): part is string => part !== undefined);
+
+  return parts.length > 0 ? parts.join(' ') : 'error desconocido';
+}
+
 @Injectable()
 export class ProcessCustomerMessageUseCase {
   private readonly logger = new Logger(ProcessCustomerMessageUseCase.name);
@@ -112,7 +134,7 @@ export class ProcessCustomerMessageUseCase {
     ]);
 
     let responseText: string;
-    let usage: { tokensInput: number; tokensOutput: number } | null = null;
+    let usage: { tokensInput: number; tokensOutput: number; model?: string } | null = null;
 
     let proposedOrder: ProposedOrder | null = null;
 
@@ -131,7 +153,7 @@ export class ProcessCustomerMessageUseCase {
 
       responseText = generated.text;
       proposedOrder = generated.proposedOrder;
-      usage = { tokensInput: generated.tokensInput, tokensOutput: generated.tokensOutput };
+      usage = { tokensInput: generated.tokensInput, tokensOutput: generated.tokensOutput, model: generated.model };
     } catch (error) {
       this.logger.error(
         `Fallo al generar respuesta del agente para el negocio ${command.businessId}: ${
@@ -158,11 +180,12 @@ export class ProcessCustomerMessageUseCase {
           messageId: command.messageId,
           tokensInput: usage.tokensInput,
           tokensOutput: usage.tokensOutput,
+          model: usage.model,
         });
       } catch (error) {
         this.logger.error(
           `Fallo al registrar el consumo de tokens del negocio ${command.businessId} (la respuesta se entrega igual): ${
-            error instanceof Error ? error.message : String(error)
+            describeError(error, true)
           }`,
         );
       }
@@ -211,10 +234,10 @@ export class ProcessCustomerMessageUseCase {
           return conversationAlreadyHasOrderReply({ orderId: result.orderId });
       }
     } catch (error) {
-      // Solo ids y el tipo de error: el mensaje de la BD podría traer ids o datos de productos.
+      // Solo ids, tipo y código del error: el mensaje de la BD podría traer ids o datos de productos.
       this.logger.error(
         `Fallo al registrar el pedido propuesto por el agente (negocio ${command.businessId}, conversación ${command.conversationId}): ${
-          error instanceof Error ? error.name : 'error desconocido'
+          describeError(error, false)
         }`,
       );
       return ORDER_REGISTRATION_FAILED_TEXT;
