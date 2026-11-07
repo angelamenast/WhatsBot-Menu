@@ -4,8 +4,10 @@ import { TRANSACCION_PAGO_REPOSITORY } from '../../transaccion-pago.repository';
 import type { SuscripcionRepository } from '../../suscripcion.repository';
 import { SUSCRIPCION_REPOSITORY } from '../../suscripcion.repository';
 import { ProcesarWebhookPagoCommand } from '../dto/procesar-webhook-pago.command';
-import { SuscripcionNoEncontradaError, TransaccionNoEncontradaError } from '../../../errors/payments.errors';
-import { calcularNuevaFechaFin, DURACION_PLAN_MESES } from '../../../../../../shared/domain/periodo-suscripcion';
+import type { PlanRepository } from '../../plan.repository';
+import { PLAN_REPOSITORY } from '../../plan.repository';
+import { PlanNoEncontradoError, SuscripcionNoEncontradaError, TransaccionNoEncontradaError } from '../../../errors/payments.errors';
+import { calcularNuevaFechaFin } from '../../../../../../shared/domain/periodo-suscripcion';
 
 const ESTADOS_FINALES = ['APPROVED', 'DECLINED', 'VOIDED', 'ERROR'];
 
@@ -14,6 +16,7 @@ export class ProcesarWebhookPagoUseCase {
   constructor(
     @Inject(TRANSACCION_PAGO_REPOSITORY) private readonly transaccionRepository: TransaccionPagoRepository,
     @Inject(SUSCRIPCION_REPOSITORY) private readonly suscripcionRepository: SuscripcionRepository,
+    @Inject(PLAN_REPOSITORY) private readonly planRepository: PlanRepository,
   ) {}
 
   async execute(command: ProcesarWebhookPagoCommand, ahora: Date = new Date()): Promise<void> {
@@ -44,6 +47,12 @@ export class ProcesarWebhookPagoUseCase {
       throw new SuscripcionNoEncontradaError();
     }
 
+    // La vigencia que se suma es la del plan de la suscripción (1 mes, 12 meses...).
+    const plan = await this.planRepository.buscarPorId(suscripcion.planId);
+    if (!plan) {
+      throw new PlanNoEncontradoError();
+    }
+
     // Compra nueva (pendiente): el periodo empieza hoy. Renovación (activa o vencida): se
     // conserva fecha_inicio y el periodo se suma a fecha_fin si aún no vencía (HU-8.3).
     const esRenovacion = suscripcion.estado === 'activa' || suscripcion.estado === 'vencida';
@@ -52,7 +61,7 @@ export class ProcesarWebhookPagoUseCase {
     // pendiente, el webhook responde error y Wompi reintenta, así el cliente no queda sin servicio.
     await this.suscripcionRepository.actualizarEstado(suscripcion.id, 'activa', {
       fechaInicio: esRenovacion && suscripcion.fechaInicio ? suscripcion.fechaInicio : ahora,
-      fechaFin: calcularNuevaFechaFin(esRenovacion ? suscripcion.fechaFin : null, ahora, DURACION_PLAN_MESES),
+      fechaFin: calcularNuevaFechaFin(esRenovacion ? suscripcion.fechaFin : null, ahora, plan.duracionMeses),
     });
     await this.transaccionRepository.actualizarEstado(transaccion.id, 'aprobado');
   }

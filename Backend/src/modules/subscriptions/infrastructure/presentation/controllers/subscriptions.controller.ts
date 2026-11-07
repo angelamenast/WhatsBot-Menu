@@ -52,9 +52,6 @@ export interface ConsultarRenovacionResponse {
   mensaje: string;
 }
 
-// Mismo placeholder que usa HU-8.1 mientras no se defina la página de retorno del frontend.
-const REDIRECT_URL_POR_DEFECTO = 'https://tu-frontend.com/pago-confirmado';
-
 function toResponse(resultado: EstadoSuscripcionResult): EstadoSuscripcionResponse {
   return {
     estado: resultado.estado,
@@ -98,7 +95,7 @@ export class SubscriptionsController {
       const command = new IniciarRenovacionCommand(
         req.user.id,
         dto.confirmarRenovacionAnticipada ?? false,
-        this.configService.get<string>('WOMPI_REDIRECT_URL') ?? REDIRECT_URL_POR_DEFECTO,
+        this.configService.get<string>('WOMPI_REDIRECT_URL') ?? `${this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:4321'}/billing`,
       );
       return await this.iniciarRenovacionUseCase.execute(command);
     } catch (error) {

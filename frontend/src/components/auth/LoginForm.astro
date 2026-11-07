@@ -66,7 +66,7 @@
     </div>
 
     <!-- Formulario Email/Pass -->
-    <form class="flex flex-col gap-unit-md" id="loginForm">
+    <form class="flex flex-col gap-unit-md" id="loginForm" novalidate>
       <div class="flex flex-col gap-unit-2xs">
         <label
           class="font-label-md text-label-md text-on-surface font-medium"
@@ -80,11 +80,14 @@
           <input
             class="w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface font-body-md text-body-md pl-10 pr-unit-md py-unit-sm rounded-lg border border-surface-dim placeholder:text-outline outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all"
             id="email"
+            autocomplete="username"
+            aria-describedby="email-error"
             placeholder="nombre@empresa.com"
             required
             type="email"
           />
         </div>
+        <p id="email-error" class="text-sm text-orange-700" aria-live="polite" hidden></p>
       </div>
 
       <div class="flex flex-col gap-unit-2xs">
@@ -106,6 +109,8 @@
           <input
             class="w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface font-body-md text-body-md pl-10 pr-10 py-unit-sm rounded-lg border border-surface-dim placeholder:text-outline outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all"
             id="password"
+            autocomplete="current-password"
+            aria-describedby="password-error"
             placeholder="••••••••••••"
             required
             type="password"
@@ -121,6 +126,7 @@
             >
           </button>
         </div>
+        <p id="password-error" class="text-sm text-orange-700" aria-live="polite" hidden></p>
       </div>
 
       <div class="flex items-center justify-between pt-unit-2xs">
@@ -152,6 +158,7 @@
 
       <button
         id="btnSubmit"
+        disabled
         class="w-full bg-[#f97316] hover:bg-[#ea580c] active:bg-orange-700 text-white py-unit-sm px-unit-lg font-headline-sm text-headline-sm rounded-lg shadow-md transition-all flex items-center justify-center gap-unit-xs group mt-unit-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         type="submit"
       >
@@ -161,6 +168,7 @@
           >arrow_forward</span
         >
       </button>
+      <p id="login-error" class="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800 text-left" role="alert" hidden></p>
     </form>
 
     <div
@@ -177,7 +185,7 @@
 </div>
 
 <script>
-  import { authService } from "../../services/auth.service";
+
 
   const togglePasswordBtn = document.getElementById("togglePassword");
   const passwordField = document.getElementById("password") as HTMLInputElement;
@@ -191,9 +199,4 @@
     });
   }
 
-  const btnGoogle = document.getElementById("btnGoogle");
-  btnGoogle?.addEventListener("click", (e) => {
-    e.preventDefault(); // Detiene cualquier comportamiento por defecto
-    authService.loginWithGoogle();
-  });
 </script>

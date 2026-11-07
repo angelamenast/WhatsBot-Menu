@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { SupabaseService } from '../../../../../shared/supabase/supabase.service';
 
 @Injectable()
@@ -16,7 +16,16 @@ export class SupabaseAuthGuard implements CanActivate {
     const token = authHeader.split(' ')[1];
     const client = this.supabaseService.getClient();
 
-    const { data, error } = await client.auth.getUser(token);
+    let result: Awaited<ReturnType<typeof client.auth.getUser>>;
+    try {
+      result = await client.auth.getUser(token);
+    } catch {
+      throw new ServiceUnavailableException('No pudimos conectar con el servicio de acceso. Inténtalo de nuevo en un momento.');
+    }
+    const { data, error } = result;
+    if (error && (error.name === 'AuthRetryableFetchError' || !error.status || error.status >= 500 || error.status === 429)) {
+      throw new ServiceUnavailableException('El servicio de acceso no está disponible en este momento. Inténtalo de nuevo.');
+    }
 
     if (error || !data.user) {
       throw new UnauthorizedException('Token inválido o expirado');

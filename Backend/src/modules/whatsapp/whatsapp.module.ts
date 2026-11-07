@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { WhatsappStatusController } from './presentation/controllers/whatsapp-status.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { BusinessModule } from '../business/business.module';
@@ -41,7 +42,8 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
 
 @Module({
   imports: [ConfigModule, AuthModule, BusinessModule, AgentModule, SubscriptionsModule],
-  controllers: [MetaWebhookController, WhatsappOnboardingController],
+  // WhatsappStatusController expone GET /whatsapp/connections, que usa el front (perfil y vincular WhatsApp).
+  controllers: [MetaWebhookController, WhatsappOnboardingController, WhatsappStatusController],
   providers: [
     FakeMessagingProvider,
     {
@@ -137,6 +139,7 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
 
     OrderStatusChangedListener,
   ],
-  exports: [MESSAGING_PORT, PROVISIONING_PORT, PLAN_STATUS_PORT, AGENT_DISPATCH_PORT],
+  // WHATSAPP_CONNECTION_REPOSITORY lo lee el checklist de negocio-setup (TREMIA-104).
+  exports: [MESSAGING_PORT, PROVISIONING_PORT, PLAN_STATUS_PORT, AGENT_DISPATCH_PORT, WHATSAPP_CONNECTION_REPOSITORY],
 })
 export class WhatsappModule {}

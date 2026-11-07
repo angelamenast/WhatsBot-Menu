@@ -18,7 +18,7 @@ export class SupabaseSuscripcionConsultaRepository implements SuscripcionConsult
       .getClient()
       .from('suscripciones')
       .select(
-        'id, negocio_id, plan_id, estado, fecha_inicio, fecha_fin, planes ( id, nombre, precio, limite_mensajes, limite_tokens )',
+        'id, negocio_id, plan_id, estado, fecha_inicio, fecha_fin, planes ( id, nombre, precio, limite_mensajes, limite_tokens, duracion_meses )',
       )
       .eq('negocio_id', negocioId)
       .in('estado', ['activa', 'vencida'])

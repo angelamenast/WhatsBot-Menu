@@ -1,36 +1,77 @@
 ---
-
+import Layout from "../../layouts/Layout.astro";
+import Logo from "../../components/common/Logo.astro";
 ---
 
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <title>Autenticando...</title>
-  </head>
-  <body
-    class="flex items-center justify-center min-h-screen bg-slate-900 text-white"
+<Layout title="Autenticando - Tremia">
+  <main
+    class="min-h-screen flex items-center justify-center bg-background px-4"
   >
-    <div class="text-center">
-      <p class="text-lg font-medium">Iniciando sesión con Google...</p>
+    <div
+      class="flex flex-col items-center gap-6 p-8 rounded-3xl bg-surface-container-lowest border border-border-technical/60 shadow-lg max-w-sm w-full text-center animate-fade-in"
+    >
+      <!-- Logo de Tremia -->
+      <Logo />
+
+      <!-- Loader Animado con los colores de Tremia -->
+      <div class="relative flex items-center justify-center my-3">
+        <!-- Anillo exterior con pulso -->
+        <div
+          class="w-14 h-14 rounded-full border-4 border-primary/20 animate-ping absolute"
+        >
+        </div>
+        <!-- Anillo interior giratorio -->
+        <div
+          class="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin"
+        >
+        </div>
+      </div>
+
+      <!-- Textos de estado -->
+      <div class="flex flex-col gap-1">
+        <h2 class="text-base font-bold text-on-surface">
+          Iniciando sesión con Google
+        </h2>
+        <p class="text-xs text-on-surface-variant">
+          Estamos validando tu cuenta de forma segura...
+        </p>
+      </div>
+
+      <!-- Barra de progreso decorativa inferior -->
+      <div
+        class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden mt-2"
+      >
+        <div
+          class="bg-primary-container h-full rounded-full w-2/3 animate-pulse"
+        >
+        </div>
+      </div>
     </div>
+  </main>
+</Layout>
 
-    <script>
-      import { syncUserSession } from "../../services/userSession";
 
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get("access_token");
+<script>
+  import { authService } from '../../services/auth.service';
+  import { syncUserSession } from '../../services/userSession';
+  import { clearSession } from '../../api/http';
+  import { notify } from '../../services/notifications';
+  async function finishGoogle() {
+    const fragment = location.hash;
+    history.replaceState(null, '', location.pathname);
+    try {
+      await authService.completeGoogleCallback(fragment);
+      await syncUserSession();
+      location.replace('/orders');
+    } catch (error) {
+      clearSession();
+      const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión con Google.';
+      const heading = document.querySelector('h2'); if (heading) heading.textContent = 'No se pudo iniciar sesión';
+      const description = document.querySelector('main p'); if (description) description.textContent = message;
+      notify(message, 'error');
+      setTimeout(() => location.replace('/auth/login'), 2500);
+    }
+  }
+  void finishGoogle();
+</script>
 
-      if (accessToken) {
-        localStorage.setItem("auth_token", accessToken);
-        document.cookie = `jwt_token=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
-
-        // Sincronizar la información del perfil en el almacenamiento local
-        syncUserSession();
-
-        window.location.href = "/profile";
-      } else {
-        window.location.href = "/auth/login";
-      }
-    </script>
-  </body>
-</html>

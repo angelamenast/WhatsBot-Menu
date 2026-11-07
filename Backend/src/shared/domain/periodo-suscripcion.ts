@@ -1,6 +1,5 @@
-// Duración de un periodo de suscripción. La tabla planes aún no tiene periodicidad
-// (pendiente con el PO); mientras tanto todos los planes son mensuales, igual que en
-// el webhook de pagos de HU-8.1.
+// Duración por defecto de un periodo de suscripción. La duración real de cada plan está en
+// planes.duracion_meses (Plan.duracionMeses); este valor solo aplica cuando no se indica otra.
 export const DURACION_PLAN_MESES = 1;
 
 // Colombia es UTC-5 sin horario de verano: el desfase es fijo.

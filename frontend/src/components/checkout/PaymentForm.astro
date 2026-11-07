@@ -325,23 +325,4 @@
     });
   }
 
-  // Simulación de Pago
-  const cardForm = document.getElementById("card-form");
-  const submitBtn = document.getElementById("submit-pay-btn");
-  const submitLabel = document.getElementById("submit-btn-label");
-
-  if (cardForm) {
-    cardForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      if (submitBtn && submitLabel) {
-        submitBtn.setAttribute("disabled", "true");
-        submitLabel.textContent = "Procesando Pago Seguro...";
-
-        setTimeout(() => {
-          alert("🎉 ¡Pago procesado con éxito! Bienvenido a WhatsBot Pro.");
-          window.location.href = "/";
-        }, 1500);
-      }
-    });
-  }
 </script>

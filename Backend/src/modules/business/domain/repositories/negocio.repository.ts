@@ -3,7 +3,7 @@ import { Negocio } from '../entities/negocio.entity';
 export interface CrearNegocioData {
   usuarioId: string;
   nombreNegocio: string;
-  numeroWhatsapp: string;
+  numeroWhatsapp: string | null;
   descripcion: string | null;
 }
 
@@ -18,6 +18,8 @@ export interface NegocioRepository {
   crear(data: CrearNegocioData): Promise<Negocio>;
   buscarPorUsuario(usuarioId: string): Promise<Negocio | null>;
   actualizar(usuarioId: string, data: ActualizarNegocioData): Promise<Negocio>;
+  // TREMIA-71: devuelve el valor guardado de negocios.atencion_automatica_activa.
+  actualizarAtencionAutomatica(negocioId: string, activa: boolean): Promise<boolean>;
 }
 
 export const NEGOCIO_REPOSITORY = Symbol('NEGOCIO_REPOSITORY');

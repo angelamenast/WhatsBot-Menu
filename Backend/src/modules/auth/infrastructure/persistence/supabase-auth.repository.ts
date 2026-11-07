@@ -67,14 +67,14 @@ export class SupabaseAuthRepository implements AuthRepository {
   }
 
   async login(email: string, password: string): Promise<SesionAuth> {
-    const client = this.supabaseService.getClient();
+    const client = this.supabaseService.createAuthClient();
 
     const { data, error } = await client.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
+    if (error || !data.session || !data.user || data.user.email?.trim().toLowerCase() !== email.trim().toLowerCase()) {
       throw new CredencialesInvalidasError();
     }
 
@@ -86,7 +86,7 @@ export class SupabaseAuthRepository implements AuthRepository {
   }
 
   async refresh(refreshToken: string): Promise<SesionAuth> {
-    const client = this.supabaseService.getClient();
+    const client = this.supabaseService.createAuthClient();
 
     const { data, error } = await client.auth.refreshSession({
       refresh_token: refreshToken,

@@ -138,16 +138,10 @@
       <div class="flex items-baseline gap-1 mb-space-xs">
         <span
           class="font-display-lg text-display-lg font-bold text-on-surface"
-          id="pro-price-display">$24</span
+          id="pro-price-display">—</span
         >
-        <span class="font-body-md text-body-md text-on-surface-variant"
-          >USD / mes</span
-        >
-      </div>
-      <div
-        class="font-label-sm text-label-sm text-primary mb-space-md font-semibold"
-      >
-        Facturado anualmente ($288/año) • 14 días sin costo
+        <span class="plan-period font-body-md text-body-md text-on-surface-variant"
+        ></span>
       </div>
       <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-xl">
         Potencia completa de ventas, atención automática fluida y cobro directo
@@ -211,11 +205,10 @@
       <div class="flex items-baseline gap-1 mb-space-xs">
         <span
           class="font-display-lg text-display-lg font-bold text-on-surface"
-          id="enterprise-price-display">$79</span
+          id="enterprise-price-display">—</span
         >
-        <span class="font-body-md text-body-md text-on-surface-variant"
-          >USD / mes</span
-        >
+        <span class="plan-period font-body-md text-body-md text-on-surface-variant"
+        ></span>
       </div>
       <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-xl">
         Infraestructura dedicada, volumen empresarial y soporte estratégico
@@ -260,13 +253,8 @@
       localStorage.setItem("checkout_plan", currentPlan);
       localStorage.setItem("checkout_billing", currentBilling);
 
-      const proDisplay = document.getElementById("pro-price-display");
-      const entDisplay = document.getElementById("enterprise-price-display");
-      if (proDisplay)
-        proDisplay.textContent = currentBilling === "annual" ? "$24" : "$29";
-      if (entDisplay)
-        entDisplay.textContent = currentBilling === "annual" ? "$79" : "$99";
-
+      // Los precios y el periodo de cada tarjeta los pone view-integration con los datos de la API
+      // al recibir "plan-changed".
       const cards = document.querySelectorAll(".plan-card");
       cards.forEach((card) => {
         const planKey = card.getAttribute("data-plan");

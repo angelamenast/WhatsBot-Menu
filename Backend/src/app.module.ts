@@ -1,3 +1,4 @@
+import { CatalogModule } from './modules/catalog/catalog.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -14,15 +15,16 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_GUARD } from '@nestjs/core';
 import { AgentModule } from './modules/agent/agent.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { NegocioSetupModule } from './modules/negocio-setup/negocio-setup.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env.local', '.env'] }),
     EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,  // ventana de 60 segundos
-        limit: 10,   // 10 peticiones por ventana, por defecto global
+        limit: 120,   // 120 peticiones por ventana, por defecto global
       },
     ]),
     AuthModule,
@@ -33,6 +35,8 @@ import { OrdersModule } from './modules/orders/orders.module';
     SupabaseModule,
     AgentModule,
     OrdersModule,
+    CatalogModule,
+    NegocioSetupModule,
   ],
   controllers: [AppController, HealthController],     
   providers: [AppService, 

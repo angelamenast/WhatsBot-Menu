@@ -9,6 +9,7 @@ interface PlanRow {
   precio: number | string;
   limite_mensajes: number | null;
   limite_tokens: number | null;
+  duracion_meses: number;
 }
 
 export interface SuscripcionVigenteRow {
@@ -41,6 +42,7 @@ export class SuscripcionVigenteMapper {
             Number(row.planes.precio),
             row.planes.limite_mensajes,
             row.planes.limite_tokens,
+            row.planes.duracion_meses,
           )
         : null,
     };

@@ -143,6 +143,7 @@ import { AgentConfigController } from './presentation/controllers/agent-config.c
   ],
   // API pública del módulo: WhatsappModule la consume desde su propio adapter
   // (whatsapp/infrastructure/adapters/agent-dispatch.adapter.ts). agent no conoce a whatsapp.
-  exports: [ProcessCustomerMessageUseCase],
+  // AGENT_CONFIG_REPOSITORY lo lee el checklist de negocio-setup (TREMIA-104).
+  exports: [ProcessCustomerMessageUseCase, AGENT_CONFIG_REPOSITORY],
 })
 export class AgentModule {}

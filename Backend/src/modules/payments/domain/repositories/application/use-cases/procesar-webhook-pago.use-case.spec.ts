@@ -1,13 +1,15 @@
 import { jest } from '@jest/globals';
 import { ProcesarWebhookPagoUseCase } from './procesar-webhook-pago.use-case';
 import { ProcesarWebhookPagoCommand } from '../dto/procesar-webhook-pago.command';
-import { SuscripcionNoEncontradaError, TransaccionNoEncontradaError } from '../../../errors/payments.errors';
+import { PlanNoEncontradoError, SuscripcionNoEncontradaError, TransaccionNoEncontradaError } from '../../../errors/payments.errors';
+import { Plan } from '../../../entities/plan.entity';
 import { TransaccionPago } from '../../../entities/transaccion-pago.entity';
 import type { EstadoTransaccion } from '../../../entities/transaccion-pago.entity';
 import { Suscripcion } from '../../../entities/suscripcion.entity';
 import type { EstadoSuscripcion } from '../../../entities/suscripcion.entity';
 import type { TransaccionPagoRepository } from '../../transaccion-pago.repository';
 import type { SuscripcionRepository } from '../../suscripcion.repository';
+import type { PlanRepository } from '../../plan.repository';
 
 const DIA = 24 * 60 * 60 * 1000;
 // 2-oct-2026 10:00 a. m. en Colombia.
@@ -18,16 +20,20 @@ const transaccion = (estado: EstadoTransaccion) => new TransaccionPago('tx-1', '
 const suscripcion = (estado: EstadoSuscripcion, fechaFin: Date | null) =>
   new Suscripcion('sus-1', 'neg-1', 'plan-1', estado, INICIO, fechaFin);
 const command = (estado: ProcesarWebhookPagoCommand['estadoTransaccion']) => new ProcesarWebhookPagoCommand('test_AbC123', estado);
+const plan = (duracionMeses: number) => new Plan('plan-1', 'Pro', 50000, null, null, duracionMeses);
 
 describe('ProcesarWebhookPagoUseCase', () => {
   let useCase: ProcesarWebhookPagoUseCase;
   let transacciones: jest.Mocked<TransaccionPagoRepository>;
   let suscripciones: jest.Mocked<SuscripcionRepository>;
+  let planes: jest.Mocked<PlanRepository>;
 
   beforeEach(() => {
     transacciones = { crear: jest.fn(), buscarPorReferencia: jest.fn(), actualizarEstado: jest.fn() };
     suscripciones = { crear: jest.fn(), buscarPorId: jest.fn(), actualizarEstado: jest.fn() };
-    useCase = new ProcesarWebhookPagoUseCase(transacciones, suscripciones);
+    planes = { buscarPorId: jest.fn(), obtenerTodos: jest.fn() };
+    planes.buscarPorId.mockResolvedValue(plan(1));
+    useCase = new ProcesarWebhookPagoUseCase(transacciones, suscripciones, planes);
   });
 
   it('busca la transacción por la referencia recibida (id del link de pago)', async () => {
@@ -134,6 +140,44 @@ describe('ProcesarWebhookPagoUseCase', () => {
     suscripciones.buscarPorId.mockResolvedValue(null);
 
     await expect(useCase.execute(command('APPROVED'), AHORA)).rejects.toThrow(SuscripcionNoEncontradaError);
+    expect(transacciones.actualizarEstado).not.toHaveBeenCalled();
+  });
+
+  it('plan anual: la compra nueva da 12 meses de vigencia', async () => {
+    transacciones.buscarPorReferencia.mockResolvedValue(transaccion('pendiente'));
+    suscripciones.buscarPorId.mockResolvedValue(suscripcion('pendiente', null));
+    planes.buscarPorId.mockResolvedValue(plan(12));
+
+    await useCase.execute(command('APPROVED'), AHORA);
+
+    expect(planes.buscarPorId).toHaveBeenCalledWith('plan-1');
+    expect(suscripciones.actualizarEstado).toHaveBeenCalledWith('sus-1', 'activa', {
+      fechaInicio: AHORA,
+      fechaFin: new Date('2027-10-02T15:00:00.000Z'),
+    });
+  });
+
+  it('plan anual: la renovación anticipada suma 12 meses a fecha_fin', async () => {
+    const fechaFin = new Date(AHORA.getTime() + 20 * DIA); // 22-oct
+    transacciones.buscarPorReferencia.mockResolvedValue(transaccion('pendiente'));
+    suscripciones.buscarPorId.mockResolvedValue(suscripcion('activa', fechaFin));
+    planes.buscarPorId.mockResolvedValue(plan(12));
+
+    await useCase.execute(command('APPROVED'), AHORA);
+
+    expect(suscripciones.actualizarEstado).toHaveBeenCalledWith('sus-1', 'activa', {
+      fechaInicio: INICIO,
+      fechaFin: new Date('2027-10-22T15:00:00.000Z'),
+    });
+  });
+
+  it('lanza PlanNoEncontradoError si el plan de la suscripción no existe, sin activar nada', async () => {
+    transacciones.buscarPorReferencia.mockResolvedValue(transaccion('pendiente'));
+    suscripciones.buscarPorId.mockResolvedValue(suscripcion('pendiente', null));
+    planes.buscarPorId.mockResolvedValue(null);
+
+    await expect(useCase.execute(command('APPROVED'), AHORA)).rejects.toThrow(PlanNoEncontradoError);
+    expect(suscripciones.actualizarEstado).not.toHaveBeenCalled();
     expect(transacciones.actualizarEstado).not.toHaveBeenCalled();
   });
 });
