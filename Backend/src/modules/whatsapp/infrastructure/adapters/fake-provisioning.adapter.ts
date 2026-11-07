@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { randomUUID } from 'node:crypto';
 import { ProvisioningPort, ProvisioningResult } from '../../application/ports/out/provisioning.port';
+import { normalizePhoneNumber } from '../../domain/phone-number';
 
 @Injectable()
 export class FakeProvisioningProvider implements ProvisioningPort {
@@ -9,20 +9,18 @@ export class FakeProvisioningProvider implements ProvisioningPort {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async provision(_phoneNumber: string): Promise<ProvisioningResult> {
+  async link(phoneNumberId: string): Promise<ProvisioningResult> {
     const forceFail = this.configService.get<string>('FAKE_PROVISIONING_FORCE_FAIL') === 'true';
 
     if (forceFail) {
-      this.logger.warn('[FakeProvisioningProvider] Aprovisionamiento simulado FALLIDO');
+      this.logger.warn('[FakeProvisioningProvider] Vinculación simulada FALLIDA');
       return { status: 'failed' };
     }
 
-    const subaccountSid = randomUUID();
-    const senderSid = randomUUID();
+    // Derivado del phone_number_id: distinto por número (numero_whatsapp es único) y estable entre llamadas.
+    const displayPhoneNumber = `1${normalizePhoneNumber(phoneNumberId).slice(-10).padStart(10, '0')}`;
 
-    this.logger.log(
-      `[FakeProvisioningProvider] Aprovisionamiento simulado (subaccountSid=${subaccountSid}, senderSid=${senderSid})`,
-    );
-    return { status: 'connected', subaccountSid, senderSid };
+    this.logger.log('[FakeProvisioningProvider] Vinculación simulada');
+    return { status: 'connected', displayPhoneNumber };
   }
 }

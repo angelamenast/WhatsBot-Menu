@@ -8,7 +8,7 @@ interface MensajeRow {
   conversacion_id: string;
   remitente: Remitente;
   contenido: string;
-  twilio_message_sid: string | null;
+  id_mensaje_proveedor: string | null;
   estado_envio: EstadoEnvio | null;
   created_at: string;
 }
@@ -44,7 +44,7 @@ export class MessageMapper {
       conversationId: row.conversacion_id,
       sender: REMITENTE_TO_SENDER[row.remitente],
       content: row.contenido,
-      providerMessageId: row.twilio_message_sid,
+      providerMessageId: row.id_mensaje_proveedor,
       deliveryStatus: row.estado_envio ? ESTADO_TO_DELIVERY_STATUS[row.estado_envio] : null,
       createdAt: new Date(row.created_at),
     });
@@ -56,7 +56,7 @@ export class MessageMapper {
       conversacion_id: message.conversationId,
       remitente: SENDER_TO_REMITENTE[message.sender],
       contenido: message.content,
-      twilio_message_sid: message.providerMessageId,
+      id_mensaje_proveedor: message.providerMessageId,
       estado_envio: message.deliveryStatus ? DELIVERY_STATUS_TO_ESTADO[message.deliveryStatus] : null,
     };
   }

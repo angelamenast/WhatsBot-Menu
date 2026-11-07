@@ -13,7 +13,12 @@ import type { AgentDispatchPort } from '../ports/out/agent-dispatch.port';
 import { AGENT_DISPATCH_PORT } from '../ports/out/agent-dispatch.port';
 import { Conversation } from '../../domain/entities/conversation.entity';
 import { Message } from '../../domain/entities/message.entity';
-import { WhatsappConnectionNotFoundError } from '../../domain/errors/whatsapp.errors';
+import {
+  ActiveConversationAlreadyExistsError,
+  WhatsappConnectionNotFoundError,
+} from '../../domain/errors/whatsapp.errors';
+import { normalizePhoneNumber } from '../../domain/phone-number';
+import { CONVERSATION_INACTIVITY_MS } from '../constants/conversation-lifecycle';
 import { HandleIncomingMessageCommand } from '../dto/handle-incoming-message.command';
 import { SendMessageUseCase } from './send-message.use-case';
 
@@ -37,8 +42,9 @@ export class HandleIncomingMessageUseCase {
     private readonly sendMessageUseCase: SendMessageUseCase,
   ) {}
 
-  async execute(command: HandleIncomingMessageCommand): Promise<void> {
-    // Duplicado (reintento de Twilio): no volver a tocar conversación/mensaje/agente.
+  /** `now` es inyectable para probar el límite de inactividad sin esperar. */
+  async execute(command: HandleIncomingMessageCommand, now: Date = new Date()): Promise<void> {
+    // Duplicado (reintento del webhook de Meta): no volver a tocar conversación/mensaje/agente.
     const alreadyProcessed = await this.processedMessageRepository.existsByProviderMessageId(
       command.providerMessageId,
     );
@@ -47,28 +53,34 @@ export class HandleIncomingMessageUseCase {
       return;
     }
 
-    const connection = await this.whatsappConnectionRepository.findByPhoneNumber(command.toPhoneNumber);
+    const connection = await this.whatsappConnectionRepository.findByPhoneNumberId(command.phoneNumberId);
 
     if (!connection) {
-      throw new WhatsappConnectionNotFoundError(command.toPhoneNumber);
+      throw new WhatsappConnectionNotFoundError(`phone_number_id ${command.phoneNumberId}`);
     }
+
+    const customerNumber = normalizePhoneNumber(command.customerNumber);
 
     let conversation = await this.conversationRepository.findActiveByBusinessAndCustomer(
       connection.businessId,
-      command.fromCustomerNumber,
+      customerNumber,
     );
 
-    if (!conversation) {
-      conversation = Conversation.start({
-        businessId: connection.businessId,
-        customerNumber: command.fromCustomerNumber,
-      });
+    // Una conversación inactiva se cierra aquí (una lectura por mensaje, sin escrituras extra
+    // mientras siga vigente) y el mensaje entrante abre una nueva, sin historial previo.
+    if (conversation && (await this.isInactive(conversation, now))) {
+      conversation.close(now);
       await this.conversationRepository.save(conversation);
+      conversation = null;
+    }
+
+    if (!conversation) {
+      conversation = await this.startConversation(connection.businessId, customerNumber);
     }
 
     const message = Message.receiveFromCustomer({
       conversationId: conversation.id,
-      content: command.body,
+      content: command.text,
       providerMessageId: command.providerMessageId,
     });
 
@@ -83,23 +95,28 @@ export class HandleIncomingMessageUseCase {
 
     // Desde aquí el mensaje ya está persistido: un fallo del agente o del envío se loguea
     // y no se propaga (el mensaje queda sin respuesta, igual que con plan vencido), para
-    // que el webhook responda 200 y Twilio no reintente algo que la deduplicación cortaría.
-    let responseText: string;
+    // que no se propague al webhook (que ya respondió 200 a Meta).
+    let responseText: string | null;
 
     try {
-      const result = await this.agentDispatchPort.dispatch({
+      responseText = await this.agentDispatchPort.dispatch({
         businessId: connection.businessId,
         conversationId: conversation.id,
-        customerNumber: command.fromCustomerNumber,
-        message: command.body,
+        messageId: message.id,
+        customerNumber,
+        message: command.text,
       });
-      responseText = result.responseText;
     } catch (error) {
       this.logger.error(
         `Fallo al despachar al agente (conversación ${conversation.id}): ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
+      return;
+    }
+
+    // null = el agente decidió no responder (p. ej. negocio inactivo o cuota agotada): no se envía nada.
+    if (responseText === null) {
       return;
     }
 
@@ -114,6 +131,42 @@ export class HandleIncomingMessageUseCase {
           error instanceof Error ? error.message : String(error)
         }`,
       );
+    }
+  }
+
+  /** Último mensaje de la conversación (o su creación si aún no tiene) con al menos 4 h de antigüedad. */
+  private async isInactive(conversation: Conversation, now: Date): Promise<boolean> {
+    const lastActivity =
+      (await this.messageRepository.findLastMessageDate(conversation.id)) ?? conversation.createdAt;
+
+    return now.getTime() - lastActivity.getTime() >= CONVERSATION_INACTIVITY_MS;
+  }
+
+  /**
+   * Crea la conversación. Si dos mensajes del mismo cliente llegan a la vez, el segundo insert
+   * viola uq_conversaciones_activa: se relee la activa que ganó la carrera y se sigue con ella.
+   */
+  private async startConversation(businessId: string, customerNumber: string): Promise<Conversation> {
+    const conversation = Conversation.start({ businessId, customerNumber });
+
+    try {
+      await this.conversationRepository.save(conversation);
+      return conversation;
+    } catch (error) {
+      if (!(error instanceof ActiveConversationAlreadyExistsError)) {
+        throw error;
+      }
+
+      const existing = await this.conversationRepository.findActiveByBusinessAndCustomer(
+        businessId,
+        customerNumber,
+      );
+
+      if (!existing) {
+        throw error;
+      }
+
+      return existing;
     }
   }
 }

@@ -4,6 +4,7 @@ import { SupabaseService } from '../../../../shared/supabase/supabase.service';
 import { Order, OrderStatus } from '../../domain/entities/order.entity';
 import { OrderItem } from '../../domain/entities/order-item.entity';
 import {
+  ConversationAlreadyHasOrderError,
   ConversationNotInBusinessError,
   EmptyOrderError,
   OrderCustomerPhoneMissingError,
@@ -385,6 +386,107 @@ describe('SupabaseOrderRepository', () => {
 
       expect(result?.id).toBe('order-1');
       expect(result?.status).toBe(OrderStatus.PENDING);
+    });
+  });
+
+  describe('un solo pedido abierto por conversación', () => {
+    const OPEN_INDEX_ERROR = {
+      code: '23505',
+      message: 'duplicate key value violates unique constraint "uq_pedidos_conversacion_abierto"',
+      details: 'Key (conversacion_id)=(conversation-1) already exists.',
+    };
+
+    const openOrderRow = {
+      id: 'existing-order-id',
+      negocio_id: 'business-1',
+      conversacion_id: 'conversation-1',
+      estado_codigo: 'pendiente',
+      created_at: '2026-10-22T10:00:00.000Z',
+      updated_at: '2026-10-22T10:00:00.000Z',
+      pedido_items: [],
+    };
+
+    describe('insert', () => {
+      it('23505 del índice uq_pedidos_conversacion_abierto: lanza ConversationAlreadyHasOrderError con el id del pedido existente', async () => {
+        rpc.mockResolvedValue({ data: null, error: OPEN_INDEX_ERROR });
+        const { builder, calls } = queryBuilder({ data: openOrderRow });
+        from.mockReturnValue(builder);
+
+        const error = await repository.insert(anOrder()).catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(ConversationAlreadyHasOrderError);
+        expect((error as ConversationAlreadyHasOrderError).orderId).toBe('existing-order-id');
+        expect(calls).toContainEqual(['eq', ['conversacion_id', 'conversation-1']]);
+        expect(calls).toContainEqual(['eq', ['negocio_id', 'business-1']]);
+      });
+
+      it('reconoce el índice también cuando solo viene en details', async () => {
+        rpc.mockResolvedValue({
+          data: null,
+          error: { code: '23505', message: 'duplicate key', details: 'constraint "uq_pedidos_conversacion_abierto"' },
+        });
+        const { builder } = queryBuilder({ data: openOrderRow });
+        from.mockReturnValue(builder);
+
+        await expect(repository.insert(anOrder())).rejects.toThrow(ConversationAlreadyHasOrderError);
+      });
+
+      it('23505 de OTRO índice: se propaga tal cual y no consulta pedidos', async () => {
+        const otherViolation = {
+          code: '23505',
+          message: 'duplicate key value violates unique constraint "pedidos_pkey"',
+        };
+        rpc.mockResolvedValue({ data: null, error: otherViolation });
+
+        await expect(repository.insert(anOrder())).rejects.toBe(otherViolation);
+        expect(from).not.toHaveBeenCalled();
+      });
+
+      it('el nombre del índice sin el código 23505: se propaga tal cual', async () => {
+        const error = { code: '42501', message: 'menciona uq_pedidos_conversacion_abierto' };
+        rpc.mockResolvedValue({ data: null, error });
+
+        await expect(repository.insert(anOrder())).rejects.toBe(error);
+      });
+
+      it('23505 correcto pero el pedido ganador ya no está abierto: se propaga el error original', async () => {
+        rpc.mockResolvedValue({ data: null, error: OPEN_INDEX_ERROR });
+        const { builder } = queryBuilder({ data: null });
+        from.mockReturnValue(builder);
+
+        await expect(repository.insert(anOrder())).rejects.toBe(OPEN_INDEX_ERROR);
+      });
+    });
+
+    describe('findOpenByConversation', () => {
+      it('filtra por conversación Y negocio en la query y excluye los cancelados', async () => {
+        const { builder, calls } = queryBuilder({ data: openOrderRow });
+        from.mockReturnValue(builder);
+
+        const result = await repository.findOpenByConversation('conversation-1', 'business-1');
+
+        expect(from).toHaveBeenCalledWith('pedidos');
+        expect(calls).toContainEqual(['eq', ['conversacion_id', 'conversation-1']]);
+        expect(calls).toContainEqual(['eq', ['negocio_id', 'business-1']]);
+        expect(calls).toContainEqual(['neq', ['estado_codigo', 'cancelado']]);
+        expect(result?.id).toBe('existing-order-id');
+        expect(result?.status).toBe(OrderStatus.PENDING);
+      });
+
+      it('sin pedido abierto devuelve null', async () => {
+        const { builder } = queryBuilder({ data: null });
+        from.mockReturnValue(builder);
+
+        await expect(repository.findOpenByConversation('conversation-1', 'business-1')).resolves.toBeNull();
+      });
+
+      it('error de Supabase: se propaga', async () => {
+        const dbError = { message: 'db caída' };
+        const { builder } = queryBuilder({ data: null, error: dbError });
+        from.mockReturnValue(builder);
+
+        await expect(repository.findOpenByConversation('conversation-1', 'business-1')).rejects.toBe(dbError);
+      });
     });
   });
 });

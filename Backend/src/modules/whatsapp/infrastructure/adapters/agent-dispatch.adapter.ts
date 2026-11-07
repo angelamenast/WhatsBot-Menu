@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  AgentDispatchCommand,
-  AgentDispatchPort,
-  AgentDispatchResult,
-} from '../../application/ports/out/agent-dispatch.port';
+import { AgentDispatchCommand, AgentDispatchPort } from '../../application/ports/out/agent-dispatch.port';
 import { ProcessCustomerMessageUseCase } from '../../../agent/application/use-cases/process-customer-message.use-case';
 
 /**
@@ -14,14 +10,15 @@ import { ProcessCustomerMessageUseCase } from '../../../agent/application/use-ca
 export class AgentDispatchAdapter implements AgentDispatchPort {
   constructor(private readonly processCustomerMessageUseCase: ProcessCustomerMessageUseCase) {}
 
-  async dispatch(command: AgentDispatchCommand): Promise<AgentDispatchResult> {
+  async dispatch(command: AgentDispatchCommand): Promise<string | null> {
     const result = await this.processCustomerMessageUseCase.execute({
       businessId: command.businessId,
       conversationId: command.conversationId,
+      messageId: command.messageId,
       customerNumber: command.customerNumber,
       message: command.message,
     });
 
-    return { responseText: result.responseText };
+    return result ? result.responseText : null;
   }
 }

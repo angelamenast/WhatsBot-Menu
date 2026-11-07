@@ -1,4 +1,5 @@
 export interface ConnectWhatsappCommand {
   businessId: string;
-  phoneNumber: string;
+  phoneNumberId: string;
+  wabaId: string;
 }

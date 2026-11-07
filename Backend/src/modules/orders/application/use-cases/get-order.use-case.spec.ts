@@ -16,6 +16,7 @@ describe('GetOrderUseCase', () => {
       findById: jest.fn(),
       findViewById: jest.fn(),
       findViewsByBusiness: jest.fn(),
+      findOpenByConversation: jest.fn(),
       insert: jest.fn(),
       updateStatus: jest.fn(),
     };

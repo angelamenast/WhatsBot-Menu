@@ -4,11 +4,16 @@ import { AuthModule } from '../auth/auth.module';
 import { BusinessModule } from '../business/business.module';
 import { AgentModule } from '../agent/agent.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { SubscriptionPlanStatusAdapter } from '../subscriptions/infrastructure/adapters/subscription-plan-status.adapter';
 
 import { MESSAGING_PORT } from './application/ports/out/messaging.port';
 import { FakeMessagingProvider } from './infrastructure/adapters/fake-messaging.adapter';
 import { PROVISIONING_PORT } from './application/ports/out/provisioning.port';
 import { FakeProvisioningProvider } from './infrastructure/adapters/fake-provisioning.adapter';
+import { loadMetaConfig } from './infrastructure/adapters/meta-config';
+import { MetaGraphClient } from './infrastructure/adapters/meta-graph.client';
+import { MetaMessagingAdapter } from './infrastructure/adapters/meta-messaging.adapter';
+import { MetaProvisioningAdapter } from './infrastructure/adapters/meta-provisioning.adapter';
 import { PLAN_STATUS_PORT } from './application/ports/out/plan-status.port';
 import { FakePlanStatusProvider } from './infrastructure/adapters/fake-plan-status.adapter';
 import { AGENT_DISPATCH_PORT } from './application/ports/out/agent-dispatch.port';
@@ -26,17 +31,17 @@ import { SupabaseMessageRepository } from './infrastructure/persistence/supabase
 
 import { HandleIncomingMessageUseCase } from './application/use-cases/handle-incoming-message.use-case';
 import { SendMessageUseCase } from './application/use-cases/send-message.use-case';
+import { CloseConversationUseCase } from './application/use-cases/close-conversation.use-case';
 import { ConnectWhatsappUseCase } from './application/use-cases/connect-whatsapp.use-case';
 import { HandleStatusCallbackUseCase } from './application/use-cases/handle-status-callback.use-case';
 
 import { OrderStatusChangedListener } from './presentation/listeners/order-status-changed.listener';
-import { TwilioWebhookController } from './presentation/controllers/twilio-webhook.controller';
-import { TwilioStatusCallbackController } from './presentation/controllers/twilio-status-callback.controller';
+import { MetaWebhookController } from './presentation/controllers/meta-webhook.controller';
 import { WhatsappOnboardingController } from './presentation/controllers/whatsapp-onboarding.controller';
 
 @Module({
   imports: [ConfigModule, AuthModule, BusinessModule, AgentModule, SubscriptionsModule],
-  controllers: [TwilioWebhookController, TwilioStatusCallbackController, WhatsappOnboardingController],
+  controllers: [MetaWebhookController, WhatsappOnboardingController],
   providers: [
     FakeMessagingProvider,
     {
@@ -48,10 +53,10 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
         switch (provider) {
           case 'fake':
             return fakeMessagingProvider;
-          case 'twilio':
-            throw new Error('TwilioMessagingAdapter no implementado todavía');
+          case 'meta':
+            return new MetaMessagingAdapter(new MetaGraphClient(loadMetaConfig(configService)));
           default:
-            throw new Error(`MESSAGING_PROVIDER inválido: "${provider}". Usa "fake" o "twilio".`);
+            throw new Error(`MESSAGING_PROVIDER inválido: "${provider}". Usa "fake" o "meta".`);
         }
       },
     },
@@ -66,10 +71,10 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
         switch (provider) {
           case 'fake':
             return fakeProvisioningProvider;
-          case 'twilio':
-            throw new Error('TwilioProvisioningAdapter no implementado todavía');
+          case 'meta':
+            return new MetaProvisioningAdapter(new MetaGraphClient(loadMetaConfig(configService)));
           default:
-            throw new Error(`PROVISIONING_PROVIDER inválido: "${provider}". Usa "fake" o "twilio".`);
+            throw new Error(`PROVISIONING_PROVIDER inválido: "${provider}". Usa "fake" o "meta".`);
         }
       },
     },
@@ -77,17 +82,21 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
     FakePlanStatusProvider,
     {
       provide: PLAN_STATUS_PORT,
-      inject: [ConfigService, FakePlanStatusProvider],
-      useFactory: (configService: ConfigService, fakePlanStatusProvider: FakePlanStatusProvider) => {
+      inject: [ConfigService, FakePlanStatusProvider, SubscriptionPlanStatusAdapter],
+      useFactory: (
+        configService: ConfigService,
+        fakePlanStatusProvider: FakePlanStatusProvider,
+        subscriptionPlanStatusAdapter: SubscriptionPlanStatusAdapter,
+      ) => {
         const provider = configService.get<string>('PLAN_STATUS_PROVIDER') ?? 'fake';
 
         switch (provider) {
           case 'fake':
             return fakePlanStatusProvider;
+          case 'subscriptions':
+            return subscriptionPlanStatusAdapter;
           default:
-            throw new Error(
-              `PLAN_STATUS_PROVIDER inválido: "${provider}". Por ahora solo está implementado "fake".`,
-            );
+            throw new Error(`PLAN_STATUS_PROVIDER inválido: "${provider}". Usa "fake" o "subscriptions".`);
         }
       },
     },
@@ -122,6 +131,7 @@ import { WhatsappOnboardingController } from './presentation/controllers/whatsap
 
     HandleIncomingMessageUseCase,
     SendMessageUseCase,
+    CloseConversationUseCase,
     ConnectWhatsappUseCase,
     HandleStatusCallbackUseCase,
 

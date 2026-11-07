@@ -25,7 +25,7 @@ export class SupabaseMessageRepository implements MessageRepository {
     const { data, error } = await client
       .from('mensajes')
       .select('*')
-      .eq('twilio_message_sid', providerMessageId)
+      .eq('id_mensaje_proveedor', providerMessageId)
       .maybeSingle();
 
     if (error) {
@@ -33,5 +33,23 @@ export class SupabaseMessageRepository implements MessageRepository {
     }
 
     return data ? MessageMapper.toDomain(data) : null;
+  }
+
+  async findLastMessageDate(conversationId: string): Promise<Date | null> {
+    const client = this.supabaseService.getClient();
+
+    const { data, error } = await client
+      .from('mensajes')
+      .select('created_at')
+      .eq('conversacion_id', conversationId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle<{ created_at: string }>();
+
+    if (error) {
+      throw error;
+    }
+
+    return data ? new Date(data.created_at) : null;
   }
 }

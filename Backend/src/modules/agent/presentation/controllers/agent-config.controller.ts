@@ -15,12 +15,15 @@ import { GetAgentConfigUseCase } from '../../application/use-cases/get-agent-con
 import { UpdateAgentConfigUseCase } from '../../application/use-cases/update-agent-config.use-case';
 import { UpdateAgentConfigRequestDto } from '../dto/update-agent-config-request.dto';
 import { AgentConfig } from '../../domain/entities/agent-config.entity';
+import type { AgentRegionalStyle, AgentTone } from '../../domain/enums/agent-style';
 
 interface AgentConfigResponse {
   businessId: string;
   personality: string | null;
-  tone: string | null;
+  tone: AgentTone | null;
+  regionalStyle: AgentRegionalStyle | null;
   welcomeMessage: string | null;
+  unavailableMessage: string | null;
   businessHours: Record<string, unknown> | null;
 }
 
@@ -29,7 +32,9 @@ function toResponse(config: AgentConfig): AgentConfigResponse {
     businessId: config.businessId,
     personality: config.personality,
     tone: config.tone,
+    regionalStyle: config.regionalStyle,
     welcomeMessage: config.welcomeMessage,
+    unavailableMessage: config.unavailableMessage,
     businessHours: config.businessHours,
   };
 }
@@ -74,7 +79,9 @@ export class AgentConfigController {
       businessId: business.id,
       personality: dto.personality,
       tone: dto.tone,
+      regionalStyle: dto.regionalStyle,
       welcomeMessage: dto.welcomeMessage,
+      unavailableMessage: dto.unavailableMessage,
       businessHours: dto.businessHours,
     });
 

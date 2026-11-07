@@ -1,13 +1,29 @@
 import 'reflect-metadata';
 import { Test, TestingModule } from '@nestjs/testing';
 import { SupabaseService } from './shared/supabase/supabase.service';
+import { CATALOG_REPOSITORY } from './modules/agent/domain/repositories/catalog.repository';
+import { SupabaseCatalogRepository } from './modules/agent/infrastructure/persistence/supabase-catalog.repository';
+import { FakeCatalogRepository } from './modules/agent/infrastructure/persistence/fake-catalog.repository';
+import { USAGE_QUOTA_PORT } from './modules/agent/application/ports/out/usage-quota.port';
+import { FakeUsageQuotaProvider } from './modules/agent/infrastructure/adapters/fake-usage-quota.adapter';
+import { SupabaseUsageQuotaAdapter } from './modules/agent/infrastructure/adapters/supabase-usage-quota.adapter';
+import { LLM_PORT } from './modules/agent/application/ports/out/llm.port';
+import { FakeLlmProvider } from './modules/agent/infrastructure/adapters/fake-llm.adapter';
+import { GeminiLlmAdapter } from './modules/agent/infrastructure/adapters/gemini/gemini-llm.adapter';
 import { ORDER_PORT } from './modules/agent/application/ports/out/order.port';
 import { OrdersOrderAdapter } from './modules/agent/infrastructure/adapters/orders-order.adapter';
 import { FakeOrderProvider } from './modules/agent/infrastructure/adapters/fake-order.adapter';
 import { ORDER_EVENTS_PORT } from './modules/orders/application/ports/out/order-events.port';
 import { EventEmitterOrderEventsAdapter } from './modules/orders/infrastructure/events/event-emitter-order-events.adapter';
+import { PLAN_STATUS_PORT } from './modules/whatsapp/application/ports/out/plan-status.port';
+import { FakePlanStatusProvider } from './modules/whatsapp/infrastructure/adapters/fake-plan-status.adapter';
+import { SubscriptionPlanStatusAdapter } from './modules/subscriptions/infrastructure/adapters/subscription-plan-status.adapter';
 import { PlanActivoGuard } from './modules/subscriptions/infrastructure/presentation/guards/plan-activo.guard';
 import { OrderStatusChangedListener } from './modules/whatsapp/presentation/listeners/order-status-changed.listener';
+import { MESSAGING_PORT } from './modules/whatsapp/application/ports/out/messaging.port';
+import { PROVISIONING_PORT } from './modules/whatsapp/application/ports/out/provisioning.port';
+import { MetaMessagingAdapter } from './modules/whatsapp/infrastructure/adapters/meta-messaging.adapter';
+import { MetaProvisioningAdapter } from './modules/whatsapp/infrastructure/adapters/meta-provisioning.adapter';
 
 /**
  * Test de humo de inyección de dependencias: compila el AppModule COMPLETO (sin
@@ -24,6 +40,7 @@ describe('AppModule (humo de DI)', () => {
     'AGENT_DISPATCH_PROVIDER',
     'LLM_PROVIDER',
     'CATALOG_PROVIDER',
+    'USAGE_QUOTA_PROVIDER',
     'EMAIL_PROVIDER',
   ] as const;
 
@@ -107,6 +124,174 @@ describe('AppModule (humo de DI)', () => {
     );
 
     await moduleRef.close();
+  });
+
+  it('con PLAN_STATUS_PROVIDER=subscriptions, PLAN_STATUS_PORT resuelve al adapter real de subscriptions', async () => {
+    process.env.PLAN_STATUS_PROVIDER = 'subscriptions';
+    const moduleRef = await compileApp();
+
+    expect(moduleRef.get(PLAN_STATUS_PORT, { strict: false })).toBeInstanceOf(
+      SubscriptionPlanStatusAdapter,
+    );
+
+    await moduleRef.close();
+  });
+
+  it('por defecto (fake), PLAN_STATUS_PORT resuelve a FakePlanStatusProvider', async () => {
+    const moduleRef = await compileApp();
+
+    expect(moduleRef.get(PLAN_STATUS_PORT, { strict: false })).toBeInstanceOf(
+      FakePlanStatusProvider,
+    );
+
+    await moduleRef.close();
+  });
+
+  it('un PLAN_STATUS_PROVIDER desconocido falla al compilar', async () => {
+    process.env.PLAN_STATUS_PROVIDER = 'otro';
+
+    await expect(compileApp()).rejects.toThrow(/PLAN_STATUS_PROVIDER inválido/);
+  });
+
+  it('sin CATALOG_PROVIDER, CATALOG_REPOSITORY resuelve al catálogo real de Supabase (default)', async () => {
+    delete process.env.CATALOG_PROVIDER;
+    const moduleRef = await compileApp();
+
+    expect(moduleRef.get(CATALOG_REPOSITORY, { strict: false })).toBeInstanceOf(
+      SupabaseCatalogRepository,
+    );
+
+    await moduleRef.close();
+  });
+
+  it('con CATALOG_PROVIDER=fake (explícito), CATALOG_REPOSITORY resuelve al fake', async () => {
+    process.env.CATALOG_PROVIDER = 'fake';
+    const moduleRef = await compileApp();
+
+    expect(moduleRef.get(CATALOG_REPOSITORY, { strict: false })).toBeInstanceOf(
+      FakeCatalogRepository,
+    );
+
+    await moduleRef.close();
+  });
+
+  it('un CATALOG_PROVIDER inválido falla al compilar', async () => {
+    process.env.CATALOG_PROVIDER = 'otro';
+
+    await expect(compileApp()).rejects.toThrow(/CATALOG_PROVIDER inválido/);
+  });
+
+  it('USAGE_QUOTA_PORT: fake por defecto y supabase si se pide; un valor inválido falla', async () => {
+    delete process.env.USAGE_QUOTA_PROVIDER;
+    let moduleRef = await compileApp();
+    expect(moduleRef.get(USAGE_QUOTA_PORT, { strict: false })).toBeInstanceOf(FakeUsageQuotaProvider);
+    await moduleRef.close();
+
+    process.env.USAGE_QUOTA_PROVIDER = 'supabase';
+    moduleRef = await compileApp();
+    expect(moduleRef.get(USAGE_QUOTA_PORT, { strict: false })).toBeInstanceOf(SupabaseUsageQuotaAdapter);
+    await moduleRef.close();
+
+    process.env.USAGE_QUOTA_PROVIDER = 'otro';
+    await expect(compileApp()).rejects.toThrow(/USAGE_QUOTA_PROVIDER inválido/);
+  });
+
+  describe('WhatsApp con Meta', () => {
+    const WHATSAPP_KEYS = [
+      'WHATSAPP_ACCESS_TOKEN',
+      'WHATSAPP_APP_SECRET',
+      'WHATSAPP_VERIFY_TOKEN',
+      'WHATSAPP_API_VERSION',
+    ] as const;
+    const savedWhatsappEnv: Record<string, string | undefined> = {};
+
+    beforeEach(() => {
+      for (const key of WHATSAPP_KEYS) {
+        savedWhatsappEnv[key] = process.env[key];
+        // Vacío (no borrado): process.env tiene prioridad sobre el .env local y lo vacío cuenta como ausente.
+        process.env[key] = '';
+      }
+    });
+
+    afterEach(() => {
+      for (const key of WHATSAPP_KEYS) {
+        if (savedWhatsappEnv[key] === undefined) {
+          delete process.env[key];
+        } else {
+          process.env[key] = savedWhatsappEnv[key];
+        }
+      }
+    });
+
+    it.each(['MESSAGING_PROVIDER', 'PROVISIONING_PROVIDER'])(
+      '%s=meta sin variables de Meta: falla al arrancar nombrándolas, no al primer uso',
+      async (key) => {
+        process.env[key] = 'meta';
+
+        await expect(compileApp()).rejects.toThrow(
+          /faltan variables de entorno: WHATSAPP_ACCESS_TOKEN, WHATSAPP_APP_SECRET, WHATSAPP_VERIFY_TOKEN/,
+        );
+      },
+    );
+
+    it('con las variables completas, los puertos resuelven a los adaptadores de Meta', async () => {
+      process.env.MESSAGING_PROVIDER = 'meta';
+      process.env.PROVISIONING_PROVIDER = 'meta';
+      process.env.WHATSAPP_ACCESS_TOKEN = 'token-de-prueba';
+      process.env.WHATSAPP_APP_SECRET = 'secret-de-prueba';
+      process.env.WHATSAPP_VERIFY_TOKEN = 'verify-de-prueba';
+      const moduleRef = await compileApp();
+
+      expect(moduleRef.get(MESSAGING_PORT, { strict: false })).toBeInstanceOf(MetaMessagingAdapter);
+      expect(moduleRef.get(PROVISIONING_PORT, { strict: false })).toBeInstanceOf(MetaProvisioningAdapter);
+
+      await moduleRef.close();
+    });
+
+    it('twilio ya no es un proveedor válido', async () => {
+      process.env.MESSAGING_PROVIDER = 'twilio';
+
+      await expect(compileApp()).rejects.toThrow(/MESSAGING_PROVIDER inválido: "twilio". Usa "fake" o "meta"/);
+    });
+  });
+
+  describe('LLM_PROVIDER', () => {
+    // process.env tiene prioridad sobre el .env local: una cadena vacía simula "sin clave" aunque
+    // el desarrollador tenga GEMINI_API_KEY en su .env.
+    afterEach(() => {
+      delete process.env.GEMINI_API_KEY;
+    });
+
+    it('por defecto (fake), LLM_PORT resuelve a FakeLlmProvider', async () => {
+      const moduleRef = await compileApp();
+
+      expect(moduleRef.get(LLM_PORT, { strict: false })).toBeInstanceOf(FakeLlmProvider);
+
+      await moduleRef.close();
+    });
+
+    it('con LLM_PROVIDER=gemini y GEMINI_API_KEY, LLM_PORT resuelve a GeminiLlmAdapter (sin llamar a la red)', async () => {
+      process.env.LLM_PROVIDER = 'gemini';
+      process.env.GEMINI_API_KEY = 'clave-de-prueba-no-real';
+      const moduleRef = await compileApp();
+
+      expect(moduleRef.get(LLM_PORT, { strict: false })).toBeInstanceOf(GeminiLlmAdapter);
+
+      await moduleRef.close();
+    });
+
+    it('con LLM_PROVIDER=gemini y sin GEMINI_API_KEY, el arranque falla nombrando la variable', async () => {
+      process.env.LLM_PROVIDER = 'gemini';
+      process.env.GEMINI_API_KEY = '';
+
+      await expect(compileApp()).rejects.toThrow(/GEMINI_API_KEY/);
+    });
+
+    it('un LLM_PROVIDER desconocido falla al compilar', async () => {
+      process.env.LLM_PROVIDER = 'otro';
+
+      await expect(compileApp()).rejects.toThrow(/LLM_PROVIDER inválido/);
+    });
   });
 
   it('la opción retirada ORDER_PROVIDER=supabase ahora es inválida y falla al compilar', async () => {

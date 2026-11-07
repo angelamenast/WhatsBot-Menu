@@ -26,11 +26,12 @@ describe('FakeAgentDispatchProvider', () => {
     const result = await new FakeAgentDispatchProvider().dispatch({
       businessId: 'business-1',
       conversationId: 'conversation-1',
+      messageId: 'message-1',
       customerNumber: '+573001112233',
       message: 'Quiero una hamburguesa',
     });
 
-    expect(result.responseText).toEqual(expect.any(String));
+    expect(result).toEqual(expect.any(String));
     expect(logged()).toContain('business-1');
     expect(logged()).toContain('conversation-1');
     expect(logged()).not.toContain('+573001112233');
