@@ -15,8 +15,8 @@ export function enmascararCorreo(correo: string): string {
   return `${local.slice(0, 2)}***@${dominio}`;
 }
 
-// Adaptador provisional (EMAIL_PROVIDER=log): no envía correos, los registra en el log.
-// Cuando el equipo elija proveedor se agrega otro adaptador de CorreoPort sin tocar la lógica.
+// Adaptador por defecto (EMAIL_PROVIDER=log): no envía correos, los registra en el log.
+// Útil en desarrollo; el envío real lo hace ResendCorreoAdapter (EMAIL_PROVIDER=resend).
 @Injectable()
 export class LogCorreoAdapter implements CorreoPort {
   private readonly logger = new Logger('Correo');

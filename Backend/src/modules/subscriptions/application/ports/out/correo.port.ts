@@ -11,7 +11,7 @@ export interface AlertaPorVencerCorreo extends AlertaVencimientoCorreo {
 }
 
 // Puerto de salida para las notificaciones por correo de HU-8.4. El proveedor concreto
-// (hoy solo un adaptador que escribe en el log) se elige con EMAIL_PROVIDER.
+// se elige con EMAIL_PROVIDER: "log" (solo registra) o "resend" (envío real).
 export interface CorreoPort {
   enviarAlertaPorVencer(alerta: AlertaPorVencerCorreo): Promise<void>;
   enviarAlertaVencida(alerta: AlertaVencimientoCorreo): Promise<void>;
