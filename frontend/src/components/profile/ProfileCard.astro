@@ -54,30 +54,6 @@
       <span class="text-xs font-semibold text-zinc-900"
         >Foto de Perfil del Administrador</span
       >
-      <p class="text-xs text-zinc-500">JPG, WebP o PNG. Máximo 2MB.</p>
-      <div class="flex items-center justify-center sm:justify-start gap-2 mt-1">
-        <input
-          type="file"
-          id="avatar-upload"
-          accept="image/png, image/jpeg, image/webp"
-          class="hidden"
-        />
-        <button
-          id="btn-change-avatar"
-          class="px-3 py-1.5 rounded-lg bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 text-xs font-medium transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
-          type="button"
-        >
-          <span class="material-symbols-outlined text-[16px]">upload</span>
-          <span>Cambiar foto</span>
-        </button>
-        <button
-          id="btn-remove-avatar"
-          class="px-3 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 text-xs font-medium transition-colors cursor-pointer hidden"
-          type="button"
-        >
-          Eliminar
-        </button>
-      </div>
     </div>
   </div>
 
@@ -104,35 +80,12 @@
         </div>
       </div>
 
-      <!-- Rol en la Empresa -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-semibold text-zinc-700" for="admin-role"
-          >Rol en la empresa</label
-        >
-        <div class="relative">
-          <span
-            class="material-symbols-outlined absolute left-3 top-2.5 text-zinc-400 text-[18px]"
-            >work</span
-          >
-          <input
-            class="w-full bg-white text-zinc-900 rounded-xl pl-9 pr-3 py-2 text-sm border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
-            id="admin-role"
-            type="text"
-            value="Administrador / Dueño"
-            required
-          />
-        </div>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <!-- Nombre del Negocio -->
       <div class="flex flex-col gap-1.5">
         <div class="flex items-center justify-between">
           <label class="text-xs font-semibold text-zinc-700" for="business-name"
             >Nombre del Negocio</label
           >
-          <span class="text-[11px] text-zinc-400 font-mono">ID: CAFE-7749</span>
         </div>
         <div class="relative">
           <span
@@ -149,24 +102,6 @@
         </div>
       </div>
 
-      <!-- Campo de WhatsApp Business Integrado (Sin Prompt Feo) -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-xs font-semibold text-zinc-700" for="business-phone"
-          >WhatsApp Business del Negocio</label
-        >
-        <div class="relative">
-          <span
-            class="material-symbols-outlined absolute left-3 top-2.5 text-emerald-600 text-[18px]"
-            >chat</span
-          >
-          <input
-            class="w-full bg-white text-zinc-900 rounded-xl pl-9 pr-3 py-2 text-sm border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
-            id="business-phone"
-            type="tel"
-            placeholder="+57 300 123 4567"
-          />
-        </div>
-      </div>
     </div>
 
     <!-- Botón Guardar -->
@@ -188,11 +123,6 @@
   import { updateAvatar } from '../../services/avatar';
 
   const form = document.getElementById("profile-form") as HTMLFormElement;
-  const avatarUpload = document.getElementById(
-    "avatar-upload",
-  ) as HTMLInputElement;
-  const btnChangeAvatar = document.getElementById("btn-change-avatar");
-  const btnRemoveAvatar = document.getElementById("btn-remove-avatar");
   const initialsEl = document.getElementById("avatar-initials");
   const imgEl = document.getElementById("avatar-image") as HTMLImageElement;
 
@@ -206,20 +136,12 @@
       const nameInput = document.getElementById(
         "admin-name",
       ) as HTMLInputElement;
-      const roleInput = document.getElementById(
-        "admin-role",
-      ) as HTMLInputElement;
       const businessInput = document.getElementById(
         "business-name",
       ) as HTMLInputElement;
-      const phoneInput = document.getElementById(
-        "business-phone",
-      ) as HTMLInputElement;
 
       if (nameInput && data.adminName) nameInput.value = data.adminName;
-      if (roleInput && data.role) roleInput.value = data.role;
       if (businessInput) businessInput.value = data.businessName || '';
-      if (phoneInput && data.phone) phoneInput.value = data.phone;
 
       // Actualizar Iniciales
       if (data.adminName && initialsEl) {
@@ -235,8 +157,7 @@
       }
 
       // Actualizar Foto
-      updateAvatar(imgEl, initialsEl, data.adminName || 'Usuario', data.avatarUrl,
-        visible => btnRemoveAvatar?.classList.toggle('hidden', !visible));
+      updateAvatar(imgEl, initialsEl, data.adminName || 'Usuario', data.avatarUrl);
     } catch (e) {
       console.error("Error al cargar perfil desde localStorage", e);
     }
@@ -246,58 +167,13 @@
   populateProfileForm();
   window.addEventListener("profile-updated", populateProfileForm);
 
-  // Manejador del botón "Cambiar foto"
-  btnChangeAvatar?.addEventListener("click", () => {
-    avatarUpload?.click();
-  });
-
-  // Previsualización y carga de imagen
-  avatarUpload?.addEventListener("change", (e: Event) => {
-    const target = e.target as HTMLInputElement;
-    const file = target.files?.[0];
-
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-      if ((window as any).showToast) {
-        (window as any).showToast(
-          "La imagen no debe superar los 2MB",
-          "warning",
-        );
-      }
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64Url = event.target?.result as string;
-
-      updateAvatar(imgEl, initialsEl,
-        (document.getElementById('admin-name') as HTMLInputElement)?.value || 'Usuario', base64Url,
-        visible => btnRemoveAvatar?.classList.toggle('hidden', !visible));
-    };
-    reader.readAsDataURL(file);
-  });
-
-  // Manejador de "Eliminar foto"
-  btnRemoveAvatar?.addEventListener("click", () => {
-    updateAvatar(imgEl, initialsEl,
-      (document.getElementById('admin-name') as HTMLInputElement)?.value || 'Usuario', null,
-      visible => btnRemoveAvatar?.classList.toggle('hidden', !visible));
-    if (avatarUpload) avatarUpload.value = "";
-  });
-
   // Guardar Cambios de Perfil
   form?.addEventListener("submit", (e) => {
     e.preventDefault();
 
     const nameInput = document.getElementById("admin-name") as HTMLInputElement;
-    const roleInput = document.getElementById("admin-role") as HTMLInputElement;
     const businessInput = document.getElementById(
       "business-name",
-    ) as HTMLInputElement;
-    const phoneInput = document.getElementById(
-      "business-phone",
     ) as HTMLInputElement;
 
     const currentProfile = JSON.parse(
@@ -307,9 +183,7 @@
     const updatedProfile = {
       ...currentProfile,
       adminName: nameInput?.value.trim(),
-      role: roleInput?.value.trim(),
       businessName: businessInput?.value.trim(),
-      phone: phoneInput?.value.trim(),
       avatarUrl: imgEl?.classList.contains("hidden") ? "" : imgEl.src,
     };
 

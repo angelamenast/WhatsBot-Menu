@@ -150,3 +150,19 @@ test('las sesiones guardadas antes de la corrección obligan a identificar la cu
   await assert.rejects(http.request('/auth/me'),error=>error.status===401);
   assert.equal(values.get('auth_token'),undefined);assert.equal(values.get('user_profile_data'),undefined);
 });
+
+test('vincular WhatsApp envía los identificadores de Meta que exige el backend', async () => {
+  let body;
+  globalThis.fetch = async (_url, options) => { body = JSON.parse(options.body); return response({ status:'CONNECTED', phoneNumber:'573001234567' }, 201); };
+  await platform.connect('123456789012345', '987654321098765');
+  assert.deepEqual(body, { phoneNumberId:'123456789012345', wabaId:'987654321098765' });
+});
+
+test('los tonos del selector son los mismos que acepta el backend', async () => {
+  const view = await readFile(new URL('../src/components/customization/CustomizationView.astro', import.meta.url), 'utf8');
+  const backend = await readFile(new URL('../../Backend/src/modules/agent/domain/enums/agent-style.ts', import.meta.url), 'utf8');
+  const select = view.match(/<select id="agent-tone">(.*?)<\/select>/s)[1];
+  const options = [...select.matchAll(/<option value="([^"]+)"/g)].map(match => match[1]);
+  const tones = [...backend.match(/enum AgentTone \{(.*?)\}/s)[1].matchAll(/= '([^']+)'/g)].map(match => match[1]);
+  assert.deepEqual(options.sort(), tones.sort());
+});

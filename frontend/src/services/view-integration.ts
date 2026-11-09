@@ -1,5 +1,5 @@
-import { platform, type Plan, type Order, type Business, type Subscription } from './platform';
-import { ApiError } from '../api/http';
+import { platform, type Plan, type Business, type Subscription, type Connection } from './platform';
+import { ApiError, isPlanExpired } from '../api/http';
 import { syncUserSession } from './userSession';
 import { notify, confirmAction } from './notifications';
 import { setText as text, loadPageData, showBusinessSetup } from './page-data';
@@ -71,11 +71,6 @@ async function profile() {
     $('#new-password')?.dispatchEvent(new Event('input', { bubbles: true }));
     notify(createPassword ? 'Contraseña creada. Ya puedes entrar también con tu correo.' : 'Contraseña actualizada.', 'success');
   });
-  captureClick('#btn-change-avatar, #btn-remove-avatar', () => notify('El backend todavía no ofrece almacenamiento de avatares.'));
-  const twoFactor = $<HTMLInputElement>('#toggle-2fa');
-  if (twoFactor) twoFactor.checked = false;
-  text('#2fa-status-text', 'No configurado');
-  captureClick('#toggle-2fa', () => notify('La autenticación de dos factores aún no está implementada en la API.'));
   captureClick('#btn-manage-wa', () => location.assign('/vincular-whatsapp'));
 }
 
@@ -112,15 +107,13 @@ function updateCheckout() {
 async function checkout() {
   plans = await platform.plans(); updateCheckout();
   window.addEventListener('plan-changed', updateCheckout);
-  const form = $<HTMLFormElement>('#card-form'); if (form) form.noValidate = true;
   const pay = async () => {
     const plan = selectedPlan(); if (!plan) throw new Error('Este plan no está disponible en la API. Elige otro.');
     if (!(await platform.business())) { notify('Primero registra tu negocio en Perfil.'); location.assign('/profile'); return; }
-    // Los datos de tarjeta del diseño no se leen, guardan ni envían. Se pagan en Wompi.
     const result = await platform.checkout(plan.id);
     const url = new URL(result.paymentUrl); if (url.protocol !== 'https:') throw new Error('El enlace de pago no es válido.');
     localStorage.setItem('checkout_subscription', result.suscripcionId);
-    form?.reset(); location.assign(url.href);
+    location.assign(url.href);
   };
   captureClick('#btn-proceed-pay', () => {
     const plan = selectedPlan();
@@ -129,7 +122,6 @@ async function checkout() {
     location.assign('/checkout/payment?plan=' + encodeURIComponent(plan.id));
   });
   captureForm('card-form', pay);
-  captureClick('#paypal-view button, #wallet-view button, #bank-view button', element => { void act(element as HTMLButtonElement, pay); });
 }
 
 // El diseño de facturación viene pintado como plan vencido; el color y la etiqueta salen del estado real.
@@ -169,10 +161,6 @@ async function billing() {
     text('h3', subscription.alerta?.mensaje || status.title, alert);
     text('p', subscription.fechaFin ? 'Vigencia hasta ' + new Date(subscription.fechaFin).toLocaleDateString('es-CO') : 'Elige un plan para activar tu suscripción.', alert);
   }
-  document.querySelectorAll('[data-integration="billing-invoices"] tbody td').forEach(cell => { cell.textContent = '—'; });
-  const table = $('[data-integration="billing-invoices"]'); if (table) text('p', 'La API aún no dispone de facturas para descargar.', table);
-  document.querySelectorAll<HTMLElement>('[data-integration="billing-usage"] .text-zinc-900.font-bold').forEach(element => { element.textContent = 'Sin datos'; });
-  captureClick('[data-integration="billing-invoices"] button, [data-integration="billing-method"] button, [data-integration="billing-tax"] button', () => notify('Esta función todavía no está disponible en el backend.'));
   captureClick('[data-integration="billing-plan"] a[href*="checkout/payment"], [data-integration="billing-alert"] a[href*="checkout/payment"]', element => {
     void act(element as HTMLButtonElement, async () => {
       if (!subscription?.plan) { location.assign('/checkout/plans'); return; }
@@ -187,104 +175,69 @@ async function billing() {
     });
   });
   const reference = localStorage.getItem('renewal_reference');
-  if (reference) { const result = await platform.renewal(reference); notify(result.mensaje); }
-  text('[data-integration="billing-method"] .font-mono', '•••• •••• •••• —');
-  document.querySelectorAll('[data-integration="billing-method"] .font-bold.text-zinc-100, [data-integration="billing-tax"] span.font-bold.text-zinc-900').forEach(element => { element.textContent = '—'; });
-  document.querySelectorAll('[data-integration="billing-method"] .text-xs.text-zinc-600 span:not(.material-symbols-outlined)').forEach(element => { element.textContent = 'Los métodos de pago se gestionan en Wompi.'; });
+  if (reference) {
+    // Una referencia vieja o ya resuelta no debe bloquear la página ni repetir el aviso.
+    try {
+      const result = await platform.renewal(reference); notify(result.mensaje);
+      if (result.estado !== 'PENDIENTE') localStorage.removeItem('renewal_reference');
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 404) throw error;
+      localStorage.removeItem('renewal_reference');
+    }
+  }
 }
 
 async function whatsapp() {
-  const connection = await platform.connection();
-  input('phone-input', connection?.phoneNumber || '');
-  text('#qr-timer', connection?.simulated ? 'Modo de prueba' : 'No disponible');
-  captureForm('phone-code-form', async () => {
-    const result = await platform.connect(value('phone-input'));
-    const actual = await platform.connection();
-    notify(result.status === 'FAILED' ? 'La conexión falló. Revisa el proveedor.' : actual?.simulated ? 'Conexión de prueba registrada. No se enviaron mensajes reales.' : 'Estado de conexión: ' + result.status, result.status === 'FAILED' ? 'error' : 'info');
+  // Tres estados según GET /whatsapp/connections: vacío = sin conectar, CONNECTED o FAILED.
+  const form = $<HTMLFormElement>('#whatsapp-link-form')!;
+  const submit = $<HTMLButtonElement>('#wa-submit')!;
+  const cancelChange = $<HTMLButtonElement>('#wa-cancel-change')!;
+  let connection: Connection | null = null;
+  let writable = true;
+  let changing = false;
+  const paint = () => {
+    const connected = connection?.status === 'CONNECTED';
+    $('#wa-loading')!.hidden = true;
+    $('#wa-simulated')!.hidden = !connection?.simulated;
+    $('#wa-plan-notice')!.hidden = writable;
+    $('#wa-connected')!.hidden = !connected;
+    text('#wa-number', connection?.phoneNumber ? '+' + connection.phoneNumber : 'Número no disponible');
+    $('#wa-failed')!.hidden = connection?.status !== 'FAILED';
+    form.hidden = connected && !changing;
+    $('#wa-replace-warning')!.hidden = !connected;
+    cancelChange.hidden = !connected;
+    submit.textContent = connected ? 'Reemplazar número' : 'Conectar';
+    for (const control of form.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button')) control.disabled = !writable;
+    cancelChange.disabled = false;
+    const change = $<HTMLButtonElement>('#wa-change'); if (change) change.disabled = !writable;
+  };
+  const [current, status] = await Promise.all([platform.connection(), platform.subscription()]);
+  connection = current; writable = status.puedeEditar; paint();
+  captureClick('#wa-change', () => { changing = true; paint(); $<HTMLInputElement>('#phone-number-id')?.focus(); });
+  captureClick('#wa-cancel-change', () => { changing = false; form.reset(); paint(); });
+  captureForm('whatsapp-link-form', async () => {
+    if (!writable) return;
+    const phoneNumberId = value('phone-number-id'); const wabaId = value('waba-id');
+    if (![phoneNumberId, wabaId].every(id => /^\d{1,32}$/.test(id))) throw new Error('Los identificadores de Meta solo llevan números (hasta 32 dígitos).');
+    if (connection?.status === 'CONNECTED' && !(await confirmAction('Si Meta no valida el número nuevo, perderás la conexión actual y el bot dejará de responder.', 'Reemplazar el número', 'Reemplazar'))) return;
+    submit.textContent = 'Validando con Meta…';
+    try {
+      // El resultado se decide por status del body: FAILED llega con 200, no como error HTTP.
+      const result = await platform.connect(phoneNumberId, wabaId);
+      connection = await platform.connection(); changing = false;
+      if (result.status === 'CONNECTED') { form.reset(); notify(connection?.simulated ? 'Conexión de prueba registrada. No es una conexión real.' : 'Número conectado.', 'success'); }
+      else notify('Meta no validó el número. Revisa los identificadores e inténtalo de nuevo.', 'error');
+      await syncUserSession();
+    } catch (error) {
+      if (isPlanExpired(error)) writable = false;
+      throw error;
+    } finally { paint(); }
   });
-  captureClick('#btn-refresh-qr', () => notify('El backend actual vincula por número y no genera códigos QR.'));
-  captureClick('#btn-check-status', () => { void act(null, async () => { const result = await platform.connection(); notify(result ? `${result.phoneNumber}: ${result.status}${result.simulated ? ' (prueba)' : ''}` : 'No hay conexión registrada.'); }); });
   if (new URLSearchParams(location.search).get('configure') === 'agent') { location.replace('/customization'); }
 }
 
-async function orders() {
-  const board = $('[data-integration="orders-board"]'); if (!board) return;
-  const columns = [...board.children] as HTMLElement[];
-  const lists = columns.map(column => column.children[1] as HTMLElement);
-  const templates = lists.map(list => list.firstElementChild!.cloneNode(true) as HTMLElement);
-  const itemTemplate = templates[0].querySelector('.text-xs .justify-between.text-zinc-800')?.cloneNode(true) as HTMLElement | undefined;
-  const statuses = ['PENDING', 'CONFIRMED', 'CANCELLED'];
-  const titles = ['Pendientes', 'Confirmados', 'Cancelados'];
-  lists.forEach(list => list.replaceChildren());
-  let data: Order[] = [];
-  let writable = false;
-  const render = () => {
-    const query = value('orderSearchInput').toLowerCase();
-    columns.forEach((column, index) => {
-      const filtered = data.filter(order => order.status === statuses[index] && (order.customerPhone + ' ' + order.id + ' ' + order.items.map(item => item.productName).join(' ')).toLowerCase().includes(query));
-      text('h2', titles[index], column);
-      const count = column.querySelector('h2')?.nextElementSibling; if (count) count.textContent = String(filtered.length);
-      lists[index].replaceChildren();
-      for (const order of filtered) {
-        const card = templates[index].cloneNode(true) as HTMLElement;
-        text('.font-bold.text-zinc-900.text-sm', order.customerPhone, card);
-        text('.font-mono', order.customerPhone, card);
-        text('.font-black', money(order.total), card);
-        text('.text-xs.text-zinc-500', new Date(order.createdAt).toLocaleString('es-CO'), card);
-        text('.block.text-zinc-500', order.items.length + ' ítems', card);
-        const items = card.querySelector('.flex-col.gap-1.my-2');
-        if (items && itemTemplate) {
-          items.replaceChildren();
-          order.items.forEach(item => {
-            const row = itemTemplate.cloneNode(true) as HTMLElement;
-            const spans = row.querySelectorAll('span');
-            if (spans[0]) spans[0].textContent = item.quantity + 'x';
-            if (spans[1]) spans[1].textContent = item.productName;
-            if (spans[2]) spans[2].textContent = money(item.subtotal);
-            items.append(row);
-          });
-        }
-        const buttons = [...card.querySelectorAll<HTMLButtonElement>('button')];
-        buttons.forEach(button => { button.disabled = !writable || order.status !== 'PENDING'; });
-        if (order.status === 'PENDING') {
-          for (const button of buttons) {
-            const label = button.textContent?.trim() || '';
-            const action = /rechazar/i.test(label) ? 'cancel' : /aceptar/i.test(label) ? 'confirm' : null;
-            if (!action) continue;
-            button.addEventListener('click', () => { void act(button, async () => { if (action === 'cancel' && !(await confirmAction('El pedido quedará cancelado.', 'Cancelar pedido', 'Sí, cancelar'))) return; await platform.orderAction(order.id, action); await load(); }); });
-          }
-        }
-        lists[index].append(card);
-      }
-    });
-    text('[data-integration="orders-filters"] button', `Todos (${data.length})`);
-    text('[data-integration="orders-header"] .text-lg.font-extrabold', money(data.filter(order => order.status === 'CONFIRMED' && new Date(order.createdAt).toDateString() === new Date().toDateString()).reduce((sum, order) => sum + order.total, 0)));
-    const metrics = document.querySelectorAll('[data-integration="orders-header"] .text-lg.font-extrabold');
-    if (metrics[1]) metrics[1].textContent = '—';
-  };
-  async function load() {
-    const status = await platform.subscription(); writable = status.puedeEditar;
-    const collected: Order[] = []; let offset = 0;
-    do {
-      const page = await platform.orders(new URLSearchParams({ limit:'100', offset:String(offset) }));
-      collected.push(...page.data); offset += page.data.length;
-      if (!page.data.length || offset >= page.total) break;
-    } while (true);
-    data = collected; render();
-  }
-  $('#orderSearchInput')?.addEventListener('input', render);
-  captureClick('[data-integration="orders-header"] button', () => notify('La API genera pedidos desde el agente; todavía no ofrece creación manual.'));
-  captureClick('[data-integration="orders-filters"] button', () => { void load().catch(failure); });
-  await load();
-}
+const orders = async () => (await import('./orders-board')).initOrders();
 
-function navigation() {
-
-  const analytics = $<HTMLAnchorElement>('a[href="/analytics"]'); if (analytics) analytics.href = '/orders';
-  captureClick('#btn-create-bot', () => location.assign('/customization'));
-}
-
-navigation();
 if (document.documentElement.dataset.appState === 'loading' && localStorage.getItem('auth_token')) {
   const run = ['/customization','/catalog'].includes(path) ? async () => (await import('./customization')).initCustomization() : path === '/profile' ? profile : path === '/orders' ? orders : path === '/billing' ? billing : path === '/vincular-whatsapp' ? whatsapp : path.startsWith('/checkout/') ? checkout : null;
   void loadPageData(async () => {

@@ -64,14 +64,6 @@ const getLinkClass = (path: string) =>
       </div>
     </div>
 
-    <!-- Action Button -->
-    <button
-      id="btn-create-bot"
-      class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-orange-500 text-white font-medium text-sm shadow-sm hover:bg-orange-600 active:scale-95 transition-all cursor-pointer"
-    >
-      <span class="material-symbols-outlined text-[18px]">add</span>
-      <span>Crear Nuevo Bot</span>
-    </button>
 
     <!-- Main Navigation -->
     <nav class="flex flex-col gap-1">
@@ -82,10 +74,6 @@ const getLinkClass = (path: string) =>
       <a class={getLinkClass("/customization")} href="/customization">
         <span class="material-symbols-outlined text-[20px]">tune</span>
         <span>Personalización</span>
-      </a>
-      <a class={getLinkClass("/analytics")} href="/analytics">
-        <span class="material-symbols-outlined text-[20px]">analytics</span>
-        <span>Analíticas</span>
       </a>
       <a class={getLinkClass("/billing")} href="/billing">
         <span class="material-symbols-outlined text-[20px]">credit_card</span>
@@ -180,16 +168,6 @@ const getLinkClass = (path: string) =>
   window.addEventListener("resize", () => {
     if (window.innerWidth >= 1024) {
       closeSidebar();
-    }
-  });
-
-  // Botón "Crear Nuevo Bot"
-  document.getElementById("btn-create-bot")?.addEventListener("click", () => {
-    if ((window as any).showToast) {
-      (window as any).showToast(
-        "Iniciando asistente de creación de Bot...",
-        "info",
-      );
     }
   });
 

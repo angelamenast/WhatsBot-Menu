@@ -1,0 +1,21 @@
+---
+// Lo que el dueño debe saber según el contrato del backend (guía de integración, sección 5).
+---
+
+<section class="wi" aria-labelledby="wi-title">
+  <h2 id="wi-title"><span class="material-symbols-outlined" aria-hidden="true">info</span>Antes de conectar</h2>
+  <ul>
+    <li>El número debe existir en WhatsApp Business Platform (Cloud API) de Meta.</li>
+    <li>El webhook y las plantillas de mensajes se configuran a mano en el panel de Meta; Tremia no los crea.</li>
+    <li>Solo puede haber un número por negocio. Vincular otro reemplaza el anterior.</li>
+    <li>El bot responde solo si tienes un plan vigente y la <a href="/customization">atención automática</a> encendida.</li>
+  </ul>
+</section>
+
+<style>
+  .wi{padding:24px;border:1px solid #e4e4e7cc;border-radius:16px;background:#fff;box-shadow:0 1px 2px #0000000a}
+  .wi h2{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:16px;font-weight:700;color:#18181b}
+  .wi h2 .material-symbols-outlined{color:#ea580c}
+  .wi ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#3f3f46}
+  .wi a{color:#c2410c;font-weight:700;text-decoration:underline}
+</style>

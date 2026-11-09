@@ -1,8 +1,6 @@
 ---
-import QrCard from "../components/vinculacionWpp/QrCard.astro";
-import ChatPreviewCard from "../components/vinculacionWpp/ChatPreviewCard.astro";
-import RequirementsCard from "../components/vinculacionWpp/RequirementsCard.astro";
-import FaqCard from "../components/vinculacionWpp/FaqCard.astro";
+import WhatsappConnectionCard from "../components/vinculacionWpp/WhatsappConnectionCard.astro";
+import WhatsappInfoCard from "../components/vinculacionWpp/WhatsappInfoCard.astro";
 import VinculacionWppLayout from "../layouts/VinculacionWppLayout.astro";
 ---
 
@@ -66,7 +64,7 @@ import VinculacionWppLayout from "../layouts/VinculacionWppLayout.astro";
           <span
             class="w-2.5 h-2.5 rounded-full bg-orange-500 animate-ping shrink-0"
           ></span>
-          <span>Esperando vinculación</span>
+          <span data-whatsapp-status>Esperando vinculación</span>
         </div>
       </div>
     </section>
@@ -75,16 +73,14 @@ import VinculacionWppLayout from "../layouts/VinculacionWppLayout.astro";
     <div
       class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start min-w-0"
     >
-      <!-- Columna Izquierda: Código QR y Pasos -->
+      <!-- Columna Izquierda: Vinculación y Pasos -->
       <div class="lg:col-span-7 flex flex-col gap-6 min-w-0">
-        <QrCard />
+        <WhatsappConnectionCard />
       </div>
 
       <!-- Columna Derecha: Vista Previa, Requisitos y FAQ -->
       <div class="lg:col-span-5 flex flex-col gap-6 min-w-0">
-        <ChatPreviewCard />
-        <RequirementsCard />
-        <FaqCard />
+        <WhatsappInfoCard />
       </div>
     </div>
   </div>
