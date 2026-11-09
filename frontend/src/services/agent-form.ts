@@ -5,15 +5,6 @@ export const AGENT_TEXT_MAX = 500; // Límite del backend para personality y los
 export const DAYS: [key: string, label: string][] = [['lunes', 'Lunes'], ['martes', 'Martes'], ['miercoles', 'Miércoles'], ['jueves', 'Jueves'], ['viernes', 'Viernes'], ['sabado', 'Sábado'], ['domingo', 'Domingo']];
 export const HOURS_MAX_BYTES = 1000; // El bot solo lee los primeros 1000 caracteres (el backend acepta 4096).
 
-// El idioma se guarda como prefijo de personality; cuenta dentro de los 500 caracteres.
-export const personalityPrefix = (language: string) => 'Idioma de respuesta: ' + language + '.\n\n';
-export const instructionsMax = (language: string) => AGENT_TEXT_MAX - personalityPrefix(language).length;
-export function writePersonality(language: string, instructions: string): string | null {
-  const text = instructions.trim();
-  // Sin instrucciones y con el idioma por defecto no hay nada que guardar: null borra el valor.
-  return !text && language === 'Español' ? null : personalityPrefix(language) + text;
-}
-
 // Para vaciar un campo se envía null, nunca "".
 export const textOrNull = (value: string) => value.trim() || null;
 

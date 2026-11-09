@@ -1,7 +1,7 @@
 import { isPlanExpired } from '../api/http';
 import { platform, type Agent, type AgentRegionalStyle, type AgentTone, type AgentUpdate } from './platform';
 import { readPersonality } from './catalog-data';
-import { AGENT_TEXT_MAX, DAYS, agentChanges, hoursTooLong, instructionsMax, readHours, textOrNull, writeHours, writePersonality } from './agent-form';
+import { AGENT_TEXT_MAX, DAYS, agentChanges, hoursTooLong, readHours, textOrNull, writeHours } from './agent-form';
 
 const input = (id: string) => document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 const show = (message: string, kind = 'success') => { const box = document.getElementById('personality-feedback')!; box.textContent = message; box.dataset.kind = kind; box.hidden = false; };
@@ -11,10 +11,11 @@ export function initAgentForm(agent: Agent, writable: boolean, onSaved: () => vo
   const form = document.getElementById('personality-form') as HTMLFormElement;
   const fields = document.getElementById('personality-fields') as HTMLFieldSetElement;
   const save = document.getElementById('save-personality') as HTMLButtonElement;
+  // Versiones anteriores guardaban "Idioma de respuesta: …" al inicio; el bot siempre responde
+  // en español, así que ese prefijo se oculta y desaparece al editar las indicaciones.
   const parsed = readPersonality(agent.personality);
   const hours = readHours(agent.businessHours);
   input('agent-personality').value = parsed.instructions;
-  input('agent-language').value = parsed.language;
   // Un valor desconocido no se pierde al guardar otro campo: se añade como opción.
   for (const [id, value] of [['agent-tone', agent.tone], ['agent-regional', agent.regionalStyle]] as const) {
     const select = input(id) as HTMLSelectElement;
@@ -26,7 +27,7 @@ export function initAgentForm(agent: Agent, writable: boolean, onSaved: () => vo
   for (const [key] of DAYS) input('agent-hours-' + key).value = hours.days[key] ?? '';
 
   const current = (): AgentUpdate => ({
-    personality: writePersonality(input('agent-language').value, input('agent-personality').value),
+    personality: textOrNull(input('agent-personality').value),
     tone: (input('agent-tone').value || null) as AgentTone | null,
     regionalStyle: (input('agent-regional').value || null) as AgentRegionalStyle | null,
     welcomeMessage: textOrNull(input('agent-welcome').value),
@@ -37,11 +38,7 @@ export function initAgentForm(agent: Agent, writable: boolean, onSaved: () => vo
   let saving = false;
 
   function refresh() {
-    const personality = input('agent-personality') as HTMLTextAreaElement;
-    const max = instructionsMax(input('agent-language').value);
-    personality.maxLength = max;
-    document.getElementById('agent-personality-count')!.textContent = `${personality.value.length} / ${max} caracteres`;
-    for (const id of ['agent-welcome', 'agent-unavailable']) document.getElementById(id + '-count')!.textContent = `${input(id).value.length} / ${AGENT_TEXT_MAX} caracteres`;
+    for (const id of ['agent-personality', 'agent-welcome', 'agent-unavailable']) document.getElementById(id + '-count')!.textContent = `${input(id).value.length} / ${AGENT_TEXT_MAX} caracteres`;
     // Guardar solo se habilita con cambios pendientes.
     save.disabled = !writable || saving || Object.keys(agentChanges(saved, current())).length === 0;
   }

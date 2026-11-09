@@ -17,7 +17,7 @@ export function showBusinessSetup() {
   const title = document.createElement('h1'); title.className = 'text-2xl font-bold text-zinc-900'; title.textContent = 'Tu cuenta está lista';
   const message = document.createElement('p'); message.className = 'text-sm text-zinc-600 leading-relaxed'; message.textContent = 'Registra tu negocio para empezar a gestionar pedidos y configurar tu agente.';
   const link = document.createElement('a'); link.className = 'inline-flex items-center justify-center px-5 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors'; link.href = '/profile'; link.textContent = 'Registrar mi negocio';
-  const note = document.createElement('p'); note.className = 'text-xs text-zinc-500'; note.textContent = 'Puedes vincular tu número de WhatsApp después, desde Configuración.';
+  const note = document.createElement('p'); note.className = 'text-xs text-zinc-500'; note.textContent = 'Puedes vincular tu número de WhatsApp después, desde Vinculación.';
   section.append(icon, title, message, link, note); content.replaceChildren(section);
 }
 

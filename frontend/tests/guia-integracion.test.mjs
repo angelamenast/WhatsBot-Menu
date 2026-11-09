@@ -91,10 +91,13 @@ test('PATCH /agent/config envía solo los campos modificados y null para borrar'
   await platform.saveAgent(changes);
   assert.deepEqual(body, { tone: 'CERCANO', regionalStyle: 'PAISA', welcomeMessage: null });
 });
-test('personality incluye el idioma dentro del límite de 500 y queda null si no hay nada', () => {
-  assert.equal(agent.writePersonality('Español', '  '), null);
-  assert.equal(agent.writePersonality('Inglés', ''), 'Idioma de respuesta: Inglés.\n\n');
-  assert.equal(agent.instructionsMax('Español') + agent.personalityPrefix('Español').length, 500);
+test('las indicaciones van sin prefijo de idioma (el bot siempre responde en español), con 500 caracteres', async () => {
+  assert.equal(agent.textOrNull('  '), null);
+  const view = await read('../src/components/customization/CustomizationView.astro');
+  assert.doesNotMatch(view, /agent-language|Idioma principal/);
+  assert.match(view, /id="agent-personality"[^>]*maxlength="500"/);
+  const prompt = await read('../../Backend/src/modules/agent/application/prompt/system-prompt.builder.ts');
+  assert.match(prompt, /Responde en español/);
 });
 test('businessHours se lee y escribe con el mismo esquema y conserva claves ajenas', () => {
   const { days, extra } = agent.readHours({ lunes: '10:00-22:00', domingo: 'cerrado', nota: 'festivos cerrado' });
