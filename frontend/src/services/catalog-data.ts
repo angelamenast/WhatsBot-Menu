@@ -11,5 +11,5 @@ export function parseCatalogCSV(source:string):ProductInput[]{
  if(!rows.length||rows.length>100)throw new Error('Importa entre 1 y 100 productos por archivo.');
  return rows.map((r,index)=>{const raw=r[price]?.replace(',','.');const amount=Number(raw);if(!r[name]||r[name].length>200||!raw||!/^\d+(?:\.\d{1,2})?$/.test(raw)||!Number.isFinite(amount)||amount>9999999999.99||(r[description]?.length??0)>2000)throw new Error('Revisa el nombre, precio o descripción de la fila '+(index+2)+'.');return {name:r[name],price:amount,description:description<0?null:r[description]||null};});
 }
+// Quita el prefijo "Idioma de respuesta: …" que guardaban versiones anteriores del front.
 export function readPersonality(value:string|null){const match=value?.match(/^Idioma de respuesta: (Español|Inglés|Portugués)\.\n\n/);return {language:match?.[1]??'Español',instructions:match?value!.slice(match[0].length):value??''};}
-export function writePersonality(language:string,instructions:string){return 'Idioma de respuesta: '+language+'.\n\n'+instructions.trim();}

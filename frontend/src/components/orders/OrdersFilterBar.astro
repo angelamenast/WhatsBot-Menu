@@ -1,46 +1,32 @@
 ---
-
+// El backend solo filtra por fechas (from/to, día de Bogotá). La búsqueda es en el cliente.
 ---
 
-<div data-integration="orders-filters"
-  class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-8 p-2 bg-white border border-zinc-200/80 rounded-2xl shadow-2xs min-w-0"
->
-  <!-- Input de Búsqueda -->
-  <div class="relative flex-1 min-w-0">
-    <span
-      class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-[20px]"
-      >search</span
-    >
-    <input
-      id="orderSearchInput"
-      type="text"
-      placeholder="Buscar por cliente, WhatsApp o ítem..."
-      class="w-full pl-10 pr-4 py-2 rounded-xl bg-zinc-50 border border-transparent text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all focus:outline-none"
-    />
+<form data-integration="orders-filters" id="orders-filter-form" class="of" novalidate>
+  <div class="of-search">
+    <span class="material-symbols-outlined" aria-hidden="true">search</span>
+    <label class="sr-only" for="orderSearchInput">Buscar pedidos</label>
+    <input id="orderSearchInput" type="search" placeholder="Buscar por referencia, WhatsApp o producto…" autocomplete="off" />
   </div>
+  <div class="of-dates">
+    <label>Desde <input id="orders-from" name="from" type="date" /></label>
+    <label>Hasta <input id="orders-to" name="to" type="date" /></label>
+    <button type="button" id="orders-today" class="of-button">Hoy</button>
+    <button type="button" id="orders-clear" class="of-button">Quitar fechas</button>
+  </div>
+  <p id="orders-summary" class="of-summary" role="status">Cargando pedidos…</p>
+</form>
 
-  <!-- Pills de Filtro -->
-  <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 min-w-0">
-    <button
-      class="px-4 py-2 rounded-xl bg-orange-500 text-white font-bold text-xs shrink-0 shadow-2xs cursor-pointer"
-    >
-      Todos (6)
-    </button>
-    <button
-      class="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200/70 text-zinc-700 font-semibold text-xs shrink-0 transition-colors cursor-pointer"
-    >
-      Mesas / Take Away
-    </button>
-    <button
-      class="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200/70 text-zinc-700 font-semibold text-xs shrink-0 transition-colors cursor-pointer"
-    >
-      Delivery WhatsApp
-    </button>
-    <button
-      class="w-9 h-9 flex items-center justify-center rounded-xl bg-zinc-100 hover:bg-zinc-200/70 text-zinc-600 transition-colors shrink-0 cursor-pointer"
-      title="Más Filtros"
-    >
-      <span class="material-symbols-outlined text-[20px]">filter_list</span>
-    </button>
-  </div>
-</div>
+<style>
+  .of{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:24px;padding:10px;border:1px solid #e4e4e7cc;border-radius:16px;background:#fff;box-shadow:0 1px 2px #0000000a}
+  .of-search{position:relative;flex:1 1 260px;min-width:0}
+  .of-search .material-symbols-outlined{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#a1a1aa;font-size:20px}
+  .of-search input{width:100%;padding:9px 14px 9px 40px;border:1px solid transparent;border-radius:12px;background:#fafafa;font:inherit;font-size:14px;color:#18181b}
+  .of-search input:focus,.of-dates input:focus{outline:none;border-color:#f97316;box-shadow:0 0 0 1px #f97316;background:#fff}
+  .of-dates{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .of-dates label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#52525b}
+  .of-dates input{padding:7px 10px;border:1px solid #e4e4e7;border-radius:10px;font:inherit;font-size:13px;color:#18181b;background:#fff}
+  .of-button{border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:12px;font-weight:700;background:#f4f4f5;color:#3f3f46;cursor:pointer}
+  .of-button:hover{background:#e4e4e7}.of-button:focus-visible{outline:3px solid #fdba74;outline-offset:2px}
+  .of-summary{flex-basis:100%;margin:0;padding:0 4px;font-size:12px;color:#71717a}
+</style>

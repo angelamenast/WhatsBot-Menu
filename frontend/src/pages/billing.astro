@@ -2,10 +2,6 @@
 import BillingLayout from "../layouts/BillingLayout.astro";
 import BillingAlert from "../components/billing/BillingAlert.astro";
 import CurrentPlanCard from "../components/billing/CurrentPlanCard.astro";
-import UsageMetrics from "../components/billing/UsageMetrics.astro";
-import PaymentMethodCard from "../components/billing/PaymentMethodCard.astro";
-import TaxInfoCard from "../components/billing/TaxInfoCard.astro";
-import InvoiceHistory from "../components/billing/InvoiceHistory.astro";
 import BillingSupportBanner from "../components/billing/BillingSupportBanner.astro";
 ---
 
@@ -35,33 +31,10 @@ import BillingSupportBanner from "../components/billing/BillingSupportBanner.ast
         <p
           class="text-sm sm:text-base text-zinc-600 max-w-2xl leading-relaxed mt-0.5"
         >
-          Gestiona tu suscripción activa, consulta el consumo de tu plan
-          comercial, actualiza tus métodos de pago y descarga facturas fiscales
-          oficiales.
+          Gestiona tu suscripción activa y renueva o cambia tu plan comercial.
         </p>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2 shrink-0">
-        <div
-          class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold shadow-2xs"
-        >
-          <span class="material-symbols-outlined text-[16px] text-orange-600"
-            >tag</span
-          >
-          <span
-            >ID: <strong class="text-zinc-900 font-bold">WB-SUB-9421</strong
-            ></span
-          >
-        </div>
-        <div
-          class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold shadow-2xs"
-        >
-          <span class="material-symbols-outlined text-[16px] text-orange-600"
-            >verified_user</span
-          >
-          <span>Facturación Stripe 256-bit</span>
-        </div>
-      </div>
     </div>
 
     <!-- Componentes -->
@@ -69,15 +42,9 @@ import BillingSupportBanner from "../components/billing/BillingSupportBanner.ast
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
       <CurrentPlanCard />
-      <UsageMetrics />
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-      <PaymentMethodCard />
-      <TaxInfoCard />
-    </div>
 
-    <InvoiceHistory />
 
     <BillingSupportBanner />
   </div>

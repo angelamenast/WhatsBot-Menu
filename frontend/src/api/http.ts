@@ -34,11 +34,21 @@ export function clearSession() {
   document.cookie = 'jwt_token=; path=/; max-age=0; SameSite=Lax';
 }
 
+// Único error con código estable del backend: escritura bloqueada por plan vencido.
+export const isPlanExpired = (error: unknown) => error instanceof ApiError && error.status === 403 && error.details.codigo === 'PLAN_VENCIDO';
+
 async function decode<T>(response: Response): Promise<T> {
+  // Un 200 sin cuerpo (por ejemplo GET /whatsapp/connections sin conexión) se trata como null.
   const data = response.status === 204 ? null : await response.json().catch(() => null);
   if (!response.ok) {
+    if (response.status === 429) {
+      // El backend responde "ThrottlerException: Too Many Requests" en inglés; se usa Retry-After.
+      const wait = Number(response.headers.get('Retry-After'));
+      throw new ApiError(429, `Demasiadas solicitudes. Espera ${Number.isFinite(wait) && wait > 0 ? Math.ceil(wait) + ' s' : 'un momento'} y vuelve a intentarlo.`, data || {});
+    }
+    // message puede ser string o string[] (validación de DTO).
     const message = Array.isArray(data?.message) ? data.message.join(', ') : data?.message;
-    throw new ApiError(response.status, message || (response.status === 429 ? 'Demasiadas solicitudes. Espera un minuto.' : 'No se pudo completar la solicitud.'), data || {});
+    throw new ApiError(response.status, response.status >= 500 && response.status !== 503 ? 'Ocurrió un error en el servidor. Vuelve a intentarlo.' : message || 'No se pudo completar la solicitud.', data || {});
   }
   return data as T;
 }
@@ -71,7 +81,10 @@ export async function request<T>(path: string, options: RequestInit = {}, authen
     return fetch(`${API_URL}${path}`, { ...options, headers });
   };
   let response: Response;
-  try { response = await send(); } catch { throw new ApiError(0, 'No se pudo conectar con la API. Comprueba que el backend esté iniciado.'); }
+  try { response = await send(); } catch (error) {
+    if (error instanceof DOMException && error.name === 'TimeoutError') throw new ApiError(0, 'La solicitud tardó demasiado. Vuelve a intentarlo.');
+    throw new ApiError(0, 'No se pudo conectar con la API. Comprueba que el backend esté iniciado.');
+  }
   assertCurrentSession();
   if (response.status === 401 && authenticated) {
     try {
