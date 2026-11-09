@@ -18,6 +18,8 @@ import { SubscriptionPlanStatusAdapter } from './infrastructure/adapters/subscri
 import { LogCorreoAdapter } from './infrastructure/adapters/log-correo.adapter';
 import { ResendCorreoAdapter } from './infrastructure/adapters/resend-correo.adapter';
 import { VencimientosJob } from './infrastructure/jobs/vencimientos.job';
+import { SubscriptionsJobsController } from './infrastructure/presentation/controllers/subscriptions-jobs.controller';
+import { JobsSecretGuard } from './infrastructure/presentation/guards/jobs-secret.guard';
 import { TRANSACCION_PAGO_REPOSITORY } from '../payments/domain/repositories/transaccion-pago.repository';
 import { SupabaseTransaccionPagoRepository } from '../payments/infrastructure/persistence/supabase-transaccion-pago.repository';
 import { SUSCRIPCION_REPOSITORY } from '../payments/domain/repositories/suscripcion.repository';
@@ -35,7 +37,7 @@ import { WompiPaymentGatewayAdapter } from '../payments/infrastructure/adapters/
     // dos veces duplicaría las ejecuciones).
     ScheduleModule.forRoot(),
   ],
-  controllers: [SubscriptionsController],
+  controllers: [SubscriptionsController, SubscriptionsJobsController],
   providers: [
     ObtenerEstadoSuscripcionUseCase,
     IniciarRenovacionUseCase,
@@ -79,6 +81,7 @@ import { WompiPaymentGatewayAdapter } from '../payments/infrastructure/adapters/
       },
     },
     VencimientosJob,
+    JobsSecretGuard,
     PlanActivoGuard,
     SubscriptionPlanStatusAdapter,
   ],
