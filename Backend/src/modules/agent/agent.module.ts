@@ -1,0 +1,149 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from '../auth/auth.module';
+import { BusinessModule } from '../business/business.module';
+import { OrdersModule } from '../orders/orders.module';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+
+import { AGENT_CONFIG_REPOSITORY } from './domain/repositories/agent-config.repository';
+import { SupabaseAgentConfigRepository } from './infrastructure/persistence/supabase-agent-config.repository';
+import { BUSINESS_ATTENTION_REPOSITORY } from './domain/repositories/business-attention.repository';
+import { SupabaseBusinessAttentionRepository } from './infrastructure/persistence/supabase-business-attention.repository';
+import { CATALOG_REPOSITORY } from './domain/repositories/catalog.repository';
+import { SupabaseCatalogRepository } from './infrastructure/persistence/supabase-catalog.repository';
+import { FakeCatalogRepository } from './infrastructure/persistence/fake-catalog.repository';
+import { CONVERSATION_HISTORY_REPOSITORY } from './domain/repositories/conversation-history.repository';
+import { SupabaseConversationHistoryRepository } from './infrastructure/persistence/supabase-conversation-history.repository';
+
+import { LLM_PORT } from './application/ports/out/llm.port';
+import type { LlmPort } from './application/ports/out/llm.port';
+import { FakeLlmProvider } from './infrastructure/adapters/fake-llm.adapter';
+import { GeminiLlmAdapter } from './infrastructure/adapters/gemini/gemini-llm.adapter';
+import { createGeminiClient } from './infrastructure/adapters/gemini/create-gemini-client';
+import { readGeminiConfig } from './infrastructure/adapters/gemini/gemini-config';
+// import { OpenAiLlmAdapter } from './infrastructure/adapters/openai-llm.adapter'; // próximo paso
+
+import { TOKEN_USAGE_PORT } from './application/ports/out/token-usage.port';
+import { SupabaseTokenUsageAdapter } from './infrastructure/adapters/supabase-token-usage.adapter';
+
+import { USAGE_QUOTA_PORT } from './application/ports/out/usage-quota.port';
+import { FakeUsageQuotaProvider } from './infrastructure/adapters/fake-usage-quota.adapter';
+import { SupabaseUsageQuotaAdapter } from './infrastructure/adapters/supabase-usage-quota.adapter';
+
+import { ORDER_PORT } from './application/ports/out/order.port';
+import { FakeOrderProvider } from './infrastructure/adapters/fake-order.adapter';
+import { OrdersOrderAdapter } from './infrastructure/adapters/orders-order.adapter';
+
+import { ProcessCustomerMessageUseCase } from './application/use-cases/process-customer-message.use-case';
+import { GetAgentConfigUseCase } from './application/use-cases/get-agent-config.use-case';
+import { UpdateAgentConfigUseCase } from './application/use-cases/update-agent-config.use-case';
+import { AgentConfigController } from './presentation/controllers/agent-config.controller';
+
+@Module({
+  imports: [ConfigModule, AuthModule, BusinessModule, OrdersModule, SubscriptionsModule],
+  controllers: [AgentConfigController],
+  providers: [
+    { provide: AGENT_CONFIG_REPOSITORY, useClass: SupabaseAgentConfigRepository },
+    { provide: BUSINESS_ATTENTION_REPOSITORY, useClass: SupabaseBusinessAttentionRepository },
+    // El agente lee su propio catálogo (catalogo_productos); `fake` solo si se pide explícitamente.
+    FakeCatalogRepository,
+    SupabaseCatalogRepository,
+    {
+      provide: CATALOG_REPOSITORY,
+      inject: [ConfigService, FakeCatalogRepository, SupabaseCatalogRepository],
+      useFactory: (
+        configService: ConfigService,
+        fakeCatalogRepository: FakeCatalogRepository,
+        supabaseCatalogRepository: SupabaseCatalogRepository,
+      ) => {
+        const provider = configService.get<string>('CATALOG_PROVIDER') ?? 'supabase';
+        switch (provider) {
+          case 'fake':
+            return fakeCatalogRepository;
+          case 'supabase':
+            return supabaseCatalogRepository;
+          default:
+            throw new Error(`CATALOG_PROVIDER inválido: "${provider}". Usa "fake" o "supabase".`);
+        }
+      },
+    },
+    { provide: CONVERSATION_HISTORY_REPOSITORY, useClass: SupabaseConversationHistoryRepository },
+
+    FakeLlmProvider,
+    {
+      provide: LLM_PORT,
+      inject: [ConfigService, FakeLlmProvider],
+      useFactory: async (configService: ConfigService, fakeLlmProvider: FakeLlmProvider): Promise<LlmPort> => {
+        const provider = configService.get<string>('LLM_PROVIDER') ?? 'fake';
+        switch (provider) {
+          case 'fake':
+            return fakeLlmProvider;
+          case 'openai':
+            throw new Error('OpenAiLlmAdapter no implementado todavía');
+          case 'gemini': {
+            // Falla al arrancar si falta GEMINI_API_KEY (o algún GEMINI_* es inválido).
+            const geminiConfig = readGeminiConfig((key) => configService.get<string>(key));
+            return new GeminiLlmAdapter(await createGeminiClient(geminiConfig), geminiConfig);
+          }
+          default:
+            throw new Error(`LLM_PROVIDER inválido: "${provider}". Usa "fake", "openai" o "gemini".`);
+        }
+      },
+    },
+
+    { provide: TOKEN_USAGE_PORT, useClass: SupabaseTokenUsageAdapter },
+
+    FakeUsageQuotaProvider,
+    SupabaseUsageQuotaAdapter,
+    {
+      provide: USAGE_QUOTA_PORT,
+      inject: [ConfigService, FakeUsageQuotaProvider, SupabaseUsageQuotaAdapter],
+      useFactory: (
+        configService: ConfigService,
+        fakeUsageQuotaProvider: FakeUsageQuotaProvider,
+        supabaseUsageQuotaAdapter: SupabaseUsageQuotaAdapter,
+      ) => {
+        const provider = configService.get<string>('USAGE_QUOTA_PROVIDER') ?? 'fake';
+        switch (provider) {
+          case 'fake':
+            return fakeUsageQuotaProvider;
+          case 'supabase':
+            return supabaseUsageQuotaAdapter;
+          default:
+            throw new Error(`USAGE_QUOTA_PROVIDER inválido: "${provider}". Usa "fake" o "supabase".`);
+        }
+      },
+    },
+
+    FakeOrderProvider,
+    OrdersOrderAdapter,
+    {
+      provide: ORDER_PORT,
+      inject: [ConfigService, FakeOrderProvider, OrdersOrderAdapter],
+      useFactory: (
+        configService: ConfigService,
+        fakeOrderProvider: FakeOrderProvider,
+        ordersOrderAdapter: OrdersOrderAdapter,
+      ) => {
+        const provider = configService.get<string>('ORDER_PROVIDER') ?? 'fake';
+        switch (provider) {
+          case 'fake':
+            return fakeOrderProvider;
+          case 'orders':
+            return ordersOrderAdapter;
+          default:
+            throw new Error(`ORDER_PROVIDER inválido: "${provider}". Usa "fake" u "orders".`);
+        }
+      },
+    },
+
+    ProcessCustomerMessageUseCase,
+    GetAgentConfigUseCase,
+    UpdateAgentConfigUseCase,
+  ],
+  // API pública del módulo: WhatsappModule la consume desde su propio adapter
+  // (whatsapp/infrastructure/adapters/agent-dispatch.adapter.ts). agent no conoce a whatsapp.
+  // AGENT_CONFIG_REPOSITORY lo lee el checklist de negocio-setup (TREMIA-104).
+  exports: [ProcessCustomerMessageUseCase, AGENT_CONFIG_REPOSITORY],
+})
+export class AgentModule {}

@@ -1,0 +1,37 @@
+---
+
+---
+
+<div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-space-xl">
+  <div
+    class="bg-surface-container-lowest rounded-xl p-space-lg sm:p-space-xl shadow-sm flex flex-col gap-space-lg"
+  >
+    <div class="flex flex-col">
+      <div class="flex items-center gap-space-xs mb-space-xxs">
+        <span
+          class="material-symbols-outlined text-primary-container text-[22px]"
+          >verified_user</span
+        >
+        <h1 class="font-headline-md text-headline-md text-on-surface">
+          Pago seguro con Wompi
+        </h1>
+      </div>
+      <p class="font-body-md text-body-md text-on-surface-variant">
+        Te llevaremos a Wompi para elegir el medio de pago e ingresar tus datos.
+        Tremia no recibe ni guarda los datos de tu tarjeta.
+      </p>
+    </div>
+
+    <!-- El backend solo genera el enlace de pago: los datos se ingresan en Wompi. -->
+    <form class="flex flex-col" id="card-form">
+      <button
+        class="w-full py-space-lg px-space-xl rounded-lg bg-primary-container hover:bg-secondary transition-all text-on-primary font-headline-sm text-headline-sm font-bold shadow-lg flex items-center justify-center gap-space-sm cursor-pointer"
+        id="submit-pay-btn"
+        type="submit"
+      >
+        <span class="material-symbols-outlined text-[24px]">lock</span>
+        <span>Continuar al pago</span>
+      </button>
+    </form>
+  </div>
+</div>

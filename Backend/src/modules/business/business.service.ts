@@ -8,8 +8,6 @@ export class BusinessService {
 
   async create(usuarioId: string, dto: CreateBusinessDto) {
     const client = this.supabaseService.getClient();
-
-    // MVP trata la relación como 1:1 — evita que un usuario cree más de un negocio
     const { data: existentes, error: checkError } = await client
       .from('negocios')
       .select('id')
@@ -30,7 +28,6 @@ export class BusinessService {
         usuario_id: usuarioId,
         nombre_negocio: dto.nombre_negocio,
         descripcion: dto.descripcion ?? null,
-        numero_whatsapp: dto.numero_whatsapp,
         estado: 'activo',
       })
       .select()

@@ -1,0 +1,22 @@
+---
+import CheckoutLayout from "../../layouts/CheckoutLayout.astro";
+import PaymentStepper from "../../components/checkout/PaymentStepper.astro";
+import PaymentForm from "../../components/checkout/PaymentForm.astro";
+import PaymentSummary from "../../components/checkout/PaymentSummary.astro";
+---
+
+<CheckoutLayout title="Pago Seguro | WhatsBot">
+  <PaymentStepper />
+  <section class="w-full py-space-2xl lg:py-space-4xl">
+    <div
+      class="max-w-container-max mx-auto px-gutter-mobile lg:px-gutter-desktop"
+    >
+      <div
+        class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl lg:gap-space-2xl items-start"
+      >
+        <PaymentForm />
+        <PaymentSummary />
+      </div>
+    </div>
+  </section>
+</CheckoutLayout>

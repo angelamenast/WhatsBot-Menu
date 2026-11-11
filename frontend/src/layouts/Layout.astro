@@ -1,0 +1,40 @@
+---
+import SessionGuard from '../components/common/SessionGuard.astro';
+const requireSession = ['/profile', '/orders', '/billing', '/vincular-whatsapp', '/checkout/', '/support'].some(path => Astro.url.pathname.startsWith(path));
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es" data-app-state={requireSession ? "loading" : undefined} data-identity-state={requireSession ? "loading" : undefined}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+    {requireSession && (
+      <div data-page-loader role="status" aria-live="polite">
+        <span data-page-spinner aria-hidden="true"></span>
+        <p data-page-message>Cargando tu información…</p>
+        <button data-page-retry type="button" hidden>Volver a intentar</button>
+      </div>
+    )}
+    {requireSession && <SessionGuard />}
+    <script>
+      import '../services/view-integration';
+    </script>
+  </body>
+</html>

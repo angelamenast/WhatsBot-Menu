@@ -1,0 +1,56 @@
+import { jest } from '@jest/globals';
+import { AgentDispatchAdapter } from './agent-dispatch.adapter';
+import { ProcessCustomerMessageUseCase } from '../../../agent/application/use-cases/process-customer-message.use-case';
+
+describe('AgentDispatchAdapter', () => {
+  let processCustomerMessageUseCase: {
+    execute: ReturnType<typeof jest.fn>;
+  };
+  let adapter: AgentDispatchAdapter;
+
+  const command = {
+    businessId: 'business-1',
+    conversationId: 'conversation-1',
+    messageId: 'message-1',
+    customerNumber: '+573001111111',
+    message: 'Hola',
+  };
+
+  beforeEach(() => {
+    processCustomerMessageUseCase = { execute: jest.fn() };
+    adapter = new AgentDispatchAdapter(
+      processCustomerMessageUseCase as unknown as ProcessCustomerMessageUseCase,
+    );
+  });
+
+  it('traduce el comando hacia agent y el resultado de vuelta al contrato de whatsapp', async () => {
+    processCustomerMessageUseCase.execute.mockResolvedValue({
+      responseText: 'Hola, ¿en qué te ayudo?',
+    });
+
+    const result = await adapter.dispatch(command);
+
+    expect(processCustomerMessageUseCase.execute).toHaveBeenCalledWith({
+      businessId: command.businessId,
+      conversationId: command.conversationId,
+      messageId: command.messageId,
+      customerNumber: command.customerNumber,
+      message: command.message,
+    });
+    expect(result).toBe('Hola, ¿en qué te ayudo?');
+  });
+
+  it('si agent no responde (null), devuelve null', async () => {
+    processCustomerMessageUseCase.execute.mockResolvedValue(null);
+
+    await expect(adapter.dispatch(command)).resolves.toBeNull();
+  });
+
+  it('propaga los errores de agent sin tragarlos (el manejo es de quien despacha)', async () => {
+    processCustomerMessageUseCase.execute.mockRejectedValue(
+      new Error('agent falló'),
+    );
+
+    await expect(adapter.dispatch(command)).rejects.toThrow('agent falló');
+  });
+});

@@ -1,0 +1,83 @@
+---
+// Columnas por estado. El backend no filtra por estado: services/orders-board.ts carga el
+// listado, lo agrupa en el cliente y pinta las tarjetas.
+const columns = [
+  { status: 'PENDING', label: 'Pendientes', icon: 'hourglass_top' },
+  { status: 'CONFIRMED', label: 'Confirmados', icon: 'check_circle' },
+  { status: 'CANCELLED', label: 'Cancelados', icon: 'cancel' },
+];
+---
+
+<div data-integration="orders-board" class="ob">
+  <p id="orders-plan-notice" class="ob-notice" role="status" hidden>
+    Tu plan venció: puedes consultar tus pedidos, pero no confirmarlos ni cancelarlos.
+    <a href="/billing">Renovar plan</a>
+  </p>
+  <p id="orders-empty" class="ob-empty" role="status" hidden></p>
+  <div class="ob-board">
+    {columns.map(column => (
+      <section class="ob-column" data-status={column.status} aria-labelledby={`orders-col-${column.status}`}>
+        <header class="ob-column-head">
+          <span class="ob-dot" aria-hidden="true"></span>
+          <h2 id={`orders-col-${column.status}`}>{column.label}</h2>
+          <span class="ob-count" data-count aria-label={`Pedidos ${column.label.toLowerCase()}`}>0</span>
+          <span class="material-symbols-outlined ob-column-icon" aria-hidden="true">{column.icon}</span>
+        </header>
+        <div class="ob-list" data-list></div>
+        <p class="ob-column-empty" data-empty>Sin pedidos</p>
+      </section>
+    ))}
+  </div>
+  <dialog id="order-detail" class="ob-dialog" aria-labelledby="order-detail-title">
+    <div class="ob-dialog-head">
+      <h2 id="order-detail-title">Pedido</h2>
+      <button type="button" class="ob-icon-button" data-close aria-label="Cerrar detalle"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
+    </div>
+    <div id="order-detail-body"></div>
+  </dialog>
+</div>
+
+<style is:global>
+  .ob{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .ob-notice{margin:0;padding:12px 16px;border:1px solid #fed7aa;border-radius:12px;background:#fff7ed;color:#9a4914;font-size:14px}
+  .ob-notice a{font-weight:700;color:#c2410c;text-decoration:underline;margin-left:4px}
+  .ob-empty{margin:0;padding:20px;border:1px dashed #e4e4e7;border-radius:14px;background:#fff;color:#52525b;font-size:14px;text-align:center}
+  .ob-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+  .ob-column{display:flex;flex-direction:column;gap:14px;padding:16px;border-radius:16px;background:#f4f4f5cc;border:1px solid #e4e4e799;min-width:0}
+  .ob-column-head{display:flex;align-items:center;gap:8px;padding:0 4px}
+  .ob-column-head h2{margin:0;font-size:16px;font-weight:700;color:#18181b}
+  .ob-dot{width:12px;height:12px;border-radius:50%;background:#f97316}
+  .ob-column[data-status=CONFIRMED] .ob-dot{background:#16a34a}.ob-column[data-status=CANCELLED] .ob-dot{background:#a1a1aa}
+  .ob-count{padding:2px 10px;border-radius:999px;background:#ffedd5;color:#9a3412;font-size:12px;font-weight:700}
+  .ob-column-icon{margin-left:auto;color:#a1a1aa;font-size:18px}
+  .ob-list{display:flex;flex-direction:column;gap:12px}
+  .ob-list:not(:empty)+.ob-column-empty{display:none}
+  .ob-column-empty{margin:0;padding:18px 8px;text-align:center;color:#a1a1aa;font-size:13px}
+  .ob-card{position:relative;display:flex;flex-direction:column;gap:8px;padding:14px 14px 14px 20px;border-radius:12px;background:#fff;border:1px solid #e4e4e7cc;box-shadow:0 1px 2px #0000000a}
+  .ob-card:before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:6px;border-radius:0 999px 999px 0;background:#f97316}
+  .ob-card[data-status=CONFIRMED]:before{background:#16a34a}.ob-card[data-status=CANCELLED]:before{background:#d4d4d8}
+  .ob-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .ob-ref{font-family:ui-monospace,monospace;font-weight:700;font-size:14px;color:#18181b}
+  .ob-time,.ob-meta{display:block;font-size:12px;color:#71717a}
+  .ob-total{font-size:16px;font-weight:900;color:#ea580c;white-space:nowrap}
+  .ob-phone{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:#fafafa;border:1px solid #f4f4f5;font-family:ui-monospace,monospace;font-size:12px;color:#52525b}
+  .ob-phone .material-symbols-outlined{font-size:16px;color:#f97316}
+  .ob-summary{margin:0;font-size:12px;color:#3f3f46;overflow-wrap:anywhere}
+  .ob-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;padding-top:8px;border-top:1px solid #f4f4f5}
+  .ob-button{border:0;border-radius:8px;padding:7px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;background:#f4f4f5;color:#3f3f46}
+  .ob-button:hover{background:#e4e4e7}.ob-button[data-kind=confirm]{background:#f97316;color:#fff}.ob-button[data-kind=confirm]:hover{background:#ea580c}
+  .ob-button[data-kind=detail]{margin-right:auto;background:transparent;color:#c2410c;padding-left:0}
+  .ob-button:disabled{opacity:.45;cursor:not-allowed}
+  .ob-button:focus-visible,.ob-icon-button:focus-visible{outline:3px solid #fdba74;outline-offset:2px}
+  .ob-dialog{width:min(560px,calc(100vw - 32px));max-height:calc(100dvh - 48px);border:0;border-radius:20px;padding:24px;color:#18181b;box-shadow:0 20px 50px #0000002e}
+  .ob-dialog::backdrop{background:#1f1b1766;backdrop-filter:blur(3px)}
+  .ob-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+  .ob-dialog-head h2{margin:0;font-size:20px;font-weight:800}
+  .ob-icon-button{border:0;background:transparent;border-radius:8px;padding:4px;cursor:pointer;color:#71717a}
+  .ob-dl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 16px;font-size:14px}.ob-dl dt{color:#71717a}.ob-dl dd{margin:0;font-weight:600}
+  .ob-table-wrap{overflow-x:auto;border:1px solid #f4f4f5;border-radius:12px}
+  .ob-table{width:100%;border-collapse:collapse;font-size:13px}.ob-table th{background:#fafafa;color:#71717a;font-weight:600;text-align:left;padding:8px 12px}
+  .ob-table td{padding:8px 12px;border-top:1px solid #f4f4f5}.ob-table td:not(:first-child),.ob-table th:not(:first-child){text-align:right;white-space:nowrap}
+  .ob-table tfoot td{font-weight:800}
+  @media(max-width:1023px){.ob-board{grid-template-columns:1fr}}
+</style>
