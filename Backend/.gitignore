@@ -58,3 +58,7 @@ tsconfig.build.tsbuildinfo
 tsconfig.tsbuildinfo
 CLAUDE.md
 *.tsbuildinfo
+
+# Pruebas de integración contra Supabase de pruebas
+.env.test
+/test-results
