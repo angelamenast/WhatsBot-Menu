@@ -16,7 +16,10 @@ import { SupabaseVencimientosRepository } from './infrastructure/persistence/sup
 import { PlanActivoGuard } from './infrastructure/presentation/guards/plan-activo.guard';
 import { SubscriptionPlanStatusAdapter } from './infrastructure/adapters/subscription-plan-status.adapter';
 import { LogCorreoAdapter } from './infrastructure/adapters/log-correo.adapter';
+import { ResendCorreoAdapter } from './infrastructure/adapters/resend-correo.adapter';
 import { VencimientosJob } from './infrastructure/jobs/vencimientos.job';
+import { SubscriptionsJobsController } from './infrastructure/presentation/controllers/subscriptions-jobs.controller';
+import { JobsSecretGuard } from './infrastructure/presentation/guards/jobs-secret.guard';
 import { TRANSACCION_PAGO_REPOSITORY } from '../payments/domain/repositories/transaccion-pago.repository';
 import { SupabaseTransaccionPagoRepository } from '../payments/infrastructure/persistence/supabase-transaccion-pago.repository';
 import { SUSCRIPCION_REPOSITORY } from '../payments/domain/repositories/suscripcion.repository';
@@ -34,7 +37,7 @@ import { WompiPaymentGatewayAdapter } from '../payments/infrastructure/adapters/
     // dos veces duplicaría las ejecuciones).
     ScheduleModule.forRoot(),
   ],
-  controllers: [SubscriptionsController],
+  controllers: [SubscriptionsController, SubscriptionsJobsController],
   providers: [
     ObtenerEstadoSuscripcionUseCase,
     IniciarRenovacionUseCase,
@@ -53,22 +56,32 @@ import { WompiPaymentGatewayAdapter } from '../payments/infrastructure/adapters/
     { provide: SUSCRIPCION_REPOSITORY, useExisting: SupabaseSuscripcionRepository },
     WompiPaymentGatewayAdapter,
     { provide: PAYMENT_GATEWAY, useExisting: WompiPaymentGatewayAdapter },
-    // Proveedor de correo elegido por EMAIL_PROVIDER (por ahora solo "log").
+    // Proveedor de correo elegido por EMAIL_PROVIDER: "log" (por defecto, solo escribe en el
+    // log) o "resend" (envío real; exige RESEND_API_KEY y EMAIL_FROM al arrancar).
     LogCorreoAdapter,
+    ResendCorreoAdapter,
     {
       provide: CORREO_PORT,
-      inject: [ConfigService, LogCorreoAdapter],
-      useFactory: (configService: ConfigService, logCorreoAdapter: LogCorreoAdapter) => {
+      inject: [ConfigService, LogCorreoAdapter, ResendCorreoAdapter],
+      useFactory: (
+        configService: ConfigService,
+        logCorreoAdapter: LogCorreoAdapter,
+        resendCorreoAdapter: ResendCorreoAdapter,
+      ) => {
         const proveedor = configService.get<string>('EMAIL_PROVIDER') ?? 'log';
         switch (proveedor) {
           case 'log':
             return logCorreoAdapter;
+          case 'resend':
+            resendCorreoAdapter.validarConfiguracion();
+            return resendCorreoAdapter;
           default:
-            throw new Error(`EMAIL_PROVIDER inválido: "${proveedor}". Por ahora solo está implementado "log".`);
+            throw new Error(`EMAIL_PROVIDER inválido: "${proveedor}". Valores permitidos: "log", "resend".`);
         }
       },
     },
     VencimientosJob,
+    JobsSecretGuard,
     PlanActivoGuard,
     SubscriptionPlanStatusAdapter,
   ],

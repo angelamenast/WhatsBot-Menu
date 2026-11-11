@@ -172,7 +172,7 @@ Estado del pago de una renovación iniciada por el mismo negocio.
 
 ## Alertas de vencimiento — HU-8.4
 
-**No hay endpoints nuevos.** Un job interno corre **todos los días a las 8:00 a. m. (hora de Colombia)** y:
+El proceso corre **una vez al día**: con el job interno (8:00 a. m., hora de Colombia) o, en Render gratuito, desde un cron externo que llama `POST /api/subscriptions/jobs/vencimientos` (ver abajo). En cada ejecución:
 
 | Caso | Qué hace el backend | Qué ve el usuario |
 |---|---|---|
@@ -182,13 +182,48 @@ Estado del pago de una renovación iniciada por el mismo negocio.
 
 Para el frontend no cambia nada: el banner y la restricción siguen saliendo de `GET /api/subscriptions/status`, que ya refleja el vencimiento aunque el job todavía no haya corrido.
 
-> Mientras el equipo no elija proveedor de correo, los correos **no se envían**: se registran en el log del backend (`EMAIL_PROVIDER=log`).
+### Correos
+Se envían con [Resend](https://resend.com) (API HTTPS; Render gratuito bloquea SMTP) al correo del dueño del negocio. Llevan HTML y texto plano, la fecha de vencimiento en hora de Colombia y un botón **Renovar plan** que abre `FRONTEND_URL/billing`. Con `EMAIL_PROVIDER=log` (por defecto) no se envían: solo se registran en el log del backend.
+
+- **Sin dominio verificado** (`EMAIL_FROM` con `onboarding@resend.dev`): Resend solo entrega al correo con el que se creó la cuenta de Resend. A cualquier otro destinatario responde 403 y la notificación queda en `fallidas`.
+- **Con dominio propio**: en Resend → *Domains* se agrega el dominio (o un subdominio, p. ej. `mail.<dominio>`), se copian los registros SPF/DKIM (y DMARC recomendado) en el DNS del registrador, se verifica y se cambia `EMAIL_FROM` a `Tremia <notificaciones@<dominio>>`. No cambia el código.
+
+### `POST /api/subscriptions/jobs/vencimientos` — cron externo
+En Render gratuito el servicio se duerme y el job interno no es confiable. Un cron externo (cron-job.org, GitHub Actions…) llama este endpoint **una vez al día**, y en ese entorno se pone `VENCIMIENTOS_JOB_ENABLED=false` para no ejecutar el proceso dos veces. La ventana de aviso "por vencer" cubre 24 h, así que debe llamarse exactamente una vez al día.
+
+No usa token de usuario: se autentica con el header `x-jobs-secret`, cuyo valor es `JOBS_SECRET`.
+
+```http
+POST /api/subscriptions/jobs/vencimientos
+x-jobs-secret: <JOBS_SECRET>
+```
+
+**200 OK**
+```json
+{
+  "marcadasVencidas": 1,
+  "alertasVencidoEnviadas": 1,
+  "alertasPorVencerEnviadas": 2,
+  "fallidas": [
+    { "suscripcionId": "9b1c…", "tipo": "POR_VENCER", "motivo": "El dueño no tiene correo registrado" }
+  ]
+}
+```
+
+| Código HTTP | `codigo` | Cuándo |
+|---|---|---|
+| 401 | `JOB_NO_AUTORIZADO` | Falta el header o el secreto no coincide. |
+| 503 | `JOBS_DESHABILITADOS` | `JOBS_SECRET` no está configurado en el backend. |
 
 ### Variables de entorno (backend)
 | Variable | Valor por defecto | Uso |
 |---|---|---|
-| `EMAIL_PROVIDER` | `log` | Proveedor de correo. Hoy solo existe `log`. |
-| `VENCIMIENTOS_JOB_ENABLED` | activado | Con `false` el job no hace nada (útil en desarrollo local). |
+| `EMAIL_PROVIDER` | `log` | `log` (solo registra) o `resend` (envío real). |
+| `RESEND_API_KEY` | — | API key de Resend. Obligatoria con `EMAIL_PROVIDER=resend`: sin ella la app no arranca. |
+| `EMAIL_FROM` | — | Remitente, p. ej. `Tremia <onboarding@resend.dev>`. Obligatorio con `EMAIL_PROVIDER=resend`. |
+| `FRONTEND_URL` | `http://localhost:4321` | Base del enlace **Renovar plan** del correo (`/billing`). |
+| `JOBS_SECRET` | — | Secreto del cron externo. Sin él, el endpoint responde 503. Usar una cadena aleatoria larga. |
+| `VENCIMIENTOS_JOB_ENABLED` | activado | Con `false` el job interno no hace nada (en Render, cuando se usa el cron externo). |
 | `WOMPI_REDIRECT_URL` | placeholder de HU-8.1 | Página del frontend a la que Wompi redirige tras pagar una compra o una renovación. |
 
 ## Guía de integración (frontend)
