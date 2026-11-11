@@ -34,6 +34,7 @@ export class TestContext {
   private readonly users: string[] = [];
   private readonly negocios: string[] = [];
   private readonly planes: string[] = [];
+  private readonly passwords = new Map<string, string>();
   private userCount = 0;
 
   /** Nombre único de la corrida, ej. it_<runId>_categoria. */
@@ -44,10 +45,11 @@ export class TestContext {
   async createUser(): Promise<TestUser> {
     const n = this.userCount++;
     const email = n === 0 ? `${this.prefix}@test.local` : `${this.prefix}_${n}@test.local`;
+    const password = randomBytes(18).toString('base64url');
 
     const { data, error } = await this.client.auth.admin.createUser({
       email,
-      password: randomBytes(18).toString('base64url'),
+      password,
       email_confirm: true,
       user_metadata: { nombre: this.prefix },
     });
@@ -62,7 +64,23 @@ export class TestContext {
       throw new Error(`No se pudo crear el perfil de pruebas: ${perfil.error.message}`);
     }
 
+    this.passwords.set(data.user.id, password);
     return { id: data.user.id, email };
+  }
+
+  /**
+   * Access token del usuario (signInWithPassword). Usa un cliente aparte: iniciar sesión en
+   * this.client cambiaría sus peticiones al rol del usuario en lugar de service_role.
+   */
+  async signIn(user: TestUser): Promise<string> {
+    const { data, error } = await createTestClient().auth.signInWithPassword({
+      email: user.email,
+      password: this.passwords.get(user.id) ?? '',
+    });
+    if (error || !data.session) {
+      throw new Error(`No se pudo iniciar sesión con el usuario de pruebas: ${error?.message}`);
+    }
+    return data.session.access_token;
   }
 
   trackNegocio(id: string): void {

@@ -37,6 +37,17 @@ npm run test:int
 npm run test:int -- --json --outputFile=test-results/integration.json   # evidencia en JSON
 ```
 
+## Wompi (sandbox)
+
+`wompi/wompi-adapter.int-spec.ts` prueba el adaptador contra el sandbox real y la firma de eventos;
+`wompi/payment-flow.int-spec.ts` levanta la app completa (AppModule + supertest) y recorre
+generate-link → webhook firmado → Supabase de pruebas.
+
+- Variables `WOMPI_TEST_*` en `.env.test`. Si faltan, estas pruebas se **saltan** con aviso.
+- Abortan si la URL no contiene `sandbox`, si `pub_`/`prv_` no contienen `_test_` o si el secret de eventos no empieza por `test_`.
+- La app de pruebas usa una config cerrada (`support/test-app.ts`): Supabase y Wompi de pruebas, proveedores en `fake` y el job de vencimientos apagado. No lee `Backend/.env`.
+- Los links creados en el sandbox no se pueden borrar; su nombre empieza por `it_` / `Suscripción it_...`.
+
 ## Estructura
 
 - `*.int-spec.ts`: un archivo por área (catálogo, pagos, pedidos, WhatsApp, cuota de IA); cada `it` lleva un ID `IT-DB-NN`.

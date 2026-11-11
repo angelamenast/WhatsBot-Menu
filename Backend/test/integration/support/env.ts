@@ -23,6 +23,11 @@ export class IntegrationEnvError extends Error {
   }
 }
 
+/** Variables de Backend/.env.test (vacío si no existe). */
+export function readEnvTestFile(): Record<string, string> {
+  return parseEnvFile(ENV_TEST_PATH);
+}
+
 // Parser mínimo de .env (KEY=valor, comentarios con #, comillas opcionales). Nunca imprime valores.
 function parseEnvFile(path: string): Record<string, string> {
   if (!existsSync(path)) {
