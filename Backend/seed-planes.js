@@ -1,7 +1,12 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = 'https://psjabssvkwpwrwaczfyq.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzamFic3N2a3dwd3J3YWN6ZnlxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODkwNzM0NywiZXhwIjoyMTA0NDgzMzQ3fQ.kDNRVoJ4kfzG60CoeiuRDsQpWJIbPazk5QvjfRqbFoY'; // Service role key
+// Uso: node --env-file=.env seed-planes.js (lee SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY del entorno).
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY. Ejecuta: node --env-file=.env seed-planes.js');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 

@@ -11,6 +11,10 @@ Requisitos: una versión de Node compatible con las dependencias (Node 24.15 o s
 
 El servidor carga .env, no .env.example. Ninguna clave privada debe añadirse al frontend ni al repositorio.
 
+## Despliegue
+
+Railway (backend) + Vercel (frontend): ver [docs/despliegue.md](docs/despliegue.md).
+
 ## Configuración de servicios
 
 - Supabase: configura URL y service role en el backend. Para Google, habilita el proveedor y permite http://localhost:4321/auth/callback como redirección. Los usuarios de Google preparan su perfil mediante POST /api/auth/bootstrap antes de crear el negocio.
