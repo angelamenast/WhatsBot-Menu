@@ -1,6 +1,7 @@
 import { ApiError, request } from '../api/http';
 import type { Business, Connection, User } from './platform';
-export interface UserProfileData { adminName:string; email:string; businessName?:string; hasBusiness:boolean; avatarUrl?:string|null }
+import { accountHasPassword } from './onboarding';
+export interface UserProfileData { adminName:string; email:string; businessName?:string; hasBusiness:boolean; hasPassword:boolean; avatarUrl?:string|null }
 let pending: Promise<UserProfileData|null> | null = null;
 let pendingToken = '';
 
@@ -19,6 +20,7 @@ async function readCurrentProfile(): Promise<UserProfileData> {
     adminName:meta.nombre || meta.full_name || meta.name || user.email?.split('@')[0] || 'Usuario',
     businessName:business?.nombreNegocio || '',
     hasBusiness:Boolean(business),
+    hasPassword:accountHasPassword(user),
     avatarUrl:meta.avatar_url || meta.picture || null,
   };
   localStorage.setItem('user_profile_data',JSON.stringify(profile));
