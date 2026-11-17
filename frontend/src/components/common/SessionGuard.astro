@@ -1,14 +1,16 @@
 <script>
   import { request, clearSession, hasVerifiedSession } from '../../api/http';
   import { syncUserSession } from '../../services/userSession';
-  import { notify } from '../../services/notifications';
   if (!hasVerifiedSession()) { clearSession(); location.replace('/auth/login?next=' + encodeURIComponent(location.pathname + location.search)); }
   else syncUserSession().catch((error) => {
     if (error.status === 401) { clearSession(); location.replace('/auth/login'); }
   });
-  document.querySelectorAll('[data-logout]').forEach((button) => button.addEventListener('click', async () => {
-    try { await request('/auth/logout', { method: 'POST' }); }
-    catch (error) { if (!(error instanceof Error) || !('status' in error) || error.status !== 401) { notify(error instanceof Error ? error.message : 'No se pudo cerrar sesión', 'error'); return; } }
-    clearSession(); location.replace('/auth/login');
+  // Cerrar sesión: se avisa al backend para revocar el token, pero la sesión local se borra
+  // siempre, aunque el backend no responda; nadie debe quedar atrapado sin poder salir.
+  document.querySelectorAll<HTMLButtonElement>('[data-logout]').forEach((button) => button.addEventListener('click', async () => {
+    document.querySelectorAll<HTMLButtonElement>('[data-logout]').forEach((item) => { item.disabled = true; });
+    try { await request('/auth/logout', { method: 'POST' }); } catch { /* la sesión local se cierra igual */ }
+    clearSession();
+    location.replace('/auth/login');
   }));
 </script>
