@@ -3,6 +3,8 @@ import { ApiError, isPlanExpired } from '../api/http';
 import { syncUserSession } from './userSession';
 import { notify, confirmAction } from './notifications';
 import { setText as text, loadPageData, showBusinessSetup } from './page-data';
+import { showOnboardingBanner } from './onboarding-guard';
+import { accountHasPassword, pendingSteps, redirectFor } from './onboarding';
 
 // La integración modifica datos y eventos de los componentes originales, no su diseño.
 const path = location.pathname.replace(/\/$/, '') || '/';
@@ -38,9 +40,8 @@ let plans: Plan[] = [];
 async function profile() {
   const [{ user }, mine] = await Promise.all([platform.me(), platform.business()]);
   business = mine;
-  // Sin el proveedor email la cuenta no tiene contraseña: el perfil ofrece crearla.
-  const providers = user.app_metadata?.providers;
-  const createPassword = Array.isArray(providers) && !providers.includes('email');
+  // Cuenta de Google sin contraseña todavía: el perfil ofrece crearla (misma regla que el backend).
+  let createPassword = !accountHasPassword(user);
   window.dispatchEvent(new CustomEvent('password-mode', { detail: { create: createPassword } }));
   input('admin-name', user.user_metadata.nombre || user.user_metadata.full_name || '');
   input('business-name', mine?.nombreNegocio || '');
@@ -70,6 +71,12 @@ async function profile() {
     $<HTMLFormElement>('#password-form')?.reset();
     $('#new-password')?.dispatchEvent(new Event('input', { bubbles: true }));
     notify(createPassword ? 'Contraseña creada. Ya puedes entrar también con tu correo.' : 'Contraseña actualizada.', 'success');
+    if (createPassword) {
+      // Desde ahora la cuenta tiene contraseña: cambiarla pide la actual y el aviso de onboarding desaparece.
+      createPassword = false;
+      window.dispatchEvent(new CustomEvent('password-mode', { detail: { create: false } }));
+      const account = await syncUserSession(); showOnboardingBanner(pendingSteps(account?.hasPassword ?? true));
+    }
   });
   captureClick('#btn-manage-wa', () => location.assign('/vincular-whatsapp'));
 }
@@ -242,8 +249,16 @@ if (document.documentElement.dataset.appState === 'loading' && localStorage.getI
   const run = ['/customization','/catalog'].includes(path) ? async () => (await import('./customization')).initCustomization() : path === '/profile' ? profile : path === '/orders' ? orders : path === '/billing' ? billing : path === '/vincular-whatsapp' ? whatsapp : path.startsWith('/checkout/') ? checkout : null;
   void loadPageData(async () => {
     const account = await syncUserSession();
+    // Onboarding de inicio de sesión: sin contraseña (cuenta de Google), cualquier pantalla lleva a crearla.
+    const pending = pendingSteps(account?.hasPassword ?? true);
+    const target = redirectFor(path, pending);
+    if (target) { location.replace(target); await new Promise(() => {}); }
+    showOnboardingBanner(pending);
     const requiresBusiness = ['/orders','/billing','/vincular-whatsapp','/customization','/catalog'].includes(path) || path.startsWith('/checkout/');
     if (requiresBusiness && account?.hasBusiness === false) { showBusinessSetup(); return; }
     if (run) await run();
+  }).then(() => {
+    // El contenido aparece después de cargar: el ancla (p. ej. #personality del onboarding) se aplica al final.
+    if (location.hash) { try { document.querySelector(location.hash)?.scrollIntoView({ block: 'start' }); } catch { /* hash no es un selector válido */ } }
   }).catch(failure);
 }

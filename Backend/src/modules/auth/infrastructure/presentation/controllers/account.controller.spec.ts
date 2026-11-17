@@ -26,13 +26,33 @@ describe('AccountController', () => {
     const withProviders = (providers: string[]) => ({ ...request, user: { ...request.user, app_metadata: { providers } } }) as unknown as Request & { user: User };
     const session = { access_token: 'checked', refresh_token: 'r', expires_in: 3600, expires_at: 9999999999, token_type: 'bearer', user: { id: 'user-1', email: 'user@example.com' } };
 
-    it('un usuario solo de Google crea su contraseña sin enviar la actual', async () => {
-      const fetchMock = jest.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ id: 'user-1' }), { status: 200 }));
-      await controller.update(withProviders(['google']), { password: 'new-password' });
-      expect(fetchMock).toHaveBeenCalledTimes(1);
+    const urlOf = (input: unknown) => String(input instanceof Request ? input.url : input);
+    it('un usuario solo de Google crea su contraseña sin enviar la actual y queda marcado', async () => {
+      const fetchMock = jest.spyOn(globalThis, 'fetch').mockImplementation(async () => new Response(JSON.stringify({ id: 'user-1', app_metadata: { providers: ['google'] } }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+      // Supabase exige que el id sea un UUID, como los ids reales.
+      const id = '0b8e2f4c-3c1d-4f6a-9e2b-7a5d1c9f3e21';
+      const google = withProviders(['google']);
+      const { user } = await controller.update({ ...google, user: { ...google.user, id } } as unknown as Request & { user: User }, { password: 'new-password' });
       expect(fetchMock).toHaveBeenCalledWith('https://test.supabase.co/auth/v1/user', expect.objectContaining({
         method: 'PUT', body: JSON.stringify({ password: 'new-password' }),
       }));
+      // Marca en app_metadata con la service role (admin), no con el JWT del usuario.
+      const adminCall = fetchMock.mock.calls.find(([input]) => urlOf(input).includes(`/auth/v1/admin/users/${id}`));
+      expect(adminCall).toBeDefined();
+      expect(JSON.parse(String((adminCall![1] as RequestInit).body))).toEqual({ app_metadata: { password_set: true } });
+      expect(user.app_metadata).toEqual({ providers: ['google'], password_set: true });
+    });
+    it('una cuenta de Google que ya creó su contraseña debe dar la actual para cambiarla', async () => {
+      const fetchMock = jest.spyOn(globalThis, 'fetch');
+      const marked = { ...request, user: { ...request.user, app_metadata: { providers: ['google'], password_set: true } } } as unknown as Request & { user: User };
+      await expect(controller.update(marked, { password: 'other-password' })).rejects.toThrow('contraseña actual');
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+    it('cambiar el nombre de una cuenta de Google no la marca con contraseña', async () => {
+      const fetchMock = jest.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ id: 'user-1' }), { status: 200 }));
+      await controller.update(withProviders(['google']), { nombre: 'Isabella' });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock.mock.calls.some(([input]) => urlOf(input).includes('/admin/'))).toBe(false);
     });
     it('un usuario con correo no puede cambiarla sin la contraseña actual', async () => {
       const fetchMock = jest.spyOn(globalThis, 'fetch');

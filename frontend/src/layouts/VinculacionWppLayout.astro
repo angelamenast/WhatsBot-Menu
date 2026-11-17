@@ -17,6 +17,8 @@ const { title, activeRoute = "vincular" } = Astro.props;
 <!doctype html>
 <html lang="es" data-app-state={requireSession ? "loading" : undefined} data-identity-state={requireSession ? "loading" : undefined}>
   <head>
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
