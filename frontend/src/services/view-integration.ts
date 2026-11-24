@@ -3,7 +3,7 @@ import { ApiError, isPlanExpired } from '../api/http';
 import { syncUserSession } from './userSession';
 import { notify, confirmAction } from './notifications';
 import { setText as text, loadPageData, showBusinessSetup } from './page-data';
-import { showOnboardingBanner } from './onboarding-guard';
+import { rememberRedirect, showOnboardingBanner } from './onboarding-guard';
 import { accountHasPassword, pendingSteps, redirectFor } from './onboarding';
 import { emailChangeNotice, emailChangeResult } from './account-messages';
 
@@ -64,6 +64,8 @@ async function profile() {
     }
     await platform.profile({ nombre: name }); await syncUserSession();
     notify(business ? 'Perfil y negocio guardados en el servidor.' : 'Perfil guardado. Puedes registrar tu negocio cuando estés listo.', 'success');
+    // Guardar nombre y negocio no completa el paso obligatorio: se recuerda qué falta.
+    if (createPassword) { notify('Aún falta un paso obligatorio: crear tu contraseña, más abajo en esta página.', 'warning'); $('#password-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
   captureForm('email-form', async () => {
     if (value('new-email') !== value('confirm-new-email')) throw new Error('Los correos no coinciden.');
@@ -267,7 +269,7 @@ if (document.documentElement.dataset.appState === 'loading' && localStorage.getI
     // Onboarding de inicio de sesión: sin contraseña (cuenta de Google), cualquier pantalla lleva a crearla.
     const pending = pendingSteps(account?.hasPassword ?? true);
     const target = redirectFor(path, pending);
-    if (target) { location.replace(target); await new Promise(() => {}); }
+    if (target) { rememberRedirect(path); location.replace(target); await new Promise(() => {}); }
     showOnboardingBanner(pending);
     const requiresBusiness = ['/orders','/billing','/vincular-whatsapp','/customization','/catalog'].includes(path) || path.startsWith('/checkout/');
     if (requiresBusiness && account?.hasBusiness === false) { showBusinessSetup(); return; }
