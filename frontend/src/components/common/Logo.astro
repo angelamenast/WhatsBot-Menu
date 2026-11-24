@@ -1,18 +1,19 @@
 ---
+// Símbolo de Tremia (sin el nombre ni el eslogan). El nombre queda como texto accesible.
 interface Props {
   class?: string;
+  size?: number;
 }
 
-const { class: className = "" } = Astro.props;
+const { class: className = "", size = 40 } = Astro.props;
 ---
 
-<a href="/" class={`flex items-center gap-3 group ${className}`}>
-  <div
-    class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105"
-  >
-    <span class="material-symbols-outlined text-2xl fill">smart_toy</span>
-  </div>
-  <span class="text-2xl md:text-3xl font-bold text-primary tracking-tight">
-    Tremia
-  </span>
+<a href="/" class={`inline-flex items-center group ${className}`} aria-label="Tremia, ir al inicio">
+  <img
+    src="/logo.png"
+    alt="Tremia"
+    width={size}
+    height={size}
+    class="object-contain transition-transform group-hover:scale-105"
+  />
 </a>

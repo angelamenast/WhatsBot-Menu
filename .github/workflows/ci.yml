@@ -1,0 +1,138 @@
+# CI de WhatsBot Menú (Tremia)
+# Corre en cada pull request y en cada push a develop y master.
+# - Backend: lint, build y pruebas unitarias.
+# - Frontend: pruebas, revisión de tipos de Astro y build.
+# - Integración: solo en pull requests hacia master, contra Supabase de PRUEBAS y Wompi sandbox.
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, master]
+  push:
+    branches: [develop, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (lint, build, test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: Backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: Backend/.node-version
+          cache: npm
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Pruebas unitarias
+        run: npm test -- --ci
+
+  frontend:
+    name: Frontend (test, check, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      # Valor de ejemplo solo para que el build compile; Vercel usa el real.
+      PUBLIC_API_URL: http://localhost:3000/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Pruebas
+        run: npm test
+
+      - name: Revisión de tipos (astro check)
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+
+  integracion:
+    name: Integración (Supabase de pruebas + Wompi sandbox)
+    needs: backend
+    if: github.event_name == 'pull_request' && github.base_ref == 'master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: Backend
+    env:
+      SUPABASE_TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
+      SUPABASE_TEST_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+      WOMPI_TEST_BASE_URL: ${{ secrets.WOMPI_TEST_BASE_URL }}
+      WOMPI_TEST_PUBLIC_KEY: ${{ secrets.WOMPI_TEST_PUBLIC_KEY }}
+      WOMPI_TEST_PRIVATE_KEY: ${{ secrets.WOMPI_TEST_PRIVATE_KEY }}
+      WOMPI_TEST_EVENTS_SECRET: ${{ secrets.WOMPI_TEST_EVENTS_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: Backend/.node-version
+          cache: npm
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Verificar que se pueden correr
+        id: check
+        run: |
+          if [ "$(npm pkg get scripts.test:int)" = "{}" ]; then
+            echo "::notice::Esta rama no tiene el script test:int; se omiten las pruebas de integración."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          elif [ -z "$SUPABASE_TEST_URL" ] || [ -z "$SUPABASE_TEST_SERVICE_ROLE_KEY" ]; then
+            echo "::warning::Faltan los secretos SUPABASE_TEST_* en GitHub; se omiten las pruebas de integración."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Instalar dependencias
+        if: steps.check.outputs.run == 'true'
+        run: npm ci
+
+      - name: Crear Backend/.env.test desde los secretos
+        if: steps.check.outputs.run == 'true'
+        run: |
+          {
+            echo "SUPABASE_TEST_URL=$SUPABASE_TEST_URL"
+            echo "SUPABASE_TEST_SERVICE_ROLE_KEY=$SUPABASE_TEST_SERVICE_ROLE_KEY"
+            echo "WOMPI_TEST_BASE_URL=$WOMPI_TEST_BASE_URL"
+            echo "WOMPI_TEST_PUBLIC_KEY=$WOMPI_TEST_PUBLIC_KEY"
+            echo "WOMPI_TEST_PRIVATE_KEY=$WOMPI_TEST_PRIVATE_KEY"
+            echo "WOMPI_TEST_EVENTS_SECRET=$WOMPI_TEST_EVENTS_SECRET"
+          } > .env.test
+
+      - name: Pruebas de integración
+        if: steps.check.outputs.run == 'true'
+        run: npm run test:int
