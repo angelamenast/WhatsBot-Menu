@@ -19,7 +19,8 @@
     "test:cov": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test:debug": "node --inspect-brk --experimental-vm-modules -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json",
-    "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --testPathPatterns=\"integration\\.spec\\.ts$\""
+    "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --testPathPatterns=\"integration\\.spec\\.ts$\"",
+    "test:agent:int": "cross-env NODE_OPTIONS=--experimental-vm-modules jest src/modules/agent/test/integration --verbose"
   },
   "dependencies": {
     "@google/genai": "^2.32.0",
