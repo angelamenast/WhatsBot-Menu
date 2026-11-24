@@ -5,6 +5,7 @@ import { notify, confirmAction } from './notifications';
 import { setText as text, loadPageData, showBusinessSetup } from './page-data';
 import { showOnboardingBanner } from './onboarding-guard';
 import { accountHasPassword, pendingSteps, redirectFor } from './onboarding';
+import { emailChangeNotice, emailChangeResult } from './account-messages';
 
 // La integración modifica datos y eventos de los componentes originales, no su diseño.
 const path = location.pathname.replace(/\/$/, '') || '/';
@@ -46,6 +47,11 @@ async function profile() {
   input('admin-name', user.user_metadata.nombre || user.user_metadata.full_name || '');
   input('business-name', mine?.nombreNegocio || '');
   text('#current-email-display', user.email);
+  const showEmailChange = (current: string | undefined, pending: string | null | undefined) => {
+    const box = $('#email-change-pending'); if (!box) return;
+    box.textContent = emailChangeNotice(current, pending); box.hidden = !pending;
+  };
+  showEmailChange(user.email, user.new_email);
   text('#avatar-initials', (value('admin-name') || 'U').split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase());
   const emailButton = $<HTMLButtonElement>('#email-form button[type="submit"]');
   const validateEmail = () => { if (emailButton) emailButton.disabled = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value('new-email')) || value('new-email') !== value('confirm-new-email'); };
@@ -61,8 +67,17 @@ async function profile() {
   });
   captureForm('email-form', async () => {
     if (value('new-email') !== value('confirm-new-email')) throw new Error('Los correos no coinciden.');
-    await platform.profile({ email: value('new-email') });
-    notify('Revisa tu correo y confirma el cambio mediante el enlace de Supabase.', 'success');
+    const requested = value('new-email');
+    const { user: updated } = await platform.profile({ email: requested });
+    const result = emailChangeResult(requested, updated);
+    $<HTMLFormElement>('#email-form')?.reset();
+    if (result.kind === 'changed') {
+      text('#current-email-display', result.email); showEmailChange(result.email, null); await syncUserSession();
+      notify('Correo actualizado. Desde ahora entra con ' + result.email + '.', 'success');
+    } else {
+      showEmailChange(updated.email ?? user.email, result.pending);
+      notify('Te enviamos un enlace de confirmación. El correo nuevo solo sirve para entrar después de confirmarlo; mientras tanto, entra con el actual.', 'info');
+    }
   });
   captureForm('password-form', async () => {
     const password = $<HTMLInputElement>('#new-password')?.value || '';

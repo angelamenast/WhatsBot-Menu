@@ -1,3 +1,4 @@
+import { loginFailureMessage } from './account-messages';
 interface LoginActions {
   login(credentials: {email:string; password:string}): Promise<unknown>;
   google(): Promise<unknown>;
@@ -47,7 +48,7 @@ export function bindLoginForm(actions: LoginActions) {
     field.addEventListener('change', render);
   }
   function showFailure(error: unknown) {
-    message.textContent = error instanceof Error ? error.message : 'No se pudo iniciar sesión. Inténtalo de nuevo.';
+    message.textContent = loginFailureMessage(error);
     message.hidden = false;
   }
   form.addEventListener('submit', async event => {
