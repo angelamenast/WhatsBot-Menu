@@ -17,7 +17,7 @@ export type AgentRegionalStyle = 'NEUTRO' | 'PAISA' | 'COSTENO' | 'CALENO' | 'BO
 export interface Agent { businessId?: string; personality: string | null; tone: AgentTone | null; regionalStyle: AgentRegionalStyle | null; welcomeMessage: string | null; unavailableMessage: string | null; businessHours: Record<string, string> | null }
 // PATCH parcial: campo ausente = no tocar, null = borrar.
 export type AgentUpdate = Partial<Omit<Agent, 'businessId'>>;
-export interface User { id: string; email?: string; user_metadata: Record<string, string>; app_metadata?: { providers?: string[] } }
+export interface User { id: string; email?: string; user_metadata: Record<string, string>; app_metadata?: { providers?: string[]; password_set?: boolean } }
 export interface Checklist { items: { clave: string; completo: boolean; label: string }[]; completo: boolean; porcentaje: number }
 const json = (method: string, data: unknown): RequestInit => ({ method, body: JSON.stringify(data) });
 export const platform = {

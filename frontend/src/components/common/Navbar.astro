@@ -66,13 +66,14 @@ const { variant = "public" } = Astro.props;
 
     <!-- Acciones Rápidas del Usuario -->
     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-      <button
+      <a
         class="w-9 h-9 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition-colors cursor-pointer"
-        type="button"
+        href="/support"
         title="Soporte y Ayuda"
+        aria-label="Soporte y Ayuda"
       >
-        <span class="material-symbols-outlined text-[20px]">help</span>
-      </button>
+        <span class="material-symbols-outlined text-[20px]" aria-hidden="true">help</span>
+      </a>
       <a
         class="w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center font-bold text-xs transition-colors cursor-pointer"
         href="/profile"
@@ -80,6 +81,15 @@ const { variant = "public" } = Astro.props;
       >
         <span class="material-symbols-outlined text-[18px]">person</span>
       </a>
+      <button
+        data-logout
+        class="w-9 h-9 rounded-xl bg-zinc-100 hover:bg-red-50 hover:text-red-600 text-zinc-700 flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+        type="button"
+        title="Cerrar sesión"
+        aria-label="Cerrar sesión"
+      >
+        <span class="material-symbols-outlined text-[20px]" aria-hidden="true">logout</span>
+      </button>
     </div>
   </header>
 

@@ -5,6 +5,14 @@ import type { Request } from 'express';
 import { SupabaseAuthGuard } from '../guards/supabase-auth.guard';
 import { UpdateAccountDto } from '../dto/update-account.dto';
 
+// Una cuenta creada con Google tiene providers = ['google'] aunque después cree una contraseña:
+// Supabase no añade 'email'. Por eso, al crearla, se marca app_metadata.password_set (solo lo
+// escribe el servidor con la service role; el usuario no puede alterarlo).
+export function accountHasPassword(user: Pick<User, 'app_metadata'>): boolean {
+  const providers = user.app_metadata?.providers;
+  return !Array.isArray(providers) || providers.includes('email') || user.app_metadata?.password_set === true;
+}
+
 @Controller('auth/account')
 @UseGuards(SupabaseAuthGuard)
 export class AccountController {
@@ -20,12 +28,11 @@ export class AccountController {
       changes.data = { nombre: dto.nombre.trim(), full_name: dto.nombre.trim() };
     }
     if (dto.email) changes.email = dto.email;
+    const creatingPassword = Boolean(dto.password) && !accountHasPassword(request.user);
     if (dto.password) {
-      // Quien solo entra con Google no tiene contraseña que comprobar. Sin la lista de proveedores
-      // se exige la contraseña actual. app_metadata solo lo escribe Supabase; el usuario no puede alterarlo.
-      const providers = request.user.app_metadata?.providers;
-      const hasPassword = !Array.isArray(providers) || providers.includes('email');
-      if (hasPassword) {
+      // Quien solo entra con Google y aún no creó contraseña no tiene una actual que comprobar.
+      // Sin la lista de proveedores se exige la contraseña actual.
+      if (!creatingPassword) {
         if (!dto.currentPassword || !request.user.email) throw new BadRequestException('Escribe tu contraseña actual');
         // Cliente aislado: la comprobación no altera sesiones de otros usuarios.
         const isolated = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -43,6 +50,13 @@ export class AccountController {
     });
     const result = await response.json();
     if (!response.ok) throw new BadRequestException('No se pudo actualizar la cuenta. Comprueba los datos o vuelve a iniciar sesión.');
+    if (creatingPassword) {
+      // GoTrue combina app_metadata: solo se añade la marca, sin tocar providers.
+      const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+      const { error } = await admin.auth.admin.updateUserById(request.user.id, { app_metadata: { password_set: true } });
+      if (error) throw new BadRequestException('La contraseña se creó, pero no se pudo registrar en tu cuenta. Vuelve a intentarlo.');
+      result.app_metadata = { ...result.app_metadata, password_set: true };
+    }
     return { user: result };
   }
 }
