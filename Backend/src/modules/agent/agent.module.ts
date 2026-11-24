@@ -4,7 +4,7 @@ import { AuthModule } from '../auth/auth.module';
 import { BusinessModule } from '../business/business.module';
 import { OrdersModule } from '../orders/orders.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
-
+//HOLA SOY JULI
 import { AGENT_CONFIG_REPOSITORY } from './domain/repositories/agent-config.repository';
 import { SupabaseAgentConfigRepository } from './infrastructure/persistence/supabase-agent-config.repository';
 import { BUSINESS_ATTENTION_REPOSITORY } from './domain/repositories/business-attention.repository';
