@@ -39,3 +39,13 @@ test('el onboarding ya no depende del checklist del negocio', async () => {
   const integration = await read('../src/services/view-integration.ts');
   assert.match(integration, /pendingSteps\(account\?\.hasPassword \?\? true\)[\s\S]*redirectFor\(path, pending\)[\s\S]*if \(run\) await run\(\)/);
 });
+test('el aviso de onboarding dice que la contraseña es el paso obligatorio y explica la redirección', async () => {
+  const guard = await read('../src/services/onboarding-guard.ts');
+  assert.match(guard, /Falta un paso obligatorio: crear tu contraseña/);
+  assert.match(guard, /Tu nombre y los datos del negocio no completan este paso/);
+  assert.match(guard, /Te trajimos aquí desde ' \+ \(SECTION_NAMES\[from\]/);
+  assert.match(await read('../src/components/profile/PasswordCard.astro'), /Crear contraseña \(obligatorio\)/);
+  const integration = await read('../src/services/view-integration.ts');
+  assert.match(integration, /rememberRedirect\(path\); location\.replace\(target\)/);
+  assert.match(integration, /Aún falta un paso obligatorio: crear tu contraseña/);
+});
