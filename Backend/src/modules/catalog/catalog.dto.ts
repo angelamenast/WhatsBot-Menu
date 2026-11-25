@@ -6,6 +6,9 @@ export class CatalogProductDto {
  @IsNumber({maxDecimalPlaces:2}) @Min(0) @Max(9999999999.99) price!: number;
  @IsOptional() @IsString() @MaxLength(2000) description?: string;
  @IsOptional() @IsBoolean() available?: boolean;
+ // Nombre de la categoría. Ausente = no tocar al editar; null o vacío = sin categoría.
+ @Transform(({value})=>typeof value==='string'?value.trim():value)
+ @IsOptional() @IsString() @MaxLength(80) category?: string | null;
 }
 export class ImportCatalogDto {
  @IsArray() @ArrayMinSize(1) @ArrayMaxSize(100) @ValidateNested({each:true}) @Type(()=>CatalogProductDto)
